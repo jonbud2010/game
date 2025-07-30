@@ -1,0 +1,227 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  coins        Int      @default(1000)
+  role         String   @default("PLAYER")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  lobbyMembers LobbyMember[]
+  userPlayers  UserPlayer[]
+  teams        Team[]
+  leagueTable  LeagueTable[]
+
+  @@map("users")
+}
+
+
+// Lobby System
+model Lobby {
+  id         String      @id @default(cuid())
+  name       String
+  maxPlayers Int         @default(4) @map("max_players")
+  status     String      @default("WAITING")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  members     LobbyMember[]
+  teams       Team[]
+  matches     Match[]
+  leagueTable LeagueTable[]
+
+  @@map("lobbies")
+}
+
+
+model LobbyMember {
+  id       String   @id @default(cuid())
+  lobbyId  String   @map("lobby_id")
+  userId   String   @map("user_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  // Relations
+  lobby Lobby @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([lobbyId, userId])
+  @@map("lobby_members")
+}
+
+// Game Content
+model Player {
+  id          String      @id @default(cuid())
+  name        String
+  imageUrl    String      @map("image_url")
+  points      Int
+  position    String
+  color       String
+  marketPrice Int         @map("market_price")
+  theme       String
+  percentage  Float       @default(1.0)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  userPlayers UserPlayer[]
+  teamPlayers TeamPlayer[]
+  packPlayers PackPlayer[]
+
+  @@map("players")
+}
+
+
+
+model Formation {
+  id        String   @id @default(cuid())
+  name      String
+  imageUrl  String   @map("image_url")
+  positions String // JSON string of 11 positions in order
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  teams Team[]
+
+  @@map("formations")
+}
+
+model Pack {
+  id          String     @id @default(cuid())
+  name        String
+  imageUrl    String     @map("image_url")
+  price       Int
+  status      String     @default("ACTIVE")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  packPlayers PackPlayer[]
+
+  @@map("packs")
+}
+
+
+model PackPlayer {
+  id       String @id @default(cuid())
+  packId   String @map("pack_id")
+  playerId String @map("player_id")
+
+  // Relations
+  pack   Pack   @relation(fields: [packId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([packId, playerId])
+  @@map("pack_players")
+}
+
+// User Collection
+model UserPlayer {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  playerId   String   @map("player_id")
+  acquiredAt DateTime @default(now()) @map("acquired_at")
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("user_players")
+}
+
+// Team Building
+model Team {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  lobbyId     String   @map("lobby_id")
+  formationId String   @map("formation_id")
+  name        String
+  matchDay    Int      @map("match_day")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lobby       Lobby        @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  formation   Formation    @relation(fields: [formationId], references: [id])
+  teamPlayers TeamPlayer[]
+  homeMatches Match[]      @relation("HomeTeam")
+  awayMatches Match[]      @relation("AwayTeam")
+
+  @@unique([userId, lobbyId, matchDay])
+  @@map("teams")
+}
+
+model TeamPlayer {
+  id         String @id @default(cuid())
+  teamId     String @map("team_id")
+  playerId   String @map("player_id")
+  position   Int // Position index in formation (0-10)
+  points     Int    @default(0) // Cached player points at time of assignment
+  color      String @default("") // Cached player color at time of assignment
+
+  // Relations
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, position])
+  @@map("team_players")
+}
+
+// Match System
+model Match {
+  id        String   @id @default(cuid())
+  lobbyId   String   @map("lobby_id")
+  homeTeamId String  @map("home_team_id")
+  awayTeamId String  @map("away_team_id")
+  homeScore Int      @default(0) @map("home_score")
+  awayScore Int      @default(0) @map("away_score")
+  matchDay  Int      @map("match_day")
+  played    Boolean  @default(false)
+  playedAt  DateTime? @map("played_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  lobby    Lobby @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  homeTeam Team  @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  awayTeam Team  @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Cascade)
+
+  @@map("matches")
+}
+
+// League Table
+model LeagueTable {
+  id           String @id @default(cuid())
+  lobbyId      String @map("lobby_id")
+  userId       String @map("user_id")
+  points       Int    @default(0)
+  goalsFor     Int    @default(0) @map("goals_for")
+  goalsAgainst Int    @default(0) @map("goals_against")
+  wins         Int    @default(0)
+  draws        Int    @default(0)
+  losses       Int    @default(0)
+  position     Int    @default(1)
+
+  // Relations
+  lobby Lobby @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([lobbyId, userId])
+  @@map("league_table")
+}

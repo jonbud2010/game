@@ -122,10 +122,43 @@ LeagueTable (id, lobby_id, user_id, points, goals_for, goals_against, position)
 ## 🚀 Entwicklungsphasen
 
 ### Phase 1: Grundlagen (Woche 1-2)
-- [ ] **Backend-Setup**: Express Server, Datenbank, Auth
-- [ ] **Frontend-Setup**: React App Struktur, Routing
-- [ ] **User Management**: Registrierung, Login, Profil
-- [ ] **Lobby-System**: 4-Spieler Lobbies erstellen/beitreten
+- [x] **Backend-Setup**: Express Server, Datenbank, Auth
+  - ✅ Prisma database schema with all game entities
+  - ✅ PostgreSQL connection and configuration
+  - ✅ JWT authentication system (register/login/middleware)
+  - ✅ Request validation middleware with Joi
+  - ✅ Basic API route structure (auth, players, lobbies)
+  - ✅ Error handling and logging setup
+  - ✅ Prisma client generation completed (`db:generate`)
+  - ✅ Database SQlite for local development
+  - ℹ️ PostgreSQL server setup is needed for prod environment
+- [x] **Frontend-Setup**: React App Struktur, Routing
+  - ✅ React Router v6 setup with nested routes
+  - ✅ Main app layout with header, footer, and navigation
+  - ✅ Core page structure (Home, Login, Register, Lobby, Collection, Packs)
+  - ✅ TypeScript route types and constants
+  - ✅ Responsive CSS styling and component system
+  - ✅ Authentication pages with form validation
+  - ✅ API service layer for backend communication
+  - ✅ Authentication context and state management
+  - ✅ Login/Register pages connected to backend
+  - ✅ Protected routes and authentication flow
+  - ✅ Dynamic header with user state and logout
+- [x] **User Management**: Registrierung, Login, Profil
+  - ✅ User registration with validation
+  - ✅ User login with JWT authentication
+  - ✅ Protected route access control
+  - ✅ User session persistence with localStorage
+  - ✅ Logout functionality
+- [x] **Lobby-System**: 4-Spieler Lobbies erstellen/beitreten
+  - ✅ Backend lobby controller with Prisma operations (CRUD, join/leave logic)
+  - ✅ Updated API routes with proper controller integration
+  - ✅ Frontend API service extended with lobby methods
+  - ✅ Dynamic lobby page with create/join functionality
+  - ✅ Real-time lobby list with member count and status display
+  - ✅ Modal for creating new lobbies with validation
+  - ✅ Error handling and loading states
+  - ✅ 4-player limit enforcement and status transitions
 
 ### Phase 2: Content Management (Woche 3-4)  
 - [ ] **Admin-Panel**: Spieler/Formation/Pack CRUD

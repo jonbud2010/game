@@ -1,0 +1,396 @@
+import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+import type { AuthenticatedRequest } from '../middleware/auth.js';
+
+const prisma = new PrismaClient();
+
+export const getAllLobbies = async (req: Request, res: Response) => {
+  try {
+    const lobbies = await prisma.lobby.findMany({
+      where: {
+        status: 'WAITING'
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    const formattedLobbies = lobbies.map(lobby => ({
+      id: lobby.id,
+      name: lobby.name,
+      maxPlayers: lobby.maxPlayers,
+      currentPlayers: lobby.members.length,
+      status: lobby.status,
+      createdAt: lobby.createdAt,
+      members: lobby.members.map(member => ({
+        userId: member.userId,
+        username: member.user.username,
+        joinedAt: member.joinedAt
+      }))
+    }));
+
+    res.json({
+      success: true,
+      data: formattedLobbies
+    });
+  } catch (error) {
+    console.error('Error fetching lobbies:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch lobbies'
+    });
+  }
+};
+
+export const getLobbyById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const lobby = await prisma.lobby.findUnique({
+      where: { id },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!lobby) {
+      return res.status(404).json({
+        success: false,
+        error: 'Lobby not found'
+      });
+    }
+
+    const formattedLobby = {
+      id: lobby.id,
+      name: lobby.name,
+      maxPlayers: lobby.maxPlayers,
+      currentPlayers: lobby.members.length,
+      status: lobby.status,
+      createdAt: lobby.createdAt,
+      members: lobby.members.map(member => ({
+        userId: member.userId,
+        username: member.user.username,
+        joinedAt: member.joinedAt
+      }))
+    };
+
+    res.json({
+      success: true,
+      data: formattedLobby
+    });
+  } catch (error) {
+    console.error('Error fetching lobby:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch lobby'
+    });
+  }
+};
+
+export const createLobby = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { name } = req.body;
+    const userId = req.user!.userId;
+
+    // Check if user is already in a lobby
+    const existingMembership = await prisma.lobbyMember.findFirst({
+      where: {
+        userId,
+        lobby: {
+          status: {
+            in: ['WAITING', 'IN_PROGRESS']
+          }
+        }
+      }
+    });
+
+    if (existingMembership) {
+      return res.status(400).json({
+        success: false,
+        error: 'You are already in an active lobby'
+      });
+    }
+
+    // Create lobby and add user as first member in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const lobby = await tx.lobby.create({
+        data: {
+          name,
+          maxPlayers: 4,
+          status: 'WAITING'
+        }
+      });
+
+      await tx.lobbyMember.create({
+        data: {
+          lobbyId: lobby.id,
+          userId
+        }
+      });
+
+      return lobby;
+    });
+
+    // Fetch the complete lobby data
+    const createdLobby = await prisma.lobby.findUnique({
+      where: { id: result.id },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const formattedLobby = {
+      id: createdLobby!.id,
+      name: createdLobby!.name,
+      maxPlayers: createdLobby!.maxPlayers,
+      currentPlayers: createdLobby!.members.length,
+      status: createdLobby!.status,
+      createdAt: createdLobby!.createdAt,
+      members: createdLobby!.members.map(member => ({
+        userId: member.userId,
+        username: member.user.username,
+        joinedAt: member.joinedAt
+      }))
+    };
+
+    res.status(201).json({
+      success: true,
+      data: formattedLobby,
+      message: 'Lobby created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating lobby:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create lobby'
+    });
+  }
+};
+
+export const joinLobby = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.userId;
+
+    // Check if user is already in a lobby
+    const existingMembership = await prisma.lobbyMember.findFirst({
+      where: {
+        userId,
+        lobby: {
+          status: {
+            in: ['WAITING', 'IN_PROGRESS']
+          }
+        }
+      }
+    });
+
+    if (existingMembership) {
+      return res.status(400).json({
+        success: false,
+        error: 'You are already in an active lobby'
+      });
+    }
+
+    // Get lobby with current members
+    const lobby = await prisma.lobby.findUnique({
+      where: { id },
+      include: {
+        members: true
+      }
+    });
+
+    if (!lobby) {
+      return res.status(404).json({
+        success: false,
+        error: 'Lobby not found'
+      });
+    }
+
+    if (lobby.status !== 'WAITING') {
+      return res.status(400).json({
+        success: false,
+        error: 'Lobby is not accepting new members'
+      });
+    }
+
+    if (lobby.members.length >= lobby.maxPlayers) {
+      return res.status(400).json({
+        success: false,
+        error: 'Lobby is full'
+      });
+    }
+
+    // Check if user is already in this lobby
+    const alreadyMember = lobby.members.some(member => member.userId === userId);
+    if (alreadyMember) {
+      return res.status(400).json({
+        success: false,
+        error: 'You are already a member of this lobby'
+      });
+    }
+
+    // Add user to lobby and potentially update status
+    await prisma.$transaction(async (tx) => {
+      await tx.lobbyMember.create({
+        data: {
+          lobbyId: id,
+          userId
+        }
+      });
+
+      // If this makes the 4th member, update lobby status to IN_PROGRESS
+      if (lobby.members.length + 1 >= lobby.maxPlayers) {
+        await tx.lobby.update({
+          where: { id },
+          data: { status: 'IN_PROGRESS' }
+        });
+      }
+    });
+
+    // Fetch updated lobby data
+    const updatedLobby = await prisma.lobby.findUnique({
+      where: { id },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const formattedLobby = {
+      id: updatedLobby!.id,
+      name: updatedLobby!.name,
+      maxPlayers: updatedLobby!.maxPlayers,
+      currentPlayers: updatedLobby!.members.length,
+      status: updatedLobby!.status,
+      createdAt: updatedLobby!.createdAt,
+      members: updatedLobby!.members.map(member => ({
+        userId: member.userId,
+        username: member.user.username,
+        joinedAt: member.joinedAt
+      }))
+    };
+
+    res.json({
+      success: true,
+      data: formattedLobby,
+      message: 'Joined lobby successfully'
+    });
+  } catch (error) {
+    console.error('Error joining lobby:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to join lobby'
+    });
+  }
+};
+
+export const leaveLobby = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.userId;
+
+    // Check if user is in this lobby
+    const membership = await prisma.lobbyMember.findFirst({
+      where: {
+        lobbyId: id,
+        userId
+      },
+      include: {
+        lobby: {
+          include: {
+            members: true
+          }
+        }
+      }
+    });
+
+    if (!membership) {
+      return res.status(400).json({
+        success: false,
+        error: 'You are not a member of this lobby'
+      });
+    }
+
+    const lobby = membership.lobby;
+
+    if (lobby.status === 'IN_PROGRESS') {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot leave lobby while game is in progress'
+      });
+    }
+
+    // Remove user from lobby
+    await prisma.$transaction(async (tx) => {
+      await tx.lobbyMember.delete({
+        where: {
+          id: membership.id
+        }
+      });
+
+      // If this was the last member, delete the lobby
+      if (lobby.members.length === 1) {
+        await tx.lobby.delete({
+          where: { id }
+        });
+      } else {
+        // If lobby was IN_PROGRESS and now has less than 4 players, set back to WAITING
+        if (lobby.status === 'IN_PROGRESS' && lobby.members.length - 1 < lobby.maxPlayers) {
+          await tx.lobby.update({
+            where: { id },
+            data: { status: 'WAITING' }
+          });
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Left lobby successfully'
+    });
+  } catch (error) {
+    console.error('Error leaving lobby:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to leave lobby'
+    });
+  }
+};

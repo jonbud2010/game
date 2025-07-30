@@ -19,6 +19,9 @@
     "db:generate": "prisma generate",
     "db:seed": "tsx src/db/seed.ts"
   },
+  "prisma": {
+    "seed": "tsx src/db/seed.ts"
+  },
   "dependencies": {
     "@football-tcg/shared": "workspace:*",
     "@prisma/client": "^5.7.1",

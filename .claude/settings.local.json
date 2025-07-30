@@ -26,7 +26,25 @@
       "Bash(./yarn.cmd --version)",
       "Bash(cmd //c yarn.cmd --version)",
       "Bash(cmd //c yarn.cmd workspace shared build)",
-      "Bash(cmd //c yarn.cmd workspace @football-tcg/shared build)"
+      "Bash(cmd //c yarn.cmd workspace @football-tcg/shared build)",
+      "Bash(copy:*)",
+      "Bash(cmd /c copy:*)",
+      "Bash(cmd /c yarn.cmd install)",
+      "Bash(cmd /c:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(npx tsc:*)",
+      "Bash(where sqlite3)",
+      "Bash(winget install:*)",
+      "Bash(powershell:*)",
+      "Bash(sqlite-tools\\\\sqlite3.exe:*)",
+      "Bash(./sqlite-tools/sqlite3.exe -version)",
+      "Bash(npx prisma db seed:*)",
+      "Bash(npx tsx:*)",
+      "Bash(../sqlite-tools/sqlite3.exe dev.db \".tables\")",
+      "Bash(cp:*)",
+      "Bash(setx:*)",
+      "Bash(C:/sqlite/bin/sqlite3:*)"
     ],
     "deny": []
   }

@@ -44,7 +44,37 @@ cmd /c yarn.cmd test             # Jest tests all
 cmd /c yarn.cmd test:watch       # Watch mode tests
 ```
 
+### Database Tools Setup
+
+**SQLite Installation (Windows)**:
+SQLite tools are installed system-wide for convenient access from any directory:
+- **Location**: `C:\sqlite\bin\`
+- **Tools included**: sqlite3.exe, sqldiff.exe, sqlite3_analyzer.exe
+- **PATH**: Added to Windows PATH environment variable for global access
+
+**Verification**:
+```bash
+sqlite3 --version    # Should display SQLite version
+```
+
+**Note**: After PATH modification, restart command prompt/terminal or reboot system to access sqlite3 globally. 
+Until restart, use full path: `C:\sqlite\bin\sqlite3`
+
 ### Database Operations (Backend)
+
+**Local Development (SQLite)**:
+```bash
+cd backend
+npx prisma generate          # Generate Prisma client
+npx prisma migrate dev       # Run migrations
+npx prisma db seed           # Seed test data
+
+# SQLite CLI commands (available globally):
+sqlite3 dev.db               # Open database in SQLite CLI
+sqlite3 prisma/dev.db        # Open Prisma database directly
+```
+
+**Production (PostgreSQL)** - Use schema.production.prisma:
 ```bash
 cmd /c yarn.cmd workspace @football-tcg/backend db:migrate
 cmd /c yarn.cmd workspace @football-tcg/backend db:generate
@@ -88,7 +118,7 @@ Teams must have minimum 3 different colors with at least 2 players per color for
 
 ### Backend  
 - Express.js with TypeScript
-- Planned: PostgreSQL + Prisma ORM (not yet implemented)
+- SQLite for local development, PostgreSQL for production + Prisma ORM
 - JWT authentication + bcrypt (planned)
 - File uploads with Multer + Sharp (planned)
 
@@ -98,7 +128,7 @@ The project is in early development phase:
 - ✅ Shared types and business logic
 - ✅ Frontend component structure  
 - ✅ Backend API skeleton
-- 🚧 Database setup and models (in progress)
+- ✅ Database setup and models (SQLite working locally)
 - 📅 Authentication system (planned)
 - 📅 Game mechanics implementation (planned)
 
@@ -106,6 +136,7 @@ The project is in early development phase:
 
 - This is a German-language project (comments and UI in German)
 - Uses Yarn Berry (v4.9.2) - always use `yarn.cmd` on Windows
+- SQLite database (dev.db) is used for local development, PostgreSQL for production
 - Shared package must be built before frontend/backend due to workspace dependencies
 - Game rules are complex - refer to PLAN.md for detailed specifications
 - No malicious code detected - this is a legitimate game development project

@@ -9,12 +9,12 @@
     "shared"
   ],
   "scripts": {
-    "dev": "concurrently \"yarn workspace frontend dev\" \"yarn workspace backend dev\"",
-    "dev:frontend": "yarn workspace frontend dev",
-    "dev:backend": "yarn workspace backend dev",
-    "build": "yarn workspace shared build && yarn workspace frontend build && yarn workspace backend build",
-    "build:frontend": "yarn workspace frontend build",
-    "build:backend": "yarn workspace backend build",
+    "dev": "concurrently \"yarn workspace @football-tcg/frontend dev\" \"yarn workspace @football-tcg/backend dev\"",
+    "dev:frontend": "yarn workspace @football-tcg/frontend dev",
+    "dev:backend": "yarn workspace @football-tcg/backend dev",
+    "build": "yarn workspace @football-tcg/shared build && yarn workspace @football-tcg/frontend build && yarn workspace @football-tcg/backend build",
+    "build:frontend": "yarn workspace @football-tcg/frontend build",
+    "build:backend": "yarn workspace @football-tcg/backend build",
     "lint": "yarn workspaces run lint",
     "lint:fix": "yarn workspaces run lint:fix",
     "type-check": "yarn workspaces run type-check",
