@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(move src frontend/)",
+      "Bash(move public frontend/)",
+      "Bash(move index.html frontend/)",
+      "Bash(move vite.config.ts frontend/)",
+      "Bash(move:*)",
+      "Bash(move tsconfig.node.json frontend/)",
+      "Bash(move eslint.config.js frontend/)",
+      "Bash(mv:*)",
+      "Bash(ls:*)",
+      "Bash(yarn --version)",
+      "Bash(corepack enable)",
+      "Bash(yarn set version:*)",
+      "Bash(touch:*)",
+      "Bash(yarn install)",
+      "Bash(./yarn install)",
+      "Bash(node .yarn/releases/yarn-4.9.2.cjs install:*)",
+      "Bash(node:*)",
+      "Bash(./yarn.cmd --version)",
+      "Bash(cmd //c yarn.cmd --version)",
+      "Bash(cmd //c yarn.cmd workspace shared build)",
+      "Bash(cmd //c yarn.cmd workspace @football-tcg/shared build)"
+    ],
+    "deny": []
+  }
+}

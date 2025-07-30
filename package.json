@@ -1,0 +1,50 @@
+{
+  "name": "football-tcg",
+  "version": "1.0.0",
+  "description": "Ein browserbasiertes Multiplayer Fußball-Sammelkartenspiel für genau 4 Spieler",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace frontend dev\" \"yarn workspace backend dev\"",
+    "dev:frontend": "yarn workspace frontend dev",
+    "dev:backend": "yarn workspace backend dev",
+    "build": "yarn workspace shared build && yarn workspace frontend build && yarn workspace backend build",
+    "build:frontend": "yarn workspace frontend build",
+    "build:backend": "yarn workspace backend build",
+    "lint": "yarn workspaces run lint",
+    "lint:fix": "yarn workspaces run lint:fix",
+    "type-check": "yarn workspaces run type-check",
+    "test": "yarn workspaces run test",
+    "test:watch": "yarn workspaces run test:watch",
+    "clean": "yarn workspaces run clean && rm -rf node_modules",
+    "postinstall": "yarn workspaces run postinstall || true"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "yarn": ">=1.22.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/football-tcg.git"
+  },
+  "keywords": [
+    "football",
+    "soccer",
+    "trading-cards",
+    "game",
+    "multiplayer",
+    "react",
+    "typescript",
+    "nodejs"
+  ],
+  "author": "Jonathan",
+  "license": "MIT",
+  "packageManager": "yarn@4.9.2"
+}
