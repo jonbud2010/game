@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import authRoutes from './authRoutes.js';
-import playerRoutes from './playerRoutes.js';
-import lobbyRoutes from './lobbyRoutes.js';
+import authRoutes from './authRoutes';
+import playerRoutes from './playerRoutes';
+import lobbyRoutes from './lobbyRoutes';
 
 const router = Router();
 

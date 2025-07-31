@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authenticateToken, requireAdmin } from '../middleware/auth.js';
-import { validateCreatePlayer, validateId } from '../middleware/validation.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { validateCreatePlayer, validateId } from '../middleware/validation';
 
 const router = Router();
 

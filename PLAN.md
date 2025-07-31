@@ -131,7 +131,7 @@ LeagueTable (id, lobby_id, user_id, points, goals_for, goals_against, position)
   - ✅ Error handling and logging setup
   - ✅ Prisma client generation completed (`db:generate`)
   - ✅ Database SQlite for local development
-  - ℹ️ PostgreSQL server setup is needed for prod environment
+  - ℹ️ PostgreSQL server setup is needed for prod environmentnp
 - [x] **Frontend-Setup**: React App Struktur, Routing
   - ✅ React Router v6 setup with nested routes
   - ✅ Main app layout with header, footer, and navigation

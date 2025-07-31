@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { prisma } from '../db/connection.js';
-import { UserRole } from '@prisma/client';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { prisma } from '../db/connection';
 
 interface RegisterRequest {
   username: string;
@@ -21,15 +20,12 @@ function generateToken(userId: string): string {
     throw new Error('JWT_SECRET environment variable is not set');
   }
   
-  return jwt.sign(
-    { userId },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
+  const options: SignOptions = { expiresIn: process.env.JWT_EXPIRES_IN || '7d' };
+  return jwt.sign({ userId }, process.env.JWT_SECRET, options);
 }
 
 // Register new user
-export async function register(req: Request<{}, {}, RegisterRequest>, res: Response) {
+export async function register(req: Request<{}, {}, RegisterRequest>, res: Response): Promise<Response> {
   try {
     const { username, email, password } = req.body;
 
@@ -59,7 +55,7 @@ export async function register(req: Request<{}, {}, RegisterRequest>, res: Respo
         email,
         passwordHash,
         coins: 1000, // Starting coins
-        role: UserRole.PLAYER
+        role: "PLAYER"
       },
       select: {
         id: true,
@@ -81,12 +77,12 @@ export async function register(req: Request<{}, {}, RegisterRequest>, res: Respo
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
 
 // Login user
-export async function login(req: Request<{}, {}, LoginRequest>, res: Response) {
+export async function login(req: Request<{}, {}, LoginRequest>, res: Response): Promise<Response> {
   try {
     const { email, password } = req.body;
 
@@ -125,12 +121,12 @@ export async function login(req: Request<{}, {}, LoginRequest>, res: Response) {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
 
 // Get current user (protected route)
-export async function getCurrentUser(req: Request, res: Response) {
+export async function getCurrentUser(req: Request, res: Response): Promise<Response> {
   try {
     const userId = (req as any).userId; // Set by auth middleware
 
@@ -151,9 +147,9 @@ export async function getCurrentUser(req: Request, res: Response) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ user });
+    return res.json({ user });
   } catch (error) {
     console.error('Get current user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

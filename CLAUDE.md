@@ -25,6 +25,9 @@ cmd /c yarn.cmd dev              # Start both frontend and backend
 cmd /c yarn.cmd dev:frontend     # Frontend only (port 5173)
 cmd /c yarn.cmd dev:backend      # Backend only (port 3001)
 
+# Alternative backend start (if yarn dev fails):
+cd backend && npx tsx src/index.ts  # Direct TypeScript execution
+
 # On Linux/Mac:
 node .yarn/releases/yarn-4.9.2.cjs dev
 ```
@@ -33,7 +36,11 @@ node .yarn/releases/yarn-4.9.2.cjs dev
 ```bash
 cmd /c yarn.cmd build            # Build all packages (shared first)
 cmd /c yarn.cmd build:frontend   # Frontend only
-cmd /c yarn.cmd build:backend    # Backend only
+cmd /c yarn.cmd build:backend    # Backend only (Note: has TypeScript config issues)
+
+# Backend building issues:
+# The backend TypeScript config currently has 'allowImportingTsExtensions' which
+# conflicts with compilation. For development, use tsx directly instead of tsc.
 ```
 
 ### Quality Assurance
@@ -119,7 +126,9 @@ Teams must have minimum 3 different colors with at least 2 players per color for
 ### Backend  
 - Express.js with TypeScript
 - SQLite for local development, PostgreSQL for production + Prisma ORM
-- JWT authentication + bcrypt (planned)
+- JWT authentication + bcrypt (implemented)
+- Lobby management system (implemented)
+- Player management endpoints (stub implementation)
 - File uploads with Multer + Sharp (planned)
 
 ### Development Status
@@ -127,10 +136,47 @@ The project is in early development phase:
 - ✅ Basic project structure and workspace setup
 - ✅ Shared types and business logic
 - ✅ Frontend component structure  
-- ✅ Backend API skeleton
-- ✅ Database setup and models (SQLite working locally)
-- 📅 Authentication system (planned)
-- 📅 Game mechanics implementation (planned)
+- ✅ Backend API skeleton with working routes
+- ✅ Database setup and models (SQLite working locally, Prisma configured)
+- ✅ Authentication system (JWT-based, implemented)
+- ✅ Lobby system (create, join, leave lobbies)
+- 📅 Player management system (stub implementation)
+- 📅 Pack system and game mechanics (planned)
+- 📅 Team building and match engine (planned)
+
+## Troubleshooting
+
+### Backend Won't Start
+If the backend crashes on startup, common issues include:
+
+1. **Module Import Errors**: 
+   - Ensure all TypeScript imports use correct paths without `.js` extensions
+   - Check that shared package types are properly exported
+
+2. **Database Connection Issues**:
+   ```bash
+   cd backend
+   npx prisma generate    # Regenerate Prisma client
+   npx prisma migrate dev # Apply latest migrations
+   ```
+
+3. **Alternative Backend Start**:
+   ```bash
+   cd backend
+   npx tsx src/index.ts   # Direct TypeScript execution bypasses build issues
+   ```
+
+4. **Environment Variables**: 
+   - Ensure `.env` file exists in backend directory with required variables
+
+### TypeScript Compilation Issues
+The project uses `tsx` for development instead of `tsc` compilation due to:
+- `allowImportingTsExtensions` conflicts with build process
+- Development workflow prioritizes speed over strict compilation
+
+### Database Issues
+- SQLite database files are located in `backend/dev.db` and `backend/prisma/dev.db`
+- Use `sqlite3 --version` to verify SQLite CLI tools are available globally
 
 ## Important Notes
 
@@ -139,4 +185,5 @@ The project is in early development phase:
 - SQLite database (dev.db) is used for local development, PostgreSQL for production
 - Shared package must be built before frontend/backend due to workspace dependencies
 - Game rules are complex - refer to PLAN.md for detailed specifications
+- Backend uses `tsx` for development instead of `tsc` compilation
 - No malicious code detected - this is a legitimate game development project

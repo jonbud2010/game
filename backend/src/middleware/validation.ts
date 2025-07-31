@@ -3,7 +3,7 @@ import Joi from 'joi';
 
 // Generic validation middleware
 function validate(schema: Joi.ObjectSchema) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): Response | void => {
     const { error } = schema.validate(req.body);
     
     if (error) {
@@ -162,7 +162,7 @@ export const validateCreatePlayer = validate(createPlayerSchema);
 export const validateCreateLobby = validate(createLobbySchema);
 
 // Generic parameter validation
-export function validateId(req: Request, res: Response, next: NextFunction) {
+export function validateId(req: Request, res: Response, next: NextFunction): Response | void {
   const { id } = req.params;
   
   if (!id || id.trim().length === 0) {

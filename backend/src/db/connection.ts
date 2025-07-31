@@ -1,4 +1,4 @@
-import prisma from './client.js';
+import prisma from './client';
 import winston from 'winston';
 
 const logger = winston.createLogger({

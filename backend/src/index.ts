@@ -3,8 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import { connectDatabase, disconnectDatabase } from './db/connection.js';
-import apiRoutes from './routes/index.js';
+import { connectDatabase, disconnectDatabase } from './db/connection';
+import apiRoutes from './routes/index';
 
 dotenv.config();
 

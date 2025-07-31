@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth.js';
-import { validateCreateLobby, validateId } from '../middleware/validation.js';
+import { authenticateToken } from '../middleware/auth';
+import { validateCreateLobby, validateId } from '../middleware/validation';
 import {
   getAllLobbies,
   getLobbyById,
   createLobby,
   joinLobby,
   leaveLobby
-} from '../controllers/lobbyController.js';
+} from '../controllers/lobbyController';
 
 const router = Router();
 

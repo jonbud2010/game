@@ -1,6 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../db/connection.js';
+import { prisma } from '../db/connection';
+
+export interface AuthenticatedRequest extends Request {
+  userId?: string;
+  user?: {
+    userId: string;
+    id: string;
+    username: string;
+    email: string;
+    role: string;
+  };
+}
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -19,7 +30,7 @@ interface JwtPayload {
 }
 
 // Authenticate JWT token
-export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
+export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -53,7 +64,7 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
 
     // Add user info to request
     req.userId = user.id;
-    req.user = user;
+    req.user = { ...user, userId: user.id } as any;
     next();
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
@@ -69,7 +80,7 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
 }
 
 // Require admin role
-export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): Response | void {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -109,7 +120,7 @@ export async function optionalAuth(req: AuthRequest, res: Response, next: NextFu
 
     if (user) {
       req.userId = user.id;
-      req.user = user;
+      req.user = { ...user, userId: user.id } as any;
     }
 
     next();

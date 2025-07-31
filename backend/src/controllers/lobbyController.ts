@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import type { AuthenticatedRequest } from '../middleware/auth.js';
+import { prisma } from '../db/connection';
+import type { AuthenticatedRequest } from '../middleware/auth';
 
-const prisma = new PrismaClient();
-
-export const getAllLobbies = async (req: Request, res: Response) => {
+export const getAllLobbies = async (req: Request, res: Response): Promise<Response> => {
   try {
     const lobbies = await prisma.lobby.findMany({
       where: {
@@ -41,20 +39,20 @@ export const getAllLobbies = async (req: Request, res: Response) => {
       }))
     }));
 
-    res.json({
+    return res.json({
       success: true,
       data: formattedLobbies
     });
   } catch (error) {
     console.error('Error fetching lobbies:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch lobbies'
     });
   }
 };
 
-export const getLobbyById = async (req: Request, res: Response) => {
+export const getLobbyById = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { id } = req.params;
 
@@ -95,20 +93,20 @@ export const getLobbyById = async (req: Request, res: Response) => {
       }))
     };
 
-    res.json({
+    return res.json({
       success: true,
       data: formattedLobby
     });
   } catch (error) {
     console.error('Error fetching lobby:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch lobby'
     });
   }
 };
 
-export const createLobby = async (req: AuthenticatedRequest, res: Response) => {
+export const createLobby = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const { name } = req.body;
     const userId = req.user!.userId;
@@ -183,21 +181,21 @@ export const createLobby = async (req: AuthenticatedRequest, res: Response) => {
       }))
     };
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: formattedLobby,
       message: 'Lobby created successfully'
     });
   } catch (error) {
     console.error('Error creating lobby:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to create lobby'
     });
   }
 };
 
-export const joinLobby = async (req: AuthenticatedRequest, res: Response) => {
+export const joinLobby = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
@@ -263,7 +261,7 @@ export const joinLobby = async (req: AuthenticatedRequest, res: Response) => {
     await prisma.$transaction(async (tx) => {
       await tx.lobbyMember.create({
         data: {
-          lobbyId: id,
+          lobbyId: id as string,
           userId
         }
       });
@@ -308,21 +306,21 @@ export const joinLobby = async (req: AuthenticatedRequest, res: Response) => {
       }))
     };
 
-    res.json({
+    return res.json({
       success: true,
       data: formattedLobby,
       message: 'Joined lobby successfully'
     });
   } catch (error) {
     console.error('Error joining lobby:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to join lobby'
     });
   }
 };
 
-export const leaveLobby = async (req: AuthenticatedRequest, res: Response) => {
+export const leaveLobby = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
@@ -382,13 +380,13 @@ export const leaveLobby = async (req: AuthenticatedRequest, res: Response) => {
       }
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Left lobby successfully'
     });
   } catch (error) {
     console.error('Error leaving lobby:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to leave lobby'
     });

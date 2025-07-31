@@ -44,7 +44,10 @@
       "Bash(../sqlite-tools/sqlite3.exe dev.db \".tables\")",
       "Bash(cp:*)",
       "Bash(setx:*)",
-      "Bash(C:/sqlite/bin/sqlite3:*)"
+      "Bash(C:/sqlite/bin/sqlite3:*)",
+      "Bash(npm --version)",
+      "Bash(npx nodemon:*)",
+      "Bash(timeout 5 npx tsx src/index.ts)"
     ],
     "deny": []
   }

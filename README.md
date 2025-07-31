@@ -37,6 +37,9 @@ node .yarn/releases/yarn-4.9.2.cjs dev
 # Oder einzeln starten:
 cmd /c yarn.cmd dev:frontend  # Frontend: http://localhost:5173
 cmd /c yarn.cmd dev:backend   # Backend: http://localhost:3001
+
+# Falls Backend-Probleme auftreten:
+cd backend && npx tsx src/index.ts  # Direkter TypeScript-Start
 ```
 
 **Yarn 4 Setup:** Das Projekt nutzt Yarn Berry (v4.9.2) für moderne Workspace-Features. Die lokale Installation ist bereits konfiguriert.
@@ -76,9 +79,10 @@ cmd /c yarn.cmd dev:backend   # Backend: http://localhost:3001
 
 ### Backend (`/backend`)
 - **Node.js + Express** REST API
-- **PostgreSQL** Datenbank mit Prisma ORM
-- **JWT** Authentifizierung + bcrypt
-- **Multer + Sharp** für Bild-Uploads
+- **SQLite** (Development) / **PostgreSQL** (Production) mit Prisma ORM
+- **JWT** Authentifizierung + bcrypt (✅ implementiert)
+- **Lobby-System** für 4-Spieler Räume (✅ implementiert)
+- **Multer + Sharp** für Bild-Uploads (geplant)
 
 ### Shared (`/shared`)
 - **TypeScript Types** für API & Game Logic
@@ -150,6 +154,25 @@ cmd /c yarn.cmd workspace @football-tcg/shared build
 - **Husky Pre-commit Hooks** für Qualitätschecks
 - **Jest + Testing Library** für umfassende Tests
 
+### 🔧 Troubleshooting
+
+**Backend startet nicht?**
+```bash
+# Backend direkt mit tsx starten:
+cd backend && npx tsx src/index.ts
+
+# Oder Prisma-Client neu generieren:
+cd backend && npx prisma generate
+```
+
+**Yarn-Workspace Probleme?**
+- Immer `yarn.cmd` auf Windows verwenden
+- Shared Package erst bauen: `cmd /c yarn.cmd workspace @football-tcg/shared build`
+
+**Datenbank-Probleme?**
+- SQLite-Datei: `backend/dev.db`
+- Migrationen: `cd backend && npx prisma migrate dev`
+
 ## 📋 Development Status
 
 Siehe [PLAN.md](./PLAN.md) für den vollständigen Entwicklungsplan.
@@ -160,13 +183,15 @@ Siehe [PLAN.md](./PLAN.md) für den vollständigen Entwicklungsplan.
 - [x] Grundlegende Komponenten-Struktur
 - [x] Backend-Grundgerüst mit Express
 - [x] Shared Types & Business Logic
+- [x] Datenbank-Setup mit Prisma ORM (SQLite)
+- [x] User Management & JWT Authentifizierung
+- [x] Lobby-System (Erstellen, Beitreten, Verlassen)
 - [x] Entwicklungsplan & Dokumentation
 
 ### 🚧 In Arbeit
-- [ ] Datenbank-Setup mit Prisma ORM
-- [ ] User Management & JWT Authentifizierung
-- [ ] Spieler-System mit CRUD-Operationen
+- [ ] Spieler-System mit CRUD-Operationen (Stub vorhanden)
 - [ ] Pack-System & Ziehungs-Mechanik
+- [ ] Frontend-Backend Integration
 
 ### 📅 Geplant
 - [ ] Team-Building Interface
