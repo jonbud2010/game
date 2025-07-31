@@ -59,7 +59,8 @@
       "Bash(npm test:*)",
       "Bash(taskkill:*)",
       "Bash(curl:*)",
-      "Bash(yarn add:*)"
+      "Bash(yarn add:*)",
+      "Bash(timeout 10s npm run dev)"
     ],
     "deny": []
   }

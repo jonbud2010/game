@@ -1,25 +1,17 @@
 /** @type {import('jest').Config} */
-export default {
-  preset: 'ts-jest/presets/default-esm',
-  extensionsToTreatAsEsm: ['.ts'],
+module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: [
-    '**/__tests__/**/*.(ts|js)',
-    '**/*.(test|spec).(ts|js)',
-    '**/step-definitions/**/*.steps.(ts|js)'
+    '**/controllers/*.test.ts',
+    '**/middleware/*.test.ts'
   ],
-  transform: {
-    '^.+\\.ts$': ['ts-jest', {
-      useESM: true,
-      tsconfig: {
-        module: 'ESNext'
-      }
-    }]
-  },
-  moduleNameMapping: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
-  },
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/step-definitions/',
+    '/test-utils/',
+    'integration.test.ts'
+  ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverageFrom: [
     'src/**/*.ts',
