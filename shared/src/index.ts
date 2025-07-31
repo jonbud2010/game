@@ -7,3 +7,4 @@ export * from './constants/game.js';
 
 // Utils
 export * from './utils/chemistry.js';
+export * from './utils/matchEngine.js';

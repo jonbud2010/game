@@ -155,11 +155,131 @@ const createLobbySchema = Joi.object({
     })
 });
 
+// Formation validation schemas
+const createFormationSchema = Joi.object({
+  name: Joi.string()
+    .min(1)
+    .max(100)
+    .required()
+    .messages({
+      'string.min': 'Formation name cannot be empty',
+      'string.max': 'Formation name must not exceed 100 characters',
+      'any.required': 'Formation name is required'
+    }),
+  
+  imageUrl: Joi.string()
+    .uri()
+    .optional()
+    .messages({
+      'string.uri': 'Image URL must be a valid URL'
+    }),
+  
+  positions: Joi.array()
+    .items(Joi.object({
+      position: Joi.string()
+        .valid('GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST', 'CF', 'LF', 'RF')
+        .required()
+        .messages({
+          'any.only': 'Position type must be valid',
+          'any.required': 'Position type is required'
+        }),
+      x: Joi.number()
+        .min(0)
+        .max(100)
+        .required()
+        .messages({
+          'number.base': 'X coordinate must be a number',
+          'number.min': 'X coordinate must be at least 0',
+          'number.max': 'X coordinate must not exceed 100',
+          'any.required': 'X coordinate is required'
+        }),
+      y: Joi.number()
+        .min(0)
+        .max(100)
+        .required()
+        .messages({
+          'number.base': 'Y coordinate must be a number',
+          'number.min': 'Y coordinate must be at least 0',
+          'number.max': 'Y coordinate must not exceed 100',
+          'any.required': 'Y coordinate is required'
+        })
+    }))
+    .length(11)
+    .required()
+    .messages({
+      'array.length': 'Formation must have exactly 11 positions',
+      'any.required': 'Positions are required'
+    })
+});
+
+// Pack validation schemas
+const createPackSchema = Joi.object({
+  name: Joi.string()
+    .min(1)
+    .max(100)
+    .required()
+    .messages({
+      'string.min': 'Pack name cannot be empty',
+      'string.max': 'Pack name must not exceed 100 characters',
+      'any.required': 'Pack name is required'
+    }),
+  
+  price: Joi.number()
+    .integer()
+    .min(1)
+    .required()
+    .messages({
+      'number.base': 'Price must be a number',
+      'number.integer': 'Price must be an integer',
+      'number.min': 'Price must be at least 1',
+      'any.required': 'Price is required'
+    }),
+  
+  imageUrl: Joi.string()
+    .uri()
+    .optional()
+    .messages({
+      'string.uri': 'Image URL must be a valid URL'
+    }),
+  
+  playerIds: Joi.array()
+    .items(Joi.string().required())
+    .optional()
+    .messages({
+      'array.base': 'Player IDs must be an array',
+      'string.base': 'Each player ID must be a string'
+    }),
+  
+  status: Joi.string()
+    .valid('ACTIVE', 'INACTIVE', 'EMPTY')
+    .optional()
+    .messages({
+      'any.only': 'Status must be ACTIVE, INACTIVE, or EMPTY'
+    })
+});
+
+// Pack player management schemas
+const packPlayerManagementSchema = Joi.object({
+  playerIds: Joi.array()
+    .items(Joi.string().required())
+    .min(1)
+    .required()
+    .messages({
+      'array.base': 'Player IDs must be an array',
+      'array.min': 'At least one player ID is required',
+      'string.base': 'Each player ID must be a string',
+      'any.required': 'Player IDs are required'
+    })
+});
+
 // Export validation middleware functions
 export const validateRegistration = validate(registerSchema);
 export const validateLogin = validate(loginSchema);
 export const validateCreatePlayer = validate(createPlayerSchema);
 export const validateCreateLobby = validate(createLobbySchema);
+export const validateCreateFormation = validate(createFormationSchema);
+export const validateCreatePack = validate(createPackSchema);
+export const validatePackPlayerManagement = validate(packPlayerManagementSchema);
 
 // Generic parameter validation
 export function validateId(req: Request, res: Response, next: NextFunction): Response | void {

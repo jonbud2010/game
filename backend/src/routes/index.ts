@@ -2,6 +2,11 @@ import { Router } from 'express';
 import authRoutes from './authRoutes';
 import playerRoutes from './playerRoutes';
 import lobbyRoutes from './lobbyRoutes';
+import formationRoutes from './formationRoutes';
+import packRoutes from './packRoutes';
+import teamRoutes from './teamRoutes';
+import matchRoutes from './matchRoutes';
+import uploadRoutes from './uploadRoutes';
 
 const router = Router();
 
@@ -9,6 +14,11 @@ const router = Router();
 router.use('/auth', authRoutes);
 router.use('/players', playerRoutes);
 router.use('/lobbies', lobbyRoutes);
+router.use('/formations', formationRoutes);
+router.use('/packs', packRoutes);
+router.use('/teams', teamRoutes);
+router.use('/matches', matchRoutes);
+router.use('/uploads', uploadRoutes);
 
 // Health check route (already defined in index.ts, but can be organized here too)
 router.get('/health', (req, res) => {
@@ -29,10 +39,10 @@ router.get('/', (req, res) => {
       auth: '/api/auth',
       players: '/api/players',
       lobbies: '/api/lobbies',
-      formations: '/api/formations (coming soon)',
-      packs: '/api/packs (coming soon)',
-      teams: '/api/teams (coming soon)',
-      matches: '/api/matches (coming soon)',
+      formations: '/api/formations',
+      packs: '/api/packs',
+      teams: '/api/teams',
+      matches: '/api/matches',
       league: '/api/league (coming soon)'
     }
   });

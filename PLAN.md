@@ -161,16 +161,51 @@ LeagueTable (id, lobby_id, user_id, points, goals_for, goals_against, position)
   - ✅ 4-player limit enforcement and status transitions
 
 ### Phase 2: Content Management (Woche 3-4)  
-- [ ] **Admin-Panel**: Spieler/Formation/Pack CRUD
-- [ ] **File-Upload**: Bild-Upload mit Validierung/Komprimierung
-- [ ] **Spieler-System**: Vollständige Spieler-Verwaltung
-- [ ] **Pack-System**: Pack-Erstellung und Pool-Management
+- [x] **Admin-Panel**: Spieler/Formation/Pack CRUD
+  - ✅ Admin Dashboard mit Navigation zu allen Verwaltungsbereichen
+  - ✅ Spieler-Management: Vollständiges CRUD Interface mit Bildupload
+  - ✅ Formation-Management: Visueller Editor mit 11 Positionsangaben
+  - ✅ Pack-Management: CRUD mit Spielerpool-Verwaltung (Drag&Drop Auswahl)
+  - ✅ Admin-only Routing mit Rollenbasiertem Zugriff
+- [x] **File-Upload**: Bild-Upload mit Validierung/Komprimierung
+  - ✅ Multer + Sharp Integration für Bildverarbeitung
+  - ✅ Automatische WebP Konvertierung und Größenanpassung
+  - ✅ Kategorie-spezifische Bildgrößen (Spieler: 400x400, Formation: 800px, Pack: 300x300)
+  - ✅ Validierung für Dateityp, Größe und sichere Speicherung
+  - ✅ Static File Serving für hochgeladene Bilder
+- [x] **Spieler-System**: Vollständige Spieler-Verwaltung
+  - ✅ Backend Controller mit vollständigem CRUD (Create, Read, Update, Delete)
+  - ✅ Erweiterte Filterung nach Position, Farbe, Thema, Punkten, Preis
+  - ✅ Validierung aller Spielerattribute mit Joi Schemas
+  - ✅ Frontend Interface mit Formular, Tabelle und Bildupload
+  - ✅ Übersichtliche Darstellung mit Farbbadges und Statistiken
+- [x] **Pack-System**: Pack-Erstellung und Pool-Management
+  - ✅ Backend Controller für Pack CRUD und Spielerpool-Management
+  - ✅ API Endpunkte zum Hinzufügen/Entfernen von Spielern zu/von Packs
+  - ✅ Prozentsatz-basierte Wahrscheinlichkeitsberechnung
+  - ✅ Frontend Interface mit Spielerauswahl und Pool-Verwaltung
+  - ✅ Status-Management (ACTIVE, INACTIVE, EMPTY) für Pack-Verfügbarkeit
 
 ### Phase 3: Gameplay Core (Woche 5-6)
-- [ ] **Team-Builder**: Formation-basiertes Team-Building
-- [ ] **Chemie-Engine**: Farbbasierte Bonus-Berechnung  
-- [ ] **Pack-Opening**: Prozentsatz-basierte Ziehung
-- [ ] **Match-Engine**: Realistische Spiel-Simulation
+- [x] **Team-Builder**: Formation-basiertes Team-Building
+  - ✅ TeamBuilderPage.tsx mit Drag & Drop Interface
+  - ✅ Team CRUD Controller mit Formation-Validierung
+  - ✅ Positionszuordnung und Team-Statistiken
+  - ✅ Multi-Matchday Support (3 Teams pro User)
+- [x] **Chemie-Engine**: Farbbasierte Bonus-Berechnung
+  - ✅ Chemistry utilities bereits implementiert in Phase 2
+  - ✅ Integration in Team-Builder und Match-Engine
+  - ✅ Real-time Chemie-Validierung und -Anzeige
+- [x] **Pack-Opening**: Prozentsatz-basierte Ziehung
+  - ✅ Percentage-based drawing algorithm
+  - ✅ Dynamic pool management (shrinking pools)
+  - ✅ PackStorePage mit Animationen und Result-Modal
+  - ✅ Coin-System Integration
+- [x] **Match-Engine**: Realistische Spiel-Simulation
+  - ✅ Team strength calculation (Spieler + Chemie)
+  - ✅ 100-Chancen Simulation System
+  - ✅ Match Controller für Einzel- und Matchday-Simulation
+  - ✅ League table management und Points-System
 
 ### Phase 4: Liga-System (Woche 7-8)
 - [ ] **Tournament-Engine**: Jeder-gegen-jeden Logik

@@ -16,12 +16,12 @@ interface LoginRequest {
 
 // Generate JWT token
 function generateToken(userId: string): string {
-  if (!process.env.JWT_SECRET) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
     throw new Error('JWT_SECRET environment variable is not set');
   }
   
-  const options: SignOptions = { expiresIn: process.env.JWT_EXPIRES_IN || '7d' };
-  return jwt.sign({ userId }, process.env.JWT_SECRET, options);
+  return jwt.sign({ userId }, secret);
 }
 
 // Register new user
@@ -70,7 +70,7 @@ export async function register(req: Request<{}, {}, RegisterRequest>, res: Respo
     // Generate token
     const token = generateToken(user.id);
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'User registered successfully',
       user,
       token
@@ -114,7 +114,7 @@ export async function login(req: Request<{}, {}, LoginRequest>, res: Response): 
       createdAt: user.createdAt
     };
 
-    res.json({
+    return res.json({
       message: 'Login successful',
       user: userResponse,
       token

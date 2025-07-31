@@ -1,57 +1,297 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { apiService, type Player } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+
+interface UserPlayer {
+  id: string;
+  playerId: string;
+  acquiredAt: string;
+  player: Player;
+}
 
 const CollectionPage: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [userPlayers, setUserPlayers] = useState<UserPlayer[]>([]);
+  const [filteredPlayers, setFilteredPlayers] = useState<UserPlayer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [positionFilter, setPositionFilter] = useState<string>('');
+  const [colorFilter, setColorFilter] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'points' | 'name'>('newest');
+
+  // Load user's collection
+  useEffect(() => {
+    const loadCollection = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Note: This API endpoint would need to be implemented in the backend
+        // For now, we'll create a placeholder
+        setUserPlayers([]);
+        
+        // In the real implementation, this would be:
+        // const response = await apiService.getUserCollection();
+        // if (response.success && response.data) {
+        //   setUserPlayers(response.data);
+        // }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load collection');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      loadCollection();
+    }
+  }, [user]);
+
+  // Filter and sort players
+  useEffect(() => {
+    let filtered = [...userPlayers];
+
+    // Apply position filter
+    if (positionFilter) {
+      filtered = filtered.filter(up => up.player.position === positionFilter);
+    }
+
+    // Apply color filter
+    if (colorFilter) {
+      filtered = filtered.filter(up => up.player.color === colorFilter.toLowerCase());
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.acquiredAt).getTime() - new Date(a.acquiredAt).getTime();
+        case 'oldest':
+          return new Date(a.acquiredAt).getTime() - new Date(b.acquiredAt).getTime();
+        case 'points':
+          return b.player.points - a.player.points;
+        case 'name':
+          return a.player.name.localeCompare(b.player.name);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredPlayers(filtered);
+  }, [userPlayers, positionFilter, colorFilter, sortBy]);
+
+  // Calculate collection stats
+  const getCollectionStats = () => {
+    const totalCards = userPlayers.length;
+    const uniquePlayers = new Set(userPlayers.map(up => up.playerId)).size;
+    const totalPoints = userPlayers.reduce((sum, up) => sum + up.player.points, 0);
+    const colorDistribution = userPlayers.reduce((acc, up) => {
+      acc[up.player.color] = (acc[up.player.color] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return { totalCards, uniquePlayers, totalPoints, colorDistribution };
+  };
+
+  const stats = getCollectionStats();
+
+  // Get unique positions and colors for filters
+  const availablePositions = [...new Set(userPlayers.map(up => up.player.position))].sort();
+  const availableColors = [...new Set(userPlayers.map(up => up.player.color))].sort();
+
+  const handleNavigateToPackStore = () => {
+    navigate('/pack-store');
+  };
+
+  const handleNavigateToTeamBuilder = () => {
+    navigate('/team-builder');
+  };
+
+  if (loading) {
+    return (
+      <div className="collection-page">
+        <div className="loading">Loading your collection...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="collection-page">
       <div className="page-header">
         <h1>📚 Meine Sammlung</h1>
         <p>Verwalte deine Spielerkarten und erstelle Teams</p>
       </div>
+
+      {error && (
+        <div className="error-message">
+          {error}
+          <button onClick={() => setError(null)} className="close-error">×</button>
+        </div>
+      )}
       
       <div className="collection-stats">
         <div className="stat-card">
           <h3>Gesammelte Karten</h3>
-          <span className="stat-value">0</span>
+          <span className="stat-value">{stats.totalCards}</span>
+          <small>({stats.uniquePlayers} unique)</small>
         </div>
         <div className="stat-card">
           <h3>Münzen</h3>
-          <span className="stat-value">1000</span>
+          <span className="stat-value">{user?.coins || 0}</span>
         </div>
         <div className="stat-card">
-          <h3>Teams erstellt</h3>
-          <span className="stat-value">0</span>
+          <h3>Gesamtpunkte</h3>
+          <span className="stat-value">{stats.totalPoints}</span>
+        </div>
+        <div className="stat-card">
+          <h3>Farben</h3>
+          <span className="stat-value">{Object.keys(stats.colorDistribution).length}</span>
         </div>
       </div>
-      
-      <div className="collection-filters">
-        <select className="filter-select">
-          <option value="">Alle Positionen</option>
-          <option value="GK">Torwart</option>
-          <option value="CB">Innenverteidiger</option>
-          <option value="ST">Stürmer</option>
-        </select>
-        
-        <select className="filter-select">
-          <option value="">Alle Farben</option>
-          <option value="RED">Rot</option>
-          <option value="BLUE">Blau</option>
-          <option value="GREEN">Grün</option>
-        </select>
-      </div>
+
+      {userPlayers.length > 0 && (
+        <>
+          <div className="collection-controls">
+            <div className="collection-filters">
+              <select 
+                className="filter-select"
+                value={positionFilter}
+                onChange={(e) => setPositionFilter(e.target.value)}
+              >
+                <option value="">Alle Positionen</option>
+                {availablePositions.map(position => (
+                  <option key={position} value={position}>{position}</option>
+                ))}
+              </select>
+              
+              <select 
+                className="filter-select"
+                value={colorFilter}
+                onChange={(e) => setColorFilter(e.target.value)}
+              >
+                <option value="">Alle Farben</option>
+                {availableColors.map(color => (
+                  <option key={color} value={color}>{color.charAt(0).toUpperCase() + color.slice(1)}</option>
+                ))}
+              </select>
+
+              <select 
+                className="filter-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="points">Highest Points</option>
+                <option value="name">Alphabetical</option>
+              </select>
+            </div>
+
+            <div className="collection-actions">
+              <button className="btn btn-secondary" onClick={handleNavigateToTeamBuilder}>
+                🏗️ Team Builder
+              </button>
+              <button className="btn btn-primary" onClick={handleNavigateToPackStore}>
+                🎁 Open Packs
+              </button>
+            </div>
+          </div>
+
+          <div className="collection-summary">
+            <p>Showing {filteredPlayers.length} of {userPlayers.length} cards</p>
+          </div>
+        </>
+      )}
       
       <div className="collection-grid">
-        <div className="empty-collection">
-          <p>🃏 Keine Karten in deiner Sammlung</p>
-          <p>Öffne Packs, um Spieler zu sammeln!</p>
-          <button className="btn btn-primary">
-            Zum Pack Store
-          </button>
+        {userPlayers.length === 0 ? (
+          <div className="empty-collection">
+            <div className="empty-icon">🃏</div>
+            <h3>Keine Karten in deiner Sammlung</h3>
+            <p>Öffne Packs, um Spieler zu sammeln und Teams zu erstellen!</p>
+            <div className="empty-actions">
+              <button className="btn btn-primary" onClick={handleNavigateToPackStore}>
+                🎁 Zum Pack Store
+              </button>
+            </div>
+          </div>
+        ) : filteredPlayers.length === 0 ? (
+          <div className="no-results">
+            <p>Keine Spieler entsprechen den aktuellen Filtern</p>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => {
+                setPositionFilter('');
+                setColorFilter('');
+              }}
+            >
+              Filter zurücksetzen
+            </button>
+          </div>
+        ) : (
+          filteredPlayers.map(userPlayer => (
+            <div key={userPlayer.id} className="player-card">
+              <div className="card-header">
+                <img
+                  src={userPlayer.player.imageUrl || '/images/players/default.jpg'}
+                  alt={userPlayer.player.name}
+                  className="player-image"
+                />
+                <div 
+                  className="player-color-indicator"
+                  style={{ backgroundColor: `var(--color-${userPlayer.player.color})` }}
+                />
+              </div>
+              
+              <div className="card-content">
+                <h3 className="player-name">{userPlayer.player.name}</h3>
+                <div className="player-details">
+                  <span className="player-position">{userPlayer.player.position}</span>
+                  <span className="player-points">{userPlayer.player.points} pts</span>
+                </div>
+                <div className="player-meta">
+                  <span className="player-theme">{userPlayer.player.theme}</span>
+                  <span className="acquired-date">
+                    {new Date(userPlayer.acquiredAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="card-actions">
+                <button 
+                  className="btn btn-small btn-secondary"
+                  onClick={handleNavigateToTeamBuilder}
+                  title="Use in team"
+                >
+                  ⚽
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {userPlayers.length > 0 && (
+        <div className="collection-footer">
+          <div className="color-distribution">
+            <h4>Color Distribution:</h4>
+            <div className="color-bars">
+              {Object.entries(stats.colorDistribution).map(([color, count]) => (
+                <div key={color} className="color-bar">
+                  <div 
+                    className="color-indicator"
+                    style={{ backgroundColor: `var(--color-${color})` }}
+                  />
+                  <span className="color-name">{color}</span>
+                  <span className="color-count">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-      
-      <div className="coming-soon">
-        <p>🚧 Sammlungs-Management wird bald implementiert</p>
-      </div>
+      )}
     </div>
   );
 };

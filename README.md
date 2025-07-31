@@ -129,6 +129,7 @@ football-tcg/
 cmd /c yarn.cmd dev             # Beide Services starten
 cmd /c yarn.cmd dev:frontend    # Nur Frontend (Port 5173)
 cmd /c yarn.cmd dev:backend     # Nur Backend (Port 3001)
+cmd /c yarn.cmd dev:backend:clean  # Backend mit Port-Freigabe
 
 # Build
 cmd /c yarn.cmd build           # Alle Packages bauen
@@ -158,6 +159,12 @@ cmd /c yarn.cmd workspace @football-tcg/shared build
 
 **Backend startet nicht?**
 ```bash
+# Port 3001 freigeben (tötet hängende Prozesse):
+cmd /c yarn.cmd kill-port
+
+# Backend mit sauberem Start:
+cmd /c yarn.cmd dev:backend:clean
+
 # Backend direkt mit tsx starten:
 cd backend && npx tsx src/index.ts
 

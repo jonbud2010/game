@@ -25,6 +25,9 @@ cmd /c yarn.cmd dev              # Start both frontend and backend
 cmd /c yarn.cmd dev:frontend     # Frontend only (port 5173)
 cmd /c yarn.cmd dev:backend      # Backend only (port 3001)
 
+# Clean start (kills dangling processes first):
+cmd /c yarn.cmd dev:backend:clean  # Kill port 3001 processes, then start backend
+
 # Alternative backend start (if yarn dev fails):
 cd backend && npx tsx src/index.ts  # Direct TypeScript execution
 
@@ -36,11 +39,10 @@ node .yarn/releases/yarn-4.9.2.cjs dev
 ```bash
 cmd /c yarn.cmd build            # Build all packages (shared first)
 cmd /c yarn.cmd build:frontend   # Frontend only
-cmd /c yarn.cmd build:backend    # Backend only (Note: has TypeScript config issues)
+cmd /c yarn.cmd build:backend    # Backend only (✅ working)
 
-# Backend building issues:
-# The backend TypeScript config currently has 'allowImportingTsExtensions' which
-# conflicts with compilation. For development, use tsx directly instead of tsc.
+# Backend uses tsx for both development and production start
+# TypeScript compilation (tsc) generates dist files for type checking
 ```
 
 ### Quality Assurance
@@ -149,30 +151,40 @@ The project is in early development phase:
 ### Backend Won't Start
 If the backend crashes on startup, common issues include:
 
-1. **Module Import Errors**: 
+1. **Port Already in Use (EADDRINUSE)**:
+   ```bash
+   # Kill any processes on port 3001:
+   cmd /c yarn.cmd kill-port
+   
+   # Or use the clean start command:
+   cmd /c yarn.cmd dev:backend:clean
+   ```
+
+2. **Module Import Errors**: 
    - Ensure all TypeScript imports use correct paths without `.js` extensions
    - Check that shared package types are properly exported
 
-2. **Database Connection Issues**:
+3. **Database Connection Issues**:
    ```bash
    cd backend
    npx prisma generate    # Regenerate Prisma client
    npx prisma migrate dev # Apply latest migrations
    ```
 
-3. **Alternative Backend Start**:
+4. **Alternative Backend Start**:
    ```bash
    cd backend
    npx tsx src/index.ts   # Direct TypeScript execution bypasses build issues
    ```
 
-4. **Environment Variables**: 
+5. **Environment Variables**: 
    - Ensure `.env` file exists in backend directory with required variables
 
-### TypeScript Compilation Issues
-The project uses `tsx` for development instead of `tsc` compilation due to:
-- `allowImportingTsExtensions` conflicts with build process
-- Development workflow prioritizes speed over strict compilation
+### TypeScript Compilation ✅ 
+The backend now properly supports both development and production builds:
+- Development: Uses `tsx` for fast TypeScript execution
+- Production: TypeScript compiles successfully with `tsc`
+- Type checking: `npm run type-check` validates without emitting files
 
 ### Database Issues
 - SQLite database files are located in `backend/dev.db` and `backend/prisma/dev.db`
@@ -185,5 +197,5 @@ The project uses `tsx` for development instead of `tsc` compilation due to:
 - SQLite database (dev.db) is used for local development, PostgreSQL for production
 - Shared package must be built before frontend/backend due to workspace dependencies
 - Game rules are complex - refer to PLAN.md for detailed specifications
-- Backend uses `tsx` for development instead of `tsc` compilation
+- Backend uses `tsx` for runtime execution, `tsc` for building and type checking
 - No malicious code detected - this is a legitimate game development project

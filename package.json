@@ -12,6 +12,8 @@
     "dev": "concurrently \"yarn workspace @football-tcg/frontend dev\" \"yarn workspace @football-tcg/backend dev\"",
     "dev:frontend": "yarn workspace @football-tcg/frontend dev",
     "dev:backend": "yarn workspace @football-tcg/backend dev",
+    "kill-port": "yarn workspace @football-tcg/backend kill-port",
+    "dev:backend:clean": "yarn workspace @football-tcg/backend dev:clean",
     "build": "yarn workspace @football-tcg/shared build && yarn workspace @football-tcg/frontend build && yarn workspace @football-tcg/backend build",
     "build:frontend": "yarn workspace @football-tcg/frontend build",
     "build:backend": "yarn workspace @football-tcg/backend build",

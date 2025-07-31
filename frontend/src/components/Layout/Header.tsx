@@ -49,6 +49,20 @@ const Header: React.FC = () => {
           >
             Packs
           </Link>
+          <Link 
+            to="/team-builder" 
+            className={`nav-link ${isActive('/team-builder') ? 'active' : ''}`}
+          >
+            Team Builder
+          </Link>
+          {isAuthenticated && user?.role === 'ADMIN' && (
+            <Link 
+              to="/admin" 
+              className={`nav-link admin-link ${location.pathname.startsWith('/admin') ? 'active' : ''}`}
+            >
+              🔧 Admin
+            </Link>
+          )}
         </nav>
         
         <div className="user-actions">

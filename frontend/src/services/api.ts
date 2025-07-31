@@ -46,6 +46,102 @@ export interface CreateLobbyRequest {
   name: string;
 }
 
+export interface Player {
+  id: string;
+  name: string;
+  imageUrl: string;
+  points: number;
+  position: string;
+  color: string;
+  marketPrice: number;
+  theme: string;
+  percentage: number;
+}
+
+export interface Formation {
+  id: string;
+  name: string;
+  imageUrl: string;
+  positions: string;
+}
+
+export interface Pack {
+  id: string;
+  name: string;
+  imageUrl: string;
+  price: number;
+  playerCount: number;
+  status: 'ACTIVE' | 'INACTIVE' | 'EMPTY';
+}
+
+export interface TeamPlayer {
+  positionId: string;
+  playerId: string | null;
+  position: number;
+  points: number;
+  color: string;
+  player?: Player;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  userId: string;
+  lobbyId: string;
+  formationId: string;
+  matchDay: number;
+  teamPlayers: TeamPlayer[];
+  formation?: Formation;
+  stats?: {
+    totalPoints: number;
+    chemistryPoints: number;
+    totalStrength: number;
+  };
+}
+
+export interface CreateTeamRequest {
+  lobbyId: string;
+  formationId: string;
+  name: string;
+  matchDay: number;
+  players: Array<{
+    playerId: string;
+    points: number;
+    color: string;
+  }>;
+}
+
+export interface UpdateTeamRequest {
+  name?: string;
+  players?: Array<{
+    playerId: string;
+    points: number;
+    color: string;
+  }>;
+}
+
+export interface Match {
+  id: string;
+  lobbyId: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeScore: number;
+  awayScore: number;
+  matchDay: number;
+  played: boolean;
+  playedAt?: string;
+  homeTeam?: Team;
+  awayTeam?: Team;
+}
+
+export interface PackOpenResult {
+  drawnPlayer: Player;
+  coinsSpent: number;
+  remainingCoins: number;
+  remainingPlayersInPack: number;
+  packNowEmpty: boolean;
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -141,6 +237,117 @@ class ApiService {
     return this.makeRequest<ApiResponse<void>>(`/lobbies/${id}/leave`, {
       method: 'POST',
     });
+  }
+
+  // Formation methods
+  async getFormations(): Promise<ApiResponse<Formation[]>> {
+    return this.makeRequest<ApiResponse<Formation[]>>('/formations');
+  }
+
+  async getFormation(id: string): Promise<ApiResponse<Formation>> {
+    return this.makeRequest<ApiResponse<Formation>>(`/formations/${id}`);
+  }
+
+  // Player methods
+  async getPlayers(): Promise<ApiResponse<Player[]>> {
+    return this.makeRequest<ApiResponse<Player[]>>('/players');
+  }
+
+  async getPlayer(id: string): Promise<ApiResponse<Player>> {
+    return this.makeRequest<ApiResponse<Player>>(`/players/${id}`);
+  }
+
+  // Pack methods
+  async getAvailablePacks(): Promise<ApiResponse<Pack[]>> {
+    return this.makeRequest<ApiResponse<Pack[]>>('/packs/available');
+  }
+
+  async openPack(packId: string): Promise<ApiResponse<PackOpenResult>> {
+    return this.makeRequest<ApiResponse<PackOpenResult>>(`/packs/${packId}/open`, {
+      method: 'POST',
+    });
+  }
+
+  // Team methods
+  async getUserTeams(lobbyId: string): Promise<ApiResponse<Team[]>> {
+    return this.makeRequest<ApiResponse<Team[]>>(`/teams/lobby/${lobbyId}`);
+  }
+
+  async getTeam(id: string): Promise<ApiResponse<Team>> {
+    return this.makeRequest<ApiResponse<Team>>(`/teams/${id}`);
+  }
+
+  async createTeam(teamData: CreateTeamRequest): Promise<ApiResponse<Team>> {
+    return this.makeRequest<ApiResponse<Team>>('/teams', {
+      method: 'POST',
+      body: JSON.stringify(teamData),
+    });
+  }
+
+  async updateTeam(id: string, teamData: UpdateTeamRequest): Promise<ApiResponse<Team>> {
+    return this.makeRequest<ApiResponse<Team>>(`/teams/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(teamData),
+    });
+  }
+
+  async deleteTeam(id: string): Promise<ApiResponse<void>> {
+    return this.makeRequest<ApiResponse<void>>(`/teams/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async validateTeam(id: string): Promise<ApiResponse<{
+    isValid: boolean;
+    errors: string[];
+    playerCount: number;
+    requiredPlayers: number;
+  }>> {
+    return this.makeRequest<ApiResponse<{
+      isValid: boolean;
+      errors: string[];
+      playerCount: number;
+      requiredPlayers: number;
+    }>>(`/teams/${id}/validate`);
+  }
+
+  // Match methods
+  async getLobbyMatches(lobbyId: string): Promise<ApiResponse<Match[]>> {
+    return this.makeRequest<ApiResponse<Match[]>>(`/matches/lobby/${lobbyId}`);
+  }
+
+  async getMatch(id: string): Promise<ApiResponse<Match>> {
+    return this.makeRequest<ApiResponse<Match>>(`/matches/${id}`);
+  }
+
+  async generateMatchdayMatches(lobbyId: string, matchDay: number): Promise<ApiResponse<Match[]>> {
+    return this.makeRequest<ApiResponse<Match[]>>(`/matches/lobby/${lobbyId}/generate`, {
+      method: 'POST',
+      body: JSON.stringify({ matchDay }),
+    });
+  }
+
+  async simulateMatch(matchId: string): Promise<ApiResponse<any>> {
+    return this.makeRequest<ApiResponse<any>>(`/matches/${matchId}/simulate`, {
+      method: 'POST',
+    });
+  }
+
+  async simulateMatchday(lobbyId: string, matchDay: number): Promise<ApiResponse<any>> {
+    return this.makeRequest<ApiResponse<any>>(`/matches/lobby/${lobbyId}/simulate-matchday`, {
+      method: 'POST',
+      body: JSON.stringify({ matchDay }),
+    });
+  }
+
+  async getLeagueTable(lobbyId: string): Promise<ApiResponse<any[]>> {
+    return this.makeRequest<ApiResponse<any[]>>(`/matches/lobby/${lobbyId}/table`);
+  }
+
+  // User collection methods (placeholder for future implementation)
+  async getUserCollection(): Promise<ApiResponse<any[]>> {
+    // This would need to be implemented in the backend
+    return Promise.resolve({ success: true, data: [] });
   }
 }
 
