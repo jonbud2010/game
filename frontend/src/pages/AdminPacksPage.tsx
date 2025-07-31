@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
+import { apiService } from '../services/api';
 
 interface Pack {
   id: string;
@@ -82,11 +83,8 @@ const AdminPacksPage: React.FC = () => {
 
   const fetchPlayers = async () => {
     try {
-      const response = await fetch('/api/players');
-      if (response.ok) {
-        const data = await response.json();
-        setPlayers(data.data || []);
-      }
+      const data = await apiService.getPlayers();
+      setPlayers(data.data || []);
     } catch (err) {
       console.error('Error fetching players:', err);
     }

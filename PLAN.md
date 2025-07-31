@@ -21,29 +21,22 @@ Ein browserbasiertes Fußball-Sammelkartenspiel für genau 4 Spieler mit komplex
 - **Business Logic**: Zentrale Game-Logik im Shared Package
 
 ### Frontend (`/frontend`)
-- **Framework**: React 19 mit TypeScript
-- **Build Tool**: Vite mit HMR
-- **State Management**: Redux Toolkit / Zustand
-- **Styling**: CSS Modules / Styled Components
-- **Testing**: Jest + React Testing Library + Playwright
+- **Framework**: React 19 mit TypeScript + Vite
+- **State Management**: Context API mit Custom Hooks
+- **Styling**: CSS mit Mobile-First Design
+- **Testing**: Jest + React Testing Library (implementiert)
 
 ### Backend (`/backend`)
-- **Runtime**: Node.js mit Express.js
-- **Datenbank**: PostgreSQL mit Prisma ORM
+- **Runtime**: Node.js mit Express.js + TypeScript
+- **Datenbank**: SQLite (dev) / PostgreSQL (prod) mit Prisma ORM
 - **Authentifizierung**: JWT + bcrypt Hashing
 - **File Upload**: Multer + Sharp (Bildkomprimierung)
-- **Validation**: Joi Schema Validation
+- **Testing**: Jest mit supertest (70% Coverage-Ziel konfiguriert)
 
 ### Shared (`/shared`)
 - **Types**: Game Types, API Interfaces
-- **Utils**: Chemie-Berechnung, Validierung
+- **Utils**: Chemie-Berechnung, Match-Engine
 - **Constants**: Game-Konstanten, Konfiguration
-
-### DevOps & Qualität
-- **Linting**: ESLint + TypeScript-ESLint
-- **Testing**: 80%+ Code Coverage
-- **Documentation**: OpenAPI/Swagger
-- **Error Tracking**: Winston Logger
 
 ---
 
@@ -51,311 +44,287 @@ Ein browserbasiertes Fußball-Sammelkartenspiel für genau 4 Spieler mit komplex
 
 ### 👥 Spieler-System
 - **Attribute**: Bild, Punktzahl, Position, Farbe, Marktpreis, Thema, Prozentsatz
-- **Sichtbarkeit**: Spieler sehen nur das Bild
-- **Admin-Verwaltung**: Vollständige CRUD-Operationen
-
-### 🔄 Formation-System
-- **Struktur**: 11 definierte Positionen pro Formation
-- **Sichtbarkeit**: Spieler sehen nur das Formations-Bild
-- **Positionszuordnung**: Spieler können nur auf passende Positionen gesetzt werden
-
-### 📦 Pack-System
-- **Kaufprozess**: Kaufbestätigung → Zufällige Ziehung
-- **Pool-Management**: Prozentsatz-basierte Wahrscheinlichkeit
-- **Dynamik**: Pool schrumpft nach jeder Ziehung, Prozentsätze werden neu berechnet
-- **Pack-Lebenszyklus**: Verschwindet wenn Pool leer ist
-
-### ⚽ Team-Building
-- **Team-Größe**: 11 Spieler pro Team
-- **Formation-Bindung**: Spieler müssen zu Formation-Positionen passen
-- **Mehrfach-Teams**: 3 verschiedene Teams pro Spieltag (33 Spieler total)
-- **Auto-Fill**: Leere Plätze werden mit 0-Punkt Dummy-Spielern gefüllt
+- **15 Positionen**: GK, CB, LB, RB, CDM, CM, CAM, LM, RM, LW, RW, ST, CF, LF, RF
+- **10 Farben**: red, blue, green, yellow, purple, orange, pink, cyan, lime, indigo
 
 ### 🧪 Chemie-System
 - **Farb-Regel**: Minimum 3 verschiedene Farben, mindestens 2 Spieler pro Farbe
-- **Bonus-Berechnung**: 
-  - 2 Spieler: 4 Punkte
-  - 3 Spieler: 9 Punkte  
-  - 4 Spieler: 16 Punkte
-  - 5 Spieler: 25 Punkte
-  - 6 Spieler: 36 Punkte
-  - 7 Spieler: 49 Punkte
-- **Gesamt-Chemie**: Summe aller drei Farben
+- **Bonus-Berechnung**: 2²=4, 3²=9, 4²=16, 5²=25, 6²=36, 7²=49 Punkte pro Farbe
 
 ### ⚔️ Match-Engine
 - **Team-Stärke**: Spieler-Punkte + Chemie-Bonus
-- **Basis-Chance**: 1% pro Team
-- **Modifikation**: 
-  - +0.05% pro Punkt über Durchschnitt
-  - -0.01% pro Punkt unter Durchschnitt
-- **Simulation**: 100 Torchancen pro Team pro Spiel
-- **Ergebnis**: Realistische Tor-Verteilung
-
-### 🏆 Liga-System
-- **Format**: Jeder gegen jeden (6 Spiele pro Spieltag)
-- **Punkte-System**: 3 (Sieg) / 1 (Unentschieden) / 0 (Niederlage)
-- **Tabellen-Sortierung**: Punkte → Torverhältnis
+- **Simulation**: 100 Torchancen pro Team basierend auf Stärke-Verhältnis
+- **Liga-Format**: Jeder gegen jeden, 3 Spieltage (18 Matches total)
 - **Belohnungen**: 250/200/150/100 Münzen für Plätze 1-4
 
 ---
 
-## 📊 Datenbank-Schema
+## ✅ Abgeschlossene Entwicklung (Phasen 1-5)
 
-### Core Entities
-```sql
-Users (id, username, email, password_hash, coins, role)
-Lobbies (id, name, max_players, status, created_at)
-LobbyMembers (lobby_id, user_id, joined_at)
+### Grundlagen & Infrastructure ✅
+- **Backend-Setup**: Express Server, SQLite/PostgreSQL, JWT Auth, Prisma ORM
+- **Frontend-Setup**: React 19 + TypeScript, Vite, Router, Context API
+- **User Management**: Registrierung, Login, Protected Routes, Session Persistence
 
-Players (id, name, image_url, points, position, color, market_price, theme, percentage)
-Formations (id, name, image_url, positions[11])
-Packs (id, name, image_url, price, player_pool, status)
+### Content Management System ✅
+- **Admin-Panel**: Vollständiges CRUD für Spieler, Formationen, Packs
+- **File-Upload**: Multer + Sharp mit WebP-Konvertierung und Größenanpassung
+- **Spieler-System**: Backend Controller + Frontend Interface mit Filterung
+- **Pack-System**: Prozentsatz-basierte Wahrscheinlichkeit und Pool-Management
 
-UserPlayers (id, user_id, player_id, acquired_at)
-Teams (id, user_id, lobby_id, formation_id, players[11], name)
-Matches (id, lobby_id, team1_id, team2_id, score1, score2, match_day)
-LeagueTable (id, lobby_id, user_id, points, goals_for, goals_against, position)
+### Gameplay Core & Liga-System ✅
+- **Team-Builder**: Drag & Drop Interface mit Formation-Validierung
+- **Chemie-Engine**: Farbbasierte Bonus-Berechnung (shared utilities)
+- **Pack-Opening**: Dynamische Pool-Verwaltung mit Animationen
+- **Match-Engine**: 100-Chancen Simulation mit realistischen Ergebnissen
+- **Tournament-Engine**: Automatische Liga-Erstellung und -Simulation
+- **Tabellen-System**: Sortierung nach Punkten und Torverhältnis
+
+### Polish & Initial Testing ✅
+- **UI/UX**: Mobile-First Responsive Design, Loading States, Error Boundaries
+- **Performance**: Code Splitting, Lazy Loading, Bundle Optimierung
+- **Basic Testing**: Jest Setup für alle 3 Packages mit initialen Tests
+- **Accessibility**: WCAG 2.1 Compliance, Keyboard Navigation, Screen Reader Support
+
+**Aktueller Status**: Funktionsfähiges Multiplayer-Spiel mit vollständiger Feature-Set
+
+---
+
+## 🧪 Phase 6: Backend Test Design & Gherkin Scenarios (Woche 11)
+
+### Ziel: Comprehensive Test Planning mit Behavior-Driven Development
+
+#### 6.1 Gherkin Feature Files erstellen
+- **Authentication.feature**: Login, Register, JWT Validation, Role-based Access
+- **Lobby.feature**: Create/Join/Leave Lobbies, 4-Player Limits, Status Transitions
+- **Players.feature**: CRUD Operations, Admin Permissions, File Upload, Validation
+- **Packs.feature**: Purchase Flow, Drawing Algorithm, Pool Management, Status Updates
+- **Teams.feature**: Formation Validation, Team Building, Multi-Matchday Support
+- **Matches.feature**: Match Simulation, League Creation, Scoring, Rewards
+- **Chemistry.feature**: Color Rules, Bonus Calculations, Team Validation
+
+#### 6.2 Test Infrastructure Setup
+```bash
+npm install --save-dev @cucumber/cucumber jest-cucumber
+```
+- **jest-cucumber Integration**: Gherkin zu Jest Test Mapping
+- **Test Database Setup**: SQLite Test-DB für Integration Tests
+- **Mock Strategy**: Definition welche Components gemockt vs. real getestet werden
+- **Test Data Factory**: Seed-Data Generator für konsistente Test-Setups
+
+#### 6.3 Test Categories Mapping
+- **Unit Tests (Mocked)**: Controllers, Middleware, Utilities, Validation
+- **Integration Tests (Real DB)**: API Endpoints, Database Operations, File Uploads
+- **Edge Cases**: Error Handling, Boundary Conditions, Performance Limits
+
+#### Deliverables:
+- [ ] 7 Feature Files mit detaillierten Gherkin Scenarios
+- [ ] Jest-Cucumber Test Runner Configuration  
+- [ ] Test Database Schema und Seed Scripts
+- [ ] Mock Strategy Documentation
+
+---
+
+## 🔬 Phase 7: Unit Tests Implementation (Woche 12)
+
+### Ziel: 80% Unit Test Coverage mit Mocking
+
+#### 7.1 Controller Unit Tests (Mocked Dependencies)
+```typescript
+// Beispiel: authController.feature -> authController.test.ts
+Given('a user with valid credentials')
+When('they attempt to login')
+Then('they should receive a JWT token')
+And('the token should contain user role')
+```
+
+- **authController**: Login, Register, Token Validation (Prisma mocked)
+- **playerController**: CRUD Operations, Filtering, Admin Checks (DB mocked)
+- **lobbyController**: Create/Join/Leave Logic, Status Management (DB mocked)
+- **packController**: Purchase, Drawing Algorithm, Pool Updates (DB mocked)
+- **teamController**: Formation Validation, Chemistry Checks (DB mocked)
+- **matchController**: Simulation Logic, League Operations (DB mocked)
+
+#### 7.2 Middleware Unit Tests
+- **auth.js**: JWT Verification, Role Checks, Request Decoration
+- **validation.js**: Joi Schema Validation für alle Endpoints
+- **upload.js**: File Type, Size, Security Validations
+
+#### 7.3 Utilities Unit Tests
+- **Chemistry calculations** (bereits vorhanden in shared/)
+- **Match engine logic** (bereits vorhanden in shared/)
+- **Pack drawing algorithms**
+- **League table calculations**
+
+#### 7.4 Coverage Goals
+- **Branches**: 80%+ für alle kritischen Pfade
+- **Functions**: 85%+ für Controller und Middleware
+- **Lines**: 80%+ für gesamten Backend Code
+- **Statements**: 80%+ Coverage
+
+#### Deliverables:
+- [ ] 20+ Unit Test Files mit Gherkin-basierter Implementierung
+- [ ] Comprehensive Mocking für Prisma, JWT, File System
+- [ ] Coverage Report mit detailliertem Branch Analysis
+- [ ] Performance Benchmarks für kritische Functions
+
+---
+
+## 🔧 Phase 8: Integration Tests Implementation (Woche 13)
+
+### Ziel: End-to-End API Testing mit SQLite Database
+
+#### 8.1 Database Integration Tests
+```gherkin
+Scenario: Complete player creation workflow
+  Given the database is clean
+  When an admin creates a player with valid data
+  Then the player should be stored in the database
+  And the player should be retrievable via API
+  And the image should be processed and stored
+```
+
+- **Real SQLite Database**: Test-DB mit automatischem Setup/Teardown
+- **Data Seeding**: Konsistente Test-Daten für jeden Test
+- **Transaction Rollback**: Isolation zwischen Tests
+- **Foreign Key Constraints**: Vollständige Datenkonsistenz-Tests
+
+#### 8.2 API Endpoint Integration
+- **Authentication Flow**: Register → Login → Protected Route Access
+- **Lobby Workflow**: Create → Join → Start Game → Leave
+- **Player Management**: Upload Image → Create Player → Update → Delete
+- **Pack System**: Create Pack → Add Players → Purchase → Draw → Pool Update
+- **Game Flow**: Create Teams → Simulate Matches → Update League → Distribute Rewards
+
+#### 8.3 File Upload Integration
+- **Image Processing**: Upload → Sharp Processing → WebP Conversion → Storage
+- **Error Scenarios**: Invalid Files, Size Limits, Storage Failures
+- **Security Tests**: Malicious File Detection, Path Traversal Prevention
+
+#### 8.4 Performance & Stress Testing
+- **Concurrent Users**: Multiple simultaneous API requests
+- **Large Data Sets**: Performance mit 1000+ Players, 100+ Lobbies
+- **Memory Leaks**: Long-running Test Scenarios
+- **Database Connection Pooling**: Connection Limits und Timeouts
+
+#### Deliverables:
+- [ ] 50+ Integration Test Scenarios mit realer Database
+- [ ] Automated Test Data Seeding/Cleanup Pipeline
+- [ ] File Upload Security und Performance Tests
+- [ ] Concurrent User Simulation Tests
+
+---
+
+## 🎯 Phase 9: Test Execution & Bug Fixing (Woche 14)
+
+### Ziel: 80% Coverage erreichen und Production-Ready Code
+
+#### 9.1 Coverage Analysis & Optimization
+```bash
+# Continuous Coverage Monitoring
+yarn test --coverage --watchAll=false
+yarn test:integration --coverage
+```
+
+- **Coverage Gaps Identification**: Uncovered Branches und Edge Cases
+- **Test Case Enhancement**: Zusätzliche Scenarios für kritische Pfade
+- **Performance Optimization**: Slow Tests identifizieren und optimieren
+- **Flaky Test Resolution**: Intermittierende Test-Failures beheben
+
+#### 9.2 Bug Discovery & Resolution Workflow
+1. **Test Failure Analysis**: Root Cause Investigation
+2. **Bug Categorization**: Critical/High/Medium/Low Priority
+3. **Fix Implementation**: Code Changes mit Test-First Approach
+4. **Regression Testing**: Ensure keine bestehenden Features brechen
+5. **Documentation Update**: Bug Fixes und Test Cases dokumentieren
+
+#### 9.3 Test Infrastructure Optimization
+- **Parallel Test Execution**: Jest Worker Optimization
+- **Test Database Performance**: Index Optimization, Query Performance
+- **CI/CD Integration**: GitHub Actions für Automated Testing
+- **Test Reporting**: HTML Coverage Reports, Trend Analysis
+
+#### 9.4 Quality Gates
+- **Minimum 80% Coverage**: Branches, Functions, Lines, Statements
+- **Zero Critical Bugs**: Alle High-Priority Issues resolved
+- **Performance Benchmarks**: API Response Times <200ms (95th percentile)
+- **Security Validation**: No vulnerabilities in dependencies
+
+#### Deliverables:
+- [ ] 80%+ Test Coverage across all categories
+- [ ] Bug Fix Documentation mit Root Cause Analysis
+- [ ] Optimized Test Suite mit <5min Full Test Runtime
+- [ ] Production-Ready Testing Pipeline mit CI/CD Integration
+
+---
+
+## 📊 Testing Strategy & Tools
+
+### BDD Framework Stack
+- **Gherkin**: Feature files für business-readable specifications
+- **jest-cucumber**: Gherkin to Jest test mapping
+- **supertest**: HTTP API testing mit Express integration
+- **Prisma Test Database**: SQLite für schnelle, isolierte Integration tests
+
+### Coverage & Quality Metrics
+- **Target Coverage**: 80% (branches, functions, lines, statements)
+- **Test Categories**: 60% Unit Tests, 35% Integration Tests, 5% E2E
+- **Performance**: <200ms API response time (95th percentile)
+- **Reliability**: <1% flaky test rate
+
+### Test Data Management
+- **Factories**: Programmatic test data generation
+- **Fixtures**: Static test datasets für komplexe scenarios
+- **Database Seeding**: Automated setup/teardown für integration tests
+- **Isolation**: Transaction rollback zwischen tests
+
+---
+
+## 🚀 Success Metrics
+
+### Technical KPIs
+- **Test Coverage**: ≥80% across all backend code
+- **Bug Rate**: <1 Critical Bug discovered in production
+- **Test Performance**: Complete test suite runs in <5 minutes
+- **API Performance**: 95th percentile response time <200ms
+
+### Quality Indicators  
+- **Test Reliability**: <1% flaky test failure rate
+- **Documentation Coverage**: 100% of Gherkin scenarios implemented
+- **Security**: Zero high-severity vulnerabilities
+- **Maintainability**: All tests pass with minimal maintenance overhead
+
+---
+
+## 🔧 Development Commands
+
+### Testing Commands
+```bash
+# Development
+cmd /c yarn.cmd dev                    # Start frontend + backend
+cmd /c yarn.cmd test                   # Run all tests
+cmd /c yarn.cmd test:watch             # Watch mode tests
+cmd /c yarn.cmd test --coverage        # Coverage report
+
+# Backend-specific
+cd backend && npm test                 # Backend unit tests
+cd backend && npm run test:integration # Integration tests with SQLite
+cd backend && npm run test:coverage    # Backend coverage report
+
+# Quality Assurance
+cmd /c yarn.cmd lint                   # ESLint all workspaces
+cmd /c yarn.cmd type-check            # TypeScript validation
+```
+
+### Database Commands
+```bash
+cd backend
+npx prisma generate                    # Generate Prisma client
+npx prisma migrate dev                 # Run migrations (dev)
+npx prisma db seed                     # Seed test data
+sqlite3 dev.db                         # Open SQLite CLI
 ```
 
 ---
 
-## 🚀 Entwicklungsphasen
-
-### Phase 1: Grundlagen (Woche 1-2)
-- [x] **Backend-Setup**: Express Server, Datenbank, Auth
-  - ✅ Prisma database schema with all game entities
-  - ✅ PostgreSQL connection and configuration
-  - ✅ JWT authentication system (register/login/middleware)
-  - ✅ Request validation middleware with Joi
-  - ✅ Basic API route structure (auth, players, lobbies)
-  - ✅ Error handling and logging setup
-  - ✅ Prisma client generation completed (`db:generate`)
-  - ✅ Database SQlite for local development
-  - ℹ️ PostgreSQL server setup is needed for prod environmentnp
-- [x] **Frontend-Setup**: React App Struktur, Routing
-  - ✅ React Router v6 setup with nested routes
-  - ✅ Main app layout with header, footer, and navigation
-  - ✅ Core page structure (Home, Login, Register, Lobby, Collection, Packs)
-  - ✅ TypeScript route types and constants
-  - ✅ Responsive CSS styling and component system
-  - ✅ Authentication pages with form validation
-  - ✅ API service layer for backend communication
-  - ✅ Authentication context and state management
-  - ✅ Login/Register pages connected to backend
-  - ✅ Protected routes and authentication flow
-  - ✅ Dynamic header with user state and logout
-- [x] **User Management**: Registrierung, Login, Profil
-  - ✅ User registration with validation
-  - ✅ User login with JWT authentication
-  - ✅ Protected route access control
-  - ✅ User session persistence with localStorage
-  - ✅ Logout functionality
-- [x] **Lobby-System**: 4-Spieler Lobbies erstellen/beitreten
-  - ✅ Backend lobby controller with Prisma operations (CRUD, join/leave logic)
-  - ✅ Updated API routes with proper controller integration
-  - ✅ Frontend API service extended with lobby methods
-  - ✅ Dynamic lobby page with create/join functionality
-  - ✅ Real-time lobby list with member count and status display
-  - ✅ Modal for creating new lobbies with validation
-  - ✅ Error handling and loading states
-  - ✅ 4-player limit enforcement and status transitions
-
-### Phase 2: Content Management (Woche 3-4)  
-- [x] **Admin-Panel**: Spieler/Formation/Pack CRUD
-  - ✅ Admin Dashboard mit Navigation zu allen Verwaltungsbereichen
-  - ✅ Spieler-Management: Vollständiges CRUD Interface mit Bildupload
-  - ✅ Formation-Management: Visueller Editor mit 11 Positionsangaben
-  - ✅ Pack-Management: CRUD mit Spielerpool-Verwaltung (Drag&Drop Auswahl)
-  - ✅ Admin-only Routing mit Rollenbasiertem Zugriff
-- [x] **File-Upload**: Bild-Upload mit Validierung/Komprimierung
-  - ✅ Multer + Sharp Integration für Bildverarbeitung
-  - ✅ Automatische WebP Konvertierung und Größenanpassung
-  - ✅ Kategorie-spezifische Bildgrößen (Spieler: 400x400, Formation: 800px, Pack: 300x300)
-  - ✅ Validierung für Dateityp, Größe und sichere Speicherung
-  - ✅ Static File Serving für hochgeladene Bilder
-- [x] **Spieler-System**: Vollständige Spieler-Verwaltung
-  - ✅ Backend Controller mit vollständigem CRUD (Create, Read, Update, Delete)
-  - ✅ Erweiterte Filterung nach Position, Farbe, Thema, Punkten, Preis
-  - ✅ Validierung aller Spielerattribute mit Joi Schemas
-  - ✅ Frontend Interface mit Formular, Tabelle und Bildupload
-  - ✅ Übersichtliche Darstellung mit Farbbadges und Statistiken
-- [x] **Pack-System**: Pack-Erstellung und Pool-Management
-  - ✅ Backend Controller für Pack CRUD und Spielerpool-Management
-  - ✅ API Endpunkte zum Hinzufügen/Entfernen von Spielern zu/von Packs
-  - ✅ Prozentsatz-basierte Wahrscheinlichkeitsberechnung
-  - ✅ Frontend Interface mit Spielerauswahl und Pool-Verwaltung
-  - ✅ Status-Management (ACTIVE, INACTIVE, EMPTY) für Pack-Verfügbarkeit
-
-### Phase 3: Gameplay Core (Woche 5-6)
-- [x] **Team-Builder**: Formation-basiertes Team-Building
-  - ✅ TeamBuilderPage.tsx mit Drag & Drop Interface
-  - ✅ Team CRUD Controller mit Formation-Validierung
-  - ✅ Positionszuordnung und Team-Statistiken
-  - ✅ Multi-Matchday Support (3 Teams pro User)
-- [x] **Chemie-Engine**: Farbbasierte Bonus-Berechnung
-  - ✅ Chemistry utilities bereits implementiert in Phase 2
-  - ✅ Integration in Team-Builder und Match-Engine
-  - ✅ Real-time Chemie-Validierung und -Anzeige
-- [x] **Pack-Opening**: Prozentsatz-basierte Ziehung
-  - ✅ Percentage-based drawing algorithm
-  - ✅ Dynamic pool management (shrinking pools)
-  - ✅ PackStorePage mit Animationen und Result-Modal
-  - ✅ Coin-System Integration
-- [x] **Match-Engine**: Realistische Spiel-Simulation
-  - ✅ Team strength calculation (Spieler + Chemie)
-  - ✅ 100-Chancen Simulation System
-  - ✅ Match Controller für Einzel- und Matchday-Simulation
-  - ✅ League table management und Points-System
-
-### Phase 4: Liga-System (Woche 7-8)
-- [x] **Tournament-Engine**: Jeder-gegen-jeden Logik
-  - ✅ `createLeague()` - Automatische Liga-Erstellung für alle 3 Spieltage (18 Matches total)
-  - ✅ `simulateEntireLeague()` - Komplette Liga-Simulation mit automatischem Reward-System
-  - ✅ `getLeagueStatus()` - Detaillierter Liga-Fortschritt und Tabellen-Management
-  - ✅ Lobby-Status Updates (WAITING → IN_PROGRESS → FINISHED)
-- [x] **Match-Visualization**: Live-Spiel Darstellung
-  - ✅ `MatchDetailsPage.tsx` - Vollständige Match-Analyse mit Simulation-Replay
-  - ✅ Team-Stärken Visualisierung (Spieler-Punkte + Chemie-Bonus + Farb-Breakdown)
-  - ✅ Spielverlauf-Events (Tore, Chancen) mit Timeline-Darstellung
-  - ✅ Team-Aufstellungen mit Spieler-Details und Positionen
-- [x] **Tabellen-System**: Punkte, Torverhältnis, Sortierung
-  - ✅ `LeaguePage.tsx` - Liga-Tabelle mit korrekter Sortierung (Punkte → Torverhältnis)
-  - ✅ Spieltag-Fortschritt Visualisierung (3 Matchdays mit Status-Tracking)
-  - ✅ Spielplan-Übersicht mit Filter-Funktionen nach Spieltag
-  - ✅ Real-time Liga-Status Updates und Match-Navigation
-- [x] **Reward-System**: Münz-Verteilung nach Tabellenplatz
-  - ✅ Automatische Belohnungen: 250/200/150/100 Münzen für Plätze 1-4
-  - ✅ `finishLeague()` - Liga-Abschluss mit Münz-Update in User-Accounts
-  - ✅ Liga-Tabelle zeigt Belohnungen bei Liga-Ende an
-
-### Phase 5: Polish & Testing (Woche 9-10)
-- [ ] **UI/UX-Verbesserung**: Responsive Design, Animationen
-- [ ] **Testing Suite**: Unit/Integration/E2E Tests (80% Coverage)
-- [ ] **Performance-Optimierung**: Caching, Lazy Loading
-- [ ] **Error Handling**: Globale Fehlerbehandlung
-- [ ] **Accessibility**: WCAG 2.1 Compliance
-
----
-
-## 🎨 UI/UX Konzept
-
-### Hauptbereiche
-- **Dashboard**: Münzen, Sammlung, aktuelle Liga
-- **Pack-Store**: Verfügbare Packs mit Kauf-Modal
-- **Team-Builder**: Drag&Drop Formation-Editor
-- **Liga-Übersicht**: Tabelle, nächste Spiele, Ergebnisse
-- **Admin-Panel**: Content-Management (nur Admins)
-
-### Design-Prinzipien
-- **Mobile-First**: Responsive ab 320px
-- **Gamification**: Animationen bei Pack-Opening
-- **Accessibility**: Keyboard-Navigation, Screen-Reader
-- **Performance**: <3s Ladezeit, 60fps Animationen
-
----
-
-## ✅ Qualitätssicherung
-
-### Testing-Strategie
-- **Unit Tests**: Jest für Business Logic (70% Coverage)
-- **Integration Tests**: API Endpoints (20% Coverage)  
-- **E2E Tests**: Playwright für User Journeys (10% Coverage)
-- **Performance Tests**: Lighthouse CI (Score >90)
-
-### Code-Qualität
-- **TypeScript**: Strict Mode, keine `any` Types
-- **ESLint**: Airbnb Config + Custom Rules
-- **Prettier**: Konsistente Code-Formatierung
-- **Husky**: Pre-commit Hooks für Linting/Testing
-
-### Security
-- **Input Validation**: Joi/Zod Schemas
-- **SQL Injection**: Prepared Statements (ORM)
-- **XSS Protection**: Content Security Policy
-- **Authentication**: JWT mit Refresh Tokens
-- **File Upload**: Validierung, Größen-Limits
-
----
-
-## 📈 Performance-Ziele
-
-### Frontend
-- **First Contentful Paint**: <1.5s
-- **Largest Contentful Paint**: <2.5s
-- **Time to Interactive**: <3.5s
-- **Bundle Size**: <500KB gzipped
-
-### Backend  
-- **API Response Time**: <200ms (95th percentile)
-- **Database Queries**: <50ms durchschnittlich
-- **File Upload**: <2MB Bilder in <5s
-- **Concurrent Users**: 100+ ohne Performance-Verlust
-
----
-
-## 🔄 Deployment & Monitoring
-
-### Staging/Production Pipeline
-- **Development**: Local Docker Setup
-- **Staging**: GitHub Actions → Vercel/Railway
-- **Production**: PM2/Docker → DigitalOcean/AWS
-- **Database**: PostgreSQL mit Backups
-
-### Monitoring
-- **Error Tracking**: Sentry für Frontend/Backend
-- **Performance**: New Relic APM
-- **Uptime**: StatusPage für User
-- **Analytics**: Plausible für Privacy-friendly Tracking
-
----
-
-## 📚 Dokumentation
-
-### Developer Docs
-- **API Documentation**: OpenAPI/Swagger Auto-generated
-- **Database Schema**: ER-Diagramm + Migrationen
-- **Component Library**: Storybook für UI Components  
-- **Setup Guide**: README mit Docker Quick-Start
-
-### User Docs
-- **Spielregeln**: Interaktives Tutorial
-- **FAQ**: Häufige Fragen + Antworten
-- **Admin Guide**: Content-Management Anleitung
-
----
-
-## 🎯 Success Metrics
-
-### Technical KPIs
-- **Code Coverage**: >80%
-- **Bug Rate**: <1 Critical Bug/Woche
-- **Performance**: Lighthouse Score >90
-- **Uptime**: >99.5%
-
-### Business KPIs  
-- **User Retention**: >70% nach 1 Woche
-- **Match Completion**: >90% der gestarteten Spiele
-- **Pack Opening**: >5 Packs/User/Woche
-- **Admin Adoption**: >3 aktive Content-Ersteller
-
----
-
-## 🔧 Nice-to-Have Features (Future)
-
-### V2 Features
-- **Replay System**: Match-Replays ansehen
-- **Trading**: Spieler zwischen Usern tauschen  
-- **Achievements**: Erfolgs-System mit Belohnungen
-- **Seasons**: Regelmäßige Liga-Resets
-- **Mobile App**: React Native Version
-
-### Advanced Features
-- **AI Opponents**: KI-gesteuerte Gegner
-- **Live Matches**: Real-time Match-Visualization
-- **Voice Chat**: In-Game Kommunikation
-- **Streaming**: Twitch/YouTube Integration
-- **Esports**: Offizielle Turniere
-
----
-
-*Dieses Dokument wird kontinuierlich aktualisiert während der Entwicklung.*
+*Dieses Dokument fokussiert sich auf die verbleibenden Test-Phasen zur Erreichung einer robusten, 80%+ getesteten Backend-Architektur.*

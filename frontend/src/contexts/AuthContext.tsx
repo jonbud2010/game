@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiService, User, LoginRequest, RegisterRequest } from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 interface AuthContextType {
   user: User | null;
@@ -78,6 +79,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     isAuthenticated: !!user,
   };
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return <LoadingSpinner overlay text="Initialisiere Anwendung..." />;
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

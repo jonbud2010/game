@@ -1,0 +1,302 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import LoginPage from './LoginPage';
+import { AuthProvider } from '../contexts/AuthContext';
+
+// Mock useNavigate
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate
+}));
+
+// Mock the AuthContext
+const mockLogin = jest.fn();
+
+const createMockAuthContext = () => ({
+  user: null,
+  isAuthenticated: false,
+  login: mockLogin,
+  logout: jest.fn(),
+  register: jest.fn(),
+  loading: false
+});
+
+// Wrapper component to provide context
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <MemoryRouter initialEntries={['/login']}>
+      <AuthProvider value={createMockAuthContext()}>
+        {children}
+      </AuthProvider>
+    </MemoryRouter>
+  );
+};
+
+describe('LoginPage Component', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should render login form elements', () => {
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    expect(screen.getByText('⚽ Anmelden')).toBeInTheDocument();
+    expect(screen.getByText('Willkommen zurück!')).toBeInTheDocument();
+    expect(screen.getByLabelText('E-Mail')).toBeInTheDocument();
+    expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Anmelden' })).toBeInTheDocument();
+  });
+
+  it('should render registration link', () => {
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    expect(screen.getByText('Noch kein Account?')).toBeInTheDocument();
+    expect(screen.getByText('Hier registrieren')).toBeInTheDocument();
+    
+    const registerLink = screen.getByText('Hier registrieren').closest('a');
+    expect(registerLink).toHaveAttribute('href', '/register');
+  });
+
+  it('should update input values when user types', () => {
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText('E-Mail') as HTMLInputElement;
+    const passwordInput = screen.getByLabelText('Passwort') as HTMLInputElement;
+
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+
+    expect(emailInput.value).toBe('test@example.com');
+    expect(passwordInput.value).toBe('password123');
+  });
+
+  it('should call login function with correct credentials on form submit', async () => {
+    mockLogin.mockResolvedValue(undefined);
+
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText('E-Mail');
+    const passwordInput = screen.getByLabelText('Passwort');
+    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123'
+      });
+    });
+  });
+
+  it('should navigate to home page after successful login', async () => {
+    mockLogin.mockResolvedValue(undefined);
+
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText('E-Mail');
+    const passwordInput = screen.getByLabelText('Passwort');
+    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('should show loading state during login attempt', async () => {
+    // Mock login to never resolve to keep loading state
+    mockLogin.mockImplementation(() => new Promise(() => {}));
+
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText('E-Mail');
+    const passwordInput = screen.getByLabelText('Passwort');
+    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.click(submitButton);
+
+    // Check if button shows loading state
+    await waitFor(() => {
+      expect(submitButton).toHaveTextContent('Wird geladen...');
+      expect(submitButton).toBeDisabled();
+    });
+
+    // Check if inputs are disabled during loading
+    expect(emailInput).toBeDisabled();
+    expect(passwordInput).toBeDisabled();
+  });
+
+  it('should display error message on login failure', async () => {
+    const errorMessage = 'Invalid credentials';
+    mockLogin.mockRejectedValue(new Error(errorMessage));
+
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText('E-Mail');
+    const passwordInput = screen.getByLabelText('Passwort');
+    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    });
+
+    // Check that loading state is reset
+    expect(submitButton).not.toBeDisabled();
+    expect(submitButton).toHaveTextContent('Anmelden');
+  });
+
+  it('should display generic error message for non-Error exceptions', async () => {
+    mockLogin.mockRejectedValue('String error');
+
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText('E-Mail');
+    const passwordInput = screen.getByLabelText('Passwort');
+    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Login fehlgeschlagen. Bitte versuche es erneut.')).toBeInTheDocument();
+    });
+  });
+
+  it('should clear error message when form is resubmitted', async () => {
+    // First submission fails
+    mockLogin.mockRejectedValueOnce(new Error('First error'));
+    // Second submission succeeds
+    mockLogin.mockResolvedValueOnce(undefined);
+
+    render(
+      <TestWrapper>
+        <LoginPage />
+      </TestWrapper>
+    );
+
+    const emailInput = screen.getByLabelText('E-Mail');
+    const passwordInput = screen.getByLabelText('Passwort');
+    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+
+    // First submission
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('First error')).toBeInTheDocument();
+    });
+
+    // Second submission
+    fireEvent.change(passwordInput, { target: { value: 'correctpassword' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.queryByText('First error')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('form validation', () => {
+    it('should require email field', () => {
+      render(
+        <TestWrapper>
+          <LoginPage />
+        </TestWrapper>
+      );
+
+      const emailInput = screen.getByLabelText('E-Mail');
+      expect(emailInput).toHaveAttribute('required');
+      expect(emailInput).toHaveAttribute('type', 'email');
+    });
+
+    it('should require password field', () => {
+      render(
+        <TestWrapper>
+          <LoginPage />
+        </TestWrapper>
+      );
+
+      const passwordInput = screen.getByLabelText('Passwort');
+      expect(passwordInput).toHaveAttribute('required');
+      expect(passwordInput).toHaveAttribute('type', 'password');
+    });
+  });
+
+  describe('accessibility', () => {
+    it('should have proper form labels', () => {
+      render(
+        <TestWrapper>
+          <LoginPage />
+        </TestWrapper>
+      );
+
+      expect(screen.getByLabelText('E-Mail')).toBeInTheDocument();
+      expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
+    });
+
+    it('should associate error messages with form', () => {
+      mockLogin.mockRejectedValue(new Error('Test error'));
+
+      render(
+        <TestWrapper>
+          <LoginPage />
+        </TestWrapper>
+      );
+
+      const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+      fireEvent.click(submitButton);
+
+      waitFor(() => {
+        const errorMessage = screen.getByText('Test error');
+        expect(errorMessage).toHaveClass('error-message');
+      });
+    });
+  });
+});

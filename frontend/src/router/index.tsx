@@ -1,20 +1,24 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import Layout from '../components/Layout/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminRoute from '../components/AdminRoute';
+import LoadingSpinner from '../components/LoadingSpinner';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import LobbyPage from '../pages/LobbyPage';
 import CollectionPage from '../pages/CollectionPage';
 import PackStorePage from '../pages/PackStorePage';
-import AdminDashboardPage from '../pages/AdminDashboardPage';
-import AdminPlayersPage from '../pages/AdminPlayersPage';
-import AdminFormationsPage from '../pages/AdminFormationsPage';
-import AdminPacksPage from '../pages/AdminPacksPage';
 import TeamBuilderPage from '../pages/TeamBuilderPage';
 import LeaguePage from '../pages/LeaguePage';
 import MatchDetailsPage from '../pages/MatchDetailsPage';
+
+// Lazy load admin pages for better performance
+const AdminDashboardPage = lazy(() => import('../pages/AdminDashboardPage'));
+const AdminPlayersPage = lazy(() => import('../pages/AdminPlayersPage'));
+const AdminFormationsPage = lazy(() => import('../pages/AdminFormationsPage'));
+const AdminPacksPage = lazy(() => import('../pages/AdminPacksPage'));
 
 // Error boundary component
 const ErrorPage = () => (
@@ -88,7 +92,9 @@ export const router = createBrowserRouter([
         path: 'admin',
         element: (
           <AdminRoute>
-            <AdminDashboardPage />
+            <Suspense fallback={<LoadingSpinner text="Lade Admin-Panel..." />}>
+              <AdminDashboardPage />
+            </Suspense>
           </AdminRoute>
         ),
       },
@@ -96,7 +102,9 @@ export const router = createBrowserRouter([
         path: 'admin/players',
         element: (
           <AdminRoute>
-            <AdminPlayersPage />
+            <Suspense fallback={<LoadingSpinner text="Lade Spieler-Verwaltung..." />}>
+              <AdminPlayersPage />
+            </Suspense>
           </AdminRoute>
         ),
       },
@@ -104,7 +112,9 @@ export const router = createBrowserRouter([
         path: 'admin/formations',
         element: (
           <AdminRoute>
-            <AdminFormationsPage />
+            <Suspense fallback={<LoadingSpinner text="Lade Formation-Verwaltung..." />}>
+              <AdminFormationsPage />
+            </Suspense>
           </AdminRoute>
         ),
       },
@@ -112,7 +122,9 @@ export const router = createBrowserRouter([
         path: 'admin/packs',
         element: (
           <AdminRoute>
-            <AdminPacksPage />
+            <Suspense fallback={<LoadingSpinner text="Lade Pack-Verwaltung..." />}>
+              <AdminPacksPage />
+            </Suspense>
           </AdminRoute>
         ),
       },

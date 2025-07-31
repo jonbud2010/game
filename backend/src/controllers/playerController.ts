@@ -84,6 +84,10 @@ export const getPlayerById = async (req: Request, res: Response): Promise<void> 
 // Create new player
 export const createPlayer = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('=== CREATE PLAYER REQUEST ===');
+    console.log('req.body:', req.body);
+    console.log('req.file:', req.file);
+    
     const { name, points, position, color, marketPrice, theme, percentage } = req.body;
     
     // Default imageUrl if not provided (will be updated via file upload)
@@ -183,6 +187,7 @@ export const updatePlayer = async (req: Request, res: Response): Promise<void> =
 export const deletePlayer = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    const forceDelete = req.query.force === 'true';
 
     // Check if player exists
     const existingPlayer = await prisma.player.findUnique({
@@ -202,24 +207,57 @@ export const deletePlayer = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // Check if player is in use
-    const isInUse = existingPlayer.userPlayers.length > 0 || 
-                   existingPlayer.teamPlayers.length > 0 ||
-                   existingPlayer.packPlayers.length > 0;
+    // Check if force delete is required
+    const hasReferences = existingPlayer.userPlayers.length > 0 || 
+                         existingPlayer.teamPlayers.length > 0 ||
+                         existingPlayer.packPlayers.length > 0;
 
-    if (isInUse) {
+    if (hasReferences && !forceDelete) {
       res.status(400).json({
         error: 'Cannot delete player',
-        message: 'Player is currently in use by users, teams, or packs',
+        message: 'Player is currently in use. Use ?force=true to force delete and remove all references.',
         details: {
           ownedByUsers: existingPlayer.userPlayers.length,
           usedInTeams: existingPlayer.teamPlayers.length,
           inPacks: existingPlayer.packPlayers.length
-        }
+        },
+        forceDeleteUrl: `/players/${id}?force=true`
       });
       return;
     }
 
+    // If force delete or no references, proceed with cascade cleanup
+    if (hasReferences) {
+      console.log(`Force deleting player ${id} and removing all references...`);
+    } else {
+      console.log(`Deleting player ${id} (no references found)...`);
+    }
+    
+    // Remove from user collections
+    if (existingPlayer.userPlayers.length > 0) {
+      await prisma.userPlayer.deleteMany({
+        where: { playerId: id }
+      });
+      console.log(`Removed ${existingPlayer.userPlayers.length} user player references`);
+    }
+
+    // Remove from team lineups  
+    if (existingPlayer.teamPlayers.length > 0) {
+      await prisma.teamPlayer.deleteMany({
+        where: { playerId: id }
+      });
+      console.log(`Removed ${existingPlayer.teamPlayers.length} team player references`);
+    }
+
+    // Remove from pack assignments
+    if (existingPlayer.packPlayers.length > 0) {
+      await prisma.packPlayer.deleteMany({
+        where: { playerId: id }
+      });
+      console.log(`Removed ${existingPlayer.packPlayers.length} pack player references`);
+    }
+
+    // Now delete the player
     await prisma.player.delete({
       where: { id }
     });

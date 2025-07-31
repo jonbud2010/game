@@ -217,7 +217,8 @@ class ApiService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -301,6 +302,51 @@ class ApiService {
 
   async getPlayer(id: string): Promise<ApiResponse<Player>> {
     return this.makeRequest<ApiResponse<Player>>(`/players/${id}`);
+  }
+
+  // Admin Player methods
+  async createPlayer(formData: FormData): Promise<ApiResponse<Player>> {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_BASE_URL}/players`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async updatePlayer(id: string, formData: FormData): Promise<ApiResponse<Player>> {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${API_BASE_URL}/players/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async deletePlayer(id: string): Promise<ApiResponse<void>> {
+    return this.makeRequest<ApiResponse<void>>(`/players/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Pack methods

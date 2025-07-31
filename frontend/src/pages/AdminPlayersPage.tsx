@@ -1,20 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
-
-interface Player {
-  id: string;
-  name: string;
-  imageUrl: string;
-  points: number;
-  position: string;
-  color: string;
-  marketPrice: number;
-  theme: string;
-  percentage: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import { apiService, Player } from '../services/api';
 
 const AdminPlayersPage: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -45,20 +32,11 @@ const AdminPlayersPage: React.FC = () => {
   const fetchPlayers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/players', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Fehler beim Laden der Spieler');
-      }
-
-      const data = await response.json();
+      setError(null); // Clear previous errors
+      const data = await apiService.getPlayers();
       setPlayers(data.data || []);
     } catch (err) {
+      console.error('fetchPlayers error:', err);
       setError(err instanceof Error ? err.message : 'Unbekannter Fehler');
     } finally {
       setLoading(false);
@@ -67,9 +45,9 @@ const AdminPlayersPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null); // Clear previous errors
     
     try {
-      const token = localStorage.getItem('token');
       const formDataToSend = new FormData();
       
       // Add form fields
@@ -85,20 +63,10 @@ const AdminPlayersPage: React.FC = () => {
         formDataToSend.append('image', formData.image);
       }
 
-      const response = await fetch(
-        editingPlayer ? `/api/players/${editingPlayer.id}` : '/api/players',
-        {
-          method: editingPlayer ? 'PUT' : 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formDataToSend
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Speichern');
+      if (editingPlayer) {
+        await apiService.updatePlayer(editingPlayer.id, formDataToSend);
+      } else {
+        await apiService.createPlayer(formDataToSend);
       }
 
       // Reset form and refresh list
@@ -142,19 +110,7 @@ const AdminPlayersPage: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/players/${playerId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Löschen');
-      }
-
+      await apiService.deletePlayer(playerId);
       await fetchPlayers();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Löschen');
@@ -303,7 +259,7 @@ const AdminPlayersPage: React.FC = () => {
                       max="1"
                       step="0.001"
                       value={formData.percentage}
-                      onChange={(e) => setFormData({...formData, percentage: parseFloat(e.target.value)})}
+                      onChange={(e) => setFormData({...formData, percentage: parseFloat(e.target.value) || 0.05})}
                       required
                     />
                     <small>Wert zwischen 0.001 (0.1%) und 1 (100%)</small>

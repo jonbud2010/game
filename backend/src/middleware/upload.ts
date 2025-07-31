@@ -116,9 +116,18 @@ export const uploadSingleImage = (category: 'players' | 'formations' | 'packs') 
     upload.single('image'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        console.log('=== UPLOAD MIDDLEWARE ===');
+        console.log('req.file:', req.file);
+        console.log('category:', category);
+        
         if (!req.file) {
+          console.log('No file uploaded, continuing...');
           return next(); // No file uploaded, continue
         }
+
+        console.log('Processing image:', req.file.originalname);
+        console.log('File size:', req.file.size);
+        console.log('File mimetype:', req.file.mimetype);
 
         // Process and save the image
         const imageUrl = await processAndSaveImage(
@@ -126,6 +135,8 @@ export const uploadSingleImage = (category: 'players' | 'formations' | 'packs') 
           req.file.originalname,
           category
         );
+
+        console.log('Image processed successfully:', imageUrl);
 
         // Add imageUrl to request body
         req.body.imageUrl = imageUrl;

@@ -55,7 +55,8 @@
       "Bash(npm run dev:*)",
       "Bash(PORT=3002 npm run dev)",
       "Bash(PORT=3002 npm run kill-port)",
-      "Bash(yarn.cmd type-check:*)"
+      "Bash(yarn.cmd type-check:*)",
+      "Bash(npm test:*)"
     ],
     "deny": []
   }

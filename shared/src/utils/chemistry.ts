@@ -11,8 +11,8 @@ export function calculateTeamChemistry(team: Team, players: { color: PlayerColor
   }
   
   // Validiere Chemie-Regeln
-  if (colorCounts.size < MATCH_SETTINGS.MIN_CHEMISTRY_COLORS) {
-    throw new Error(`Team muss mindestens ${MATCH_SETTINGS.MIN_CHEMISTRY_COLORS} verschiedene Farben haben`);
+  if (colorCounts.size !== MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS) {
+    throw new Error(`Team muss genau ${MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS} verschiedene Farben haben`);
   }
   
   for (const [color, count] of colorCounts) {
@@ -66,8 +66,8 @@ export function validateTeamChemistry(players: { color: PlayerColor }[]): {
     colorCounts.set(player.color, currentCount + 1);
   }
   
-  if (colorCounts.size < MATCH_SETTINGS.MIN_CHEMISTRY_COLORS) {
-    errors.push(`Team muss mindestens ${MATCH_SETTINGS.MIN_CHEMISTRY_COLORS} verschiedene Farben haben`);
+  if (colorCounts.size !== MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS) {
+    errors.push(`Team muss genau ${MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS} verschiedene Farben haben`);
   }
   
   for (const [color, count] of colorCounts) {

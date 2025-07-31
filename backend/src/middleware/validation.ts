@@ -18,6 +18,77 @@ function validate(schema: Joi.ObjectSchema) {
   };
 }
 
+// FormData validation middleware - converts string fields to appropriate types
+function validateFormData(schema: Joi.ObjectSchema) {
+  return (req: Request, res: Response, next: NextFunction): Response | void => {
+    try {
+      // Convert FormData strings to appropriate types for validation
+      const processedBody = { ...req.body };
+      
+      console.log('Original FormData body:', processedBody);
+      
+      // Convert numeric fields safely
+      if (processedBody.points) {
+        const pointsValue = parseInt(processedBody.points);
+        if (isNaN(pointsValue)) {
+          return res.status(400).json({ 
+            error: 'Validation error',
+            details: 'Points must be a valid number'
+          });
+        }
+        processedBody.points = pointsValue;
+      }
+      
+      if (processedBody.marketPrice) {
+        const priceValue = parseInt(processedBody.marketPrice);
+        if (isNaN(priceValue)) {
+          return res.status(400).json({ 
+            error: 'Validation error',
+            details: 'Market price must be a valid number'
+          });
+        }
+        processedBody.marketPrice = priceValue;
+      }
+      
+      if (processedBody.percentage) {
+        // Handle German decimal format (comma) and convert to English format (dot)
+        const percentageString = processedBody.percentage.toString().replace(',', '.');
+        const percentageValue = parseFloat(percentageString);
+        if (isNaN(percentageValue)) {
+          return res.status(400).json({ 
+            error: 'Validation error',
+            details: 'Percentage must be a valid number (use comma or dot as decimal separator)'
+          });
+        }
+        processedBody.percentage = percentageValue;
+      }
+      
+      console.log('Processed FormData body:', processedBody);
+      
+      const { error } = schema.validate(processedBody);
+      
+      if (error) {
+        const errorMessage = error.details.map(detail => detail.message).join(', ');
+        console.log('Validation error details:', error.details);
+        return res.status(400).json({ 
+          error: 'Validation error',
+          details: errorMessage 
+        });
+      }
+      
+      // Update req.body with processed values
+      req.body = processedBody;
+      next();
+    } catch (err) {
+      console.error('FormData validation error:', err);
+      return res.status(400).json({ 
+        error: 'Validation error',
+        details: 'Invalid form data'
+      });
+    }
+  };
+}
+
 // Authentication validation schemas
 const registerSchema = Joi.object({
   username: Joi.string()
@@ -139,6 +210,12 @@ const createPlayerSchema = Joi.object({
       'number.base': 'Percentage must be a number',
       'number.min': 'Percentage must be at least 0.001 (0.1%)',
       'number.max': 'Percentage must not exceed 1 (100%)'
+    }),
+  
+  imageUrl: Joi.string()
+    .optional()
+    .messages({
+      'string.base': 'Image URL must be a string'
     })
 });
 
@@ -275,7 +352,7 @@ const packPlayerManagementSchema = Joi.object({
 // Export validation middleware functions
 export const validateRegistration = validate(registerSchema);
 export const validateLogin = validate(loginSchema);
-export const validateCreatePlayer = validate(createPlayerSchema);
+export const validateCreatePlayer = validateFormData(createPlayerSchema);
 export const validateCreateLobby = validate(createLobbySchema);
 export const validateCreateFormation = validate(createFormationSchema);
 export const validateCreatePack = validate(createPackSchema);
