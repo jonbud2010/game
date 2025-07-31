@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = '/api';
 
 export interface LoginRequest {
   email: string;
@@ -307,21 +307,41 @@ class ApiService {
   // Admin Player methods
   async createPlayer(formData: FormData): Promise<ApiResponse<Player>> {
     const token = localStorage.getItem('auth_token');
-    const response = await fetch(`${API_BASE_URL}/players`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
-      throw new Error(errorMessage);
+    
+    console.log('=== FRONTEND UPLOAD DEBUG ===');
+    console.log('API_BASE_URL:', API_BASE_URL);
+    console.log('Token exists:', !!token);
+    console.log('FormData entries:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`  ${key}:`, value instanceof File ? `File(${value.name}, ${value.size} bytes)` : value);
     }
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/players`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
 
-    return response.json();
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.log('Error response data:', errorData);
+        const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('Success response:', result);
+      return result;
+    } catch (networkError) {
+      console.error('Network/fetch error:', networkError);
+      throw networkError;
+    }
   }
 
   async updatePlayer(id: string, formData: FormData): Promise<ApiResponse<Player>> {

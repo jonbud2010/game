@@ -19,16 +19,14 @@ export const PLAYER_POSITIONS: Record<PlayerPosition, string> = {
 };
 
 export const PLAYER_COLORS: Record<PlayerColor, string> = {
-  red: '#EF4444',
-  blue: '#3B82F6',
-  green: '#10B981',
-  yellow: '#F59E0B',
-  purple: '#8B5CF6',
-  orange: '#F97316',
-  pink: '#EC4899',
-  cyan: '#06B6D4',
-  lime: '#84CC16',
-  indigo: '#6366F1'
+  dunkelgruen: '#166534',
+  hellgruen: '#16A34A',
+  dunkelblau: '#1E40AF',
+  hellblau: '#3B82F6',
+  rot: '#DC2626',
+  gelb: '#FACC15',
+  lila: '#7C3AED',
+  orange: '#EA580C'
 };
 
 export const CHEMISTRY_POINTS = {

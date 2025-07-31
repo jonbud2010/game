@@ -45,11 +45,13 @@ Ein browserbasiertes Fußball-Sammelkartenspiel für genau 4 Spieler mit komplex
 ### 👥 Spieler-System
 - **Attribute**: Bild, Punktzahl, Position, Farbe, Marktpreis, Thema, Prozentsatz
 - **15 Positionen**: GK, CB, LB, RB, CDM, CM, CAM, LM, RM, LW, RW, ST, CF, LF, RF
-- **10 Farben**: red, blue, green, yellow, purple, orange, pink, cyan, lime, indigo
+- **8 Farben**: Dunkelgrün, Hellgrün, Dunkelblau, Hellblau, Rot, Gelb, Lila, Orange
 
 ### 🧪 Chemie-System
-- **Farb-Regel**: Minimum 3 verschiedene Farben, mindestens 2 Spieler pro Farbe
+- **Farb-Regel**: Genau 3 verschiedene Farben aus 8 verfügbaren, mindestens 2 Spieler pro Farbe
+- **Verfügbare Farben**: Dunkelgrün, Hellgrün, Dunkelblau, Hellblau, Rot, Gelb, Lila, Orange
 - **Bonus-Berechnung**: 2²=4, 3²=9, 4²=16, 5²=25, 6²=36, 7²=49 Punkte pro Farbe
+- **Optimale Verteilung**: 5-3-3 (43 Punkte) oder 4-4-3 (41 Punkte) für maximale Chemie
 
 ### ⚔️ Match-Engine
 - **Team-Stärke**: Spieler-Punkte + Chemie-Bonus

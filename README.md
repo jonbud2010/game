@@ -10,7 +10,7 @@ Sammle Fußballspieler durch Pack-Öffnungen, baue starke Teams mit cleverer Che
 
 - 🏆 **4-Spieler Liga**: Jeder gegen jeden, 6 Spiele pro Spieltag
 - 📦 **Pack-System**: Prozentsatz-basierte Spieler-Ziehungen  
-- ⚗️ **Team-Chemie**: Farbbasiertes Bonussystem (3 Farben, min. 2 Spieler)
+- ⚗️ **Team-Chemie**: Farbbasiertes Bonussystem (genau 3 aus 8 Farben, min. 2 Spieler)
 - 🎪 **Formation-Building**: Positionsgetreue Team-Aufstellung
 - 💰 **Währungssystem**: Verdiene Münzen durch Liga-Erfolg
 - 👨‍💼 **Admin-Panel**: Content-Management für Spieler, Formationen & Packs
@@ -55,8 +55,10 @@ cd backend && npx tsx src/index.ts  # Direkter TypeScript-Start
 ### Teams bauen
 - **11 Spieler** pro Team in vordefinierte **Formationen**
 - **3 verschiedene Teams** pro Spieltag (33 Spieler total)
-- **Team-Chemie**: Mindestens 3 Farben, mindestens 2 Spieler pro Farbe
-- **Chemie-Boni**: 2=4, 3=9, 4=16, 5=25, 6=36, 7=49 Punkte
+- **Team-Chemie**: Genau 3 verschiedene Farben aus 8 verfügbaren, mindestens 2 Spieler pro Farbe
+- **Verfügbare Farben**: Dunkelgrün, Hellgrün, Dunkelblau, Hellblau, Rot, Gelb, Lila, Orange
+- **Chemie-Boni**: 2²=4, 3²=9, 4²=16, 5²=25, 6²=36, 7²=49 Punkte pro Farbe
+- **Optimale Verteilung**: 5-3-3 (43 Punkte) oder 4-4-3 (41 Punkte)
 
 ### Liga-System
 - **Jeder gegen jeden**: 6 Spiele pro Spieltag

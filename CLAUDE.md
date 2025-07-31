@@ -95,12 +95,12 @@ cmd /c yarn.cmd workspace @football-tcg/backend db:seed
 ### Core Game Concepts
 - **4-Player Lobbies**: Exactly 4 players per game session
 - **Pack System**: Percentage-based player drawing with shrinking pools
-- **Team Chemistry**: Color-based bonus system requiring 3+ colors, 2+ players per color
+- **Team Chemistry**: Color-based bonus system requiring exactly 3 colors, 2+ players per color
 - **League Format**: Round-robin tournament (6 matches per matchday)
 - **Formation System**: 11-player teams with position validation
 
 ### Key Constants (shared/src/constants/game.ts)
-- Chemistry bonuses: 2=4, 3=9, 4=16, 5=25, 6=36, 7=49 points
+- Chemistry bonuses: 2²=4, 3²=9, 4²=16, 5²=25, 6²=36, 7²=49 points per color
 - League rewards: 250/200/150/100 coins for positions 1-4
 - Match simulation: 100 chances per team, percentage-based scoring
 - Team requirements: 11 players, 3 teams per matchday (33 total players)
@@ -114,8 +114,9 @@ cmd /c yarn.cmd workspace @football-tcg/backend db:seed
 15 distinct positions: GK, CB, LB, RB, CDM, CM, CAM, LM, RM, LW, RW, ST, CF, LF, RF
 
 ### Player Colors & Chemistry
-10 colors available: red, blue, green, yellow, purple, orange, pink, cyan, lime, indigo
-Teams must have minimum 3 different colors with at least 2 players per color for valid chemistry.
+8 colors available: Dunkelgrün, Hellgrün, Dunkelblau, Hellblau, Rot, Gelb, Lila, Orange
+Teams must have exactly 3 different colors with at least 2 players per color for valid chemistry.
+Optimal distributions: 5-3-3 (43 points) or 4-4-3 (41 points) for maximum chemistry.
 
 ## Technical Stack
 
