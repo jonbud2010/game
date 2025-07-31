@@ -7,7 +7,10 @@ import {
   generateMatchdayMatches,
   simulateMatch,
   simulateMatchday,
-  getLeagueTable
+  getLeagueTable,
+  createLeague,
+  simulateEntireLeague,
+  getLeagueStatus
 } from '../controllers/matchController';
 
 const router = Router();
@@ -24,5 +27,10 @@ router.post('/lobby/:lobbyId/simulate-matchday', simulateMatchday); // Simulate 
 
 // League table routes
 router.get('/lobby/:lobbyId/table', getLeagueTable); // Get league table for lobby
+
+// Tournament/League management routes
+router.post('/lobby/:lobbyId/create-league', createLeague); // Create complete league (all 3 matchdays)
+router.post('/lobby/:lobbyId/simulate-league', simulateEntireLeague); // Simulate entire league
+router.get('/lobby/:lobbyId/status', getLeagueStatus); // Get league status and progress
 
 export default router;

@@ -13,6 +13,8 @@ import AdminPlayersPage from '../pages/AdminPlayersPage';
 import AdminFormationsPage from '../pages/AdminFormationsPage';
 import AdminPacksPage from '../pages/AdminPacksPage';
 import TeamBuilderPage from '../pages/TeamBuilderPage';
+import LeaguePage from '../pages/LeaguePage';
+import MatchDetailsPage from '../pages/MatchDetailsPage';
 
 // Error boundary component
 const ErrorPage = () => (
@@ -63,6 +65,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <TeamBuilderPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'league',
+        element: (
+          <ProtectedRoute>
+            <LeaguePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'match/:matchId',
+        element: (
+          <ProtectedRoute>
+            <MatchDetailsPage />
           </ProtectedRoute>
         ),
       },

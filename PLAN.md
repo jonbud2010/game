@@ -208,10 +208,25 @@ LeagueTable (id, lobby_id, user_id, points, goals_for, goals_against, position)
   - ✅ League table management und Points-System
 
 ### Phase 4: Liga-System (Woche 7-8)
-- [ ] **Tournament-Engine**: Jeder-gegen-jeden Logik
-- [ ] **Match-Visualization**: Live-Spiel Darstellung
-- [ ] **Tabellen-System**: Punkte, Torverhältnis, Sortierung
-- [ ] **Reward-System**: Münz-Verteilung nach Tabellenplatz
+- [x] **Tournament-Engine**: Jeder-gegen-jeden Logik
+  - ✅ `createLeague()` - Automatische Liga-Erstellung für alle 3 Spieltage (18 Matches total)
+  - ✅ `simulateEntireLeague()` - Komplette Liga-Simulation mit automatischem Reward-System
+  - ✅ `getLeagueStatus()` - Detaillierter Liga-Fortschritt und Tabellen-Management
+  - ✅ Lobby-Status Updates (WAITING → IN_PROGRESS → FINISHED)
+- [x] **Match-Visualization**: Live-Spiel Darstellung
+  - ✅ `MatchDetailsPage.tsx` - Vollständige Match-Analyse mit Simulation-Replay
+  - ✅ Team-Stärken Visualisierung (Spieler-Punkte + Chemie-Bonus + Farb-Breakdown)
+  - ✅ Spielverlauf-Events (Tore, Chancen) mit Timeline-Darstellung
+  - ✅ Team-Aufstellungen mit Spieler-Details und Positionen
+- [x] **Tabellen-System**: Punkte, Torverhältnis, Sortierung
+  - ✅ `LeaguePage.tsx` - Liga-Tabelle mit korrekter Sortierung (Punkte → Torverhältnis)
+  - ✅ Spieltag-Fortschritt Visualisierung (3 Matchdays mit Status-Tracking)
+  - ✅ Spielplan-Übersicht mit Filter-Funktionen nach Spieltag
+  - ✅ Real-time Liga-Status Updates und Match-Navigation
+- [x] **Reward-System**: Münz-Verteilung nach Tabellenplatz
+  - ✅ Automatische Belohnungen: 250/200/150/100 Münzen für Plätze 1-4
+  - ✅ `finishLeague()` - Liga-Abschluss mit Münz-Update in User-Accounts
+  - ✅ Liga-Tabelle zeigt Belohnungen bei Liga-Ende an
 
 ### Phase 5: Polish & Testing (Woche 9-10)
 - [ ] **UI/UX-Verbesserung**: Responsive Design, Animationen

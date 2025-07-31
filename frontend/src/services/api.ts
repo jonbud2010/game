@@ -134,6 +134,52 @@ export interface Match {
   awayTeam?: Team;
 }
 
+export interface LeagueTableEntry {
+  id: string;
+  lobbyId: string;
+  userId: string;
+  points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  matches: number;
+  position: number;
+  user: {
+    id: string;
+    username: string;
+  };
+}
+
+export interface MatchdayProgress {
+  matchDay: number;
+  total: number;
+  played: number;
+  remaining: number;
+  completed: boolean;
+}
+
+export interface LeagueStatus {
+  totalMatches: number;
+  playedMatches: number;
+  remainingMatches: number;
+  leagueComplete: boolean;
+  currentMatchDay: number;
+  matchdayProgress: MatchdayProgress[];
+  leagueTable: LeagueTableEntry[];
+  lobbyStatus: 'WAITING' | 'IN_PROGRESS' | 'FINISHED';
+}
+
+export interface LeagueResult {
+  matchId: string;
+  matchDay: number;
+  homeTeam: string;
+  awayTeam: string;
+  score: string;
+}
+
 export interface PackOpenResult {
   drawnPlayer: Player;
   coinsSpent: number;
@@ -340,8 +386,45 @@ class ApiService {
     });
   }
 
-  async getLeagueTable(lobbyId: string): Promise<ApiResponse<any[]>> {
-    return this.makeRequest<ApiResponse<any[]>>(`/matches/lobby/${lobbyId}/table`);
+  async getLeagueTable(lobbyId: string): Promise<ApiResponse<LeagueTableEntry[]>> {
+    return this.makeRequest<ApiResponse<LeagueTableEntry[]>>(`/matches/lobby/${lobbyId}/table`);
+  }
+
+  // League management methods
+  async createLeague(lobbyId: string): Promise<ApiResponse<{
+    totalMatches: number;
+    matchdayBreakdown: {
+      matchday1: number;
+      matchday2: number;
+      matchday3: number;
+    };
+  }>> {
+    return this.makeRequest<ApiResponse<{
+      totalMatches: number;
+      matchdayBreakdown: {
+        matchday1: number;
+        matchday2: number;
+        matchday3: number;
+      };
+    }>>(`/matches/lobby/${lobbyId}/create-league`, {
+      method: 'POST',
+    });
+  }
+
+  async simulateEntireLeague(lobbyId: string): Promise<ApiResponse<{
+    results: LeagueResult[];
+    leagueComplete: boolean;
+  }>> {
+    return this.makeRequest<ApiResponse<{
+      results: LeagueResult[];
+      leagueComplete: boolean;
+    }>>(`/matches/lobby/${lobbyId}/simulate-league`, {
+      method: 'POST',
+    });
+  }
+
+  async getLeagueStatus(lobbyId: string): Promise<ApiResponse<LeagueStatus>> {
+    return this.makeRequest<ApiResponse<LeagueStatus>>(`/matches/lobby/${lobbyId}/status`);
   }
 
   // User collection methods (placeholder for future implementation)

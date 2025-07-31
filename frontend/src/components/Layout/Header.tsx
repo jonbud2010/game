@@ -55,6 +55,12 @@ const Header: React.FC = () => {
           >
             Team Builder
           </Link>
+          <Link 
+            to="/league" 
+            className={`nav-link ${isActive('/league') ? 'active' : ''}`}
+          >
+            Liga
+          </Link>
           {isAuthenticated && user?.role === 'ADMIN' && (
             <Link 
               to="/admin" 
