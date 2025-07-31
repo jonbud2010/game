@@ -114,6 +114,12 @@ export const getPackById = async (req: Request, res: Response): Promise<void> =>
 // Create new pack
 export const createPack = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('=== CREATE PACK CONTROLLER ===');
+    console.log('req.body:', req.body);
+    console.log('name type:', typeof req.body.name);
+    console.log('price type:', typeof req.body.price);
+    console.log('status type:', typeof req.body.status);
+    
     const { name, price, playerIds } = req.body;
     
     // Default imageUrl if not provided (will be updated via file upload)

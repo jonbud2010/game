@@ -6,7 +6,8 @@ export default {
   roots: ['<rootDir>/src'],
   testMatch: [
     '**/__tests__/**/*.(ts|js)',
-    '**/*.(test|spec).(ts|js)'
+    '**/*.(test|spec).(ts|js)',
+    '**/step-definitions/**/*.steps.(ts|js)'
   ],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
@@ -24,7 +25,9 @@ export default {
     'src/**/*.ts',
     '!src/**/*.d.ts',
     '!src/index.ts',
-    '!src/db/seed.ts'
+    '!src/db/seed.ts',
+    '!src/**/*.steps.ts',
+    '!src/test-utils/**'
   ],
   coverageThreshold: {
     global: {

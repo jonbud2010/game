@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { validateId, validateCreatePack, validatePackPlayerManagement } from '../middleware/validation';
+import { uploadSingleImage, handleUploadError } from '../middleware/upload';
 import {
   getAllPacks,
   getPackById,
@@ -22,8 +23,8 @@ router.get('/:id', validateId, getPackById);
 
 // Admin-only routes
 router.get('/', authenticateToken, requireAdmin, getAllPacks);
-router.post('/', authenticateToken, requireAdmin, validateCreatePack, createPack);
-router.put('/:id', authenticateToken, requireAdmin, validateId, updatePack);
+router.post('/', authenticateToken, requireAdmin, ...uploadSingleImage('packs'), validateCreatePack, createPack);
+router.put('/:id', authenticateToken, requireAdmin, validateId, ...uploadSingleImage('packs'), updatePack);
 router.delete('/:id', authenticateToken, requireAdmin, validateId, deletePack);
 
 // Pack player management (admin-only)
@@ -35,5 +36,8 @@ router.post('/:id/open', authenticateToken, validateId, openPack);
 
 // Pack percentage recalculation (admin-only)
 router.post('/:id/recalculate', authenticateToken, requireAdmin, validateId, recalculatePackPercentages);
+
+// Upload error handling
+router.use(handleUploadError);
 
 export default router;

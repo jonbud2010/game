@@ -74,7 +74,7 @@ const AdminFormationsPage: React.FC = () => {
     e.preventDefault();
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const formDataToSend = new FormData();
       
       // Add form fields
@@ -132,7 +132,7 @@ const AdminFormationsPage: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`/api/formations/${formationId}`, {
         method: 'DELETE',
         headers: {

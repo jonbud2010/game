@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import { testDb } from './src/test-utils/testDatabase.js';
 
 // Load test environment variables
 config({ path: '.env.test' });
@@ -10,11 +11,13 @@ process.env.DATABASE_URL = process.env.DATABASE_URL || 'file:./test.db';
 
 // Global test setup
 beforeAll(async () => {
-  // Setup test database or other global test configuration
-});
+  // Initialize test database
+  await testDb.initialize();
+}, 30000); // Increase timeout for database setup
 
 afterAll(async () => {
   // Cleanup after all tests
+  await testDb.disconnect();
 });
 
 // Mock console methods to reduce noise in tests

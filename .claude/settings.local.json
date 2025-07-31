@@ -58,7 +58,8 @@
       "Bash(yarn.cmd type-check:*)",
       "Bash(npm test:*)",
       "Bash(taskkill:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(yarn add:*)"
     ],
     "deny": []
   }

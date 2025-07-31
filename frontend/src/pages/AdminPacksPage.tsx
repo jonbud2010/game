@@ -61,7 +61,7 @@ const AdminPacksPage: React.FC = () => {
   const fetchPacks = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await fetch('/api/packs', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -94,7 +94,7 @@ const AdminPacksPage: React.FC = () => {
     e.preventDefault();
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const formDataToSend = new FormData();
       
       formDataToSend.append('name', formData.name);
@@ -160,7 +160,7 @@ const AdminPacksPage: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`/api/packs/${packId}`, {
         method: 'DELETE',
         headers: {
@@ -189,7 +189,7 @@ const AdminPacksPage: React.FC = () => {
 
   const handleUpdatePackPlayers = async (packId: string) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const pack = packs.find(p => p.id === packId);
       if (!pack) return;
 

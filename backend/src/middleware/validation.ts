@@ -27,6 +27,19 @@ function validateFormData(schema: Joi.ObjectSchema) {
       
       console.log('Original FormData body:', processedBody);
       
+      // Parse playerIds if it's a JSON string (from FormData) - do this first
+      if (processedBody.playerIds && typeof processedBody.playerIds === 'string') {
+        try {
+          processedBody.playerIds = JSON.parse(processedBody.playerIds);
+          console.log('Parsed playerIds from string:', processedBody.playerIds);
+        } catch (error) {
+          return res.status(400).json({
+            error: 'Validation error',
+            details: 'playerIds must be a valid JSON array'
+          });
+        }
+      }
+      
       // Convert numeric fields safely
       if (processedBody.points) {
         const pointsValue = parseInt(processedBody.points);
@@ -63,7 +76,21 @@ function validateFormData(schema: Joi.ObjectSchema) {
         processedBody.percentage = percentageValue;
       }
       
+      if (processedBody.price) {
+        const priceValue = parseInt(processedBody.price);
+        if (isNaN(priceValue)) {
+          return res.status(400).json({ 
+            error: 'Validation error',
+            details: 'Price must be a valid number'
+          });
+        }
+        processedBody.price = priceValue;
+      }
+      
       console.log('Processed FormData body:', processedBody);
+      console.log('playerIds type:', typeof processedBody.playerIds);
+      console.log('playerIds value:', processedBody.playerIds);
+      console.log('playerIds isArray:', Array.isArray(processedBody.playerIds));
       
       const { error } = schema.validate(processedBody);
       
@@ -313,10 +340,9 @@ const createPackSchema = Joi.object({
     }),
   
   imageUrl: Joi.string()
-    .uri()
     .optional()
     .messages({
-      'string.uri': 'Image URL must be a valid URL'
+      'string.base': 'Image URL must be a string'
     }),
   
   playerIds: Joi.array()
@@ -355,7 +381,7 @@ export const validateLogin = validate(loginSchema);
 export const validateCreatePlayer = validateFormData(createPlayerSchema);
 export const validateCreateLobby = validate(createLobbySchema);
 export const validateCreateFormation = validate(createFormationSchema);
-export const validateCreatePack = validate(createPackSchema);
+export const validateCreatePack = validateFormData(createPackSchema);
 export const validatePackPlayerManagement = validate(packPlayerManagementSchema);
 
 // Generic parameter validation
