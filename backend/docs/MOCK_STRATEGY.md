@@ -13,11 +13,11 @@ Diese Dokumentation definiert die Mocking-Strategie für das Football Trading Ca
 - **Was wird real getestet**: Controller-Logik, Request/Response Handling, Validation
 - **Beispiel**: `authController.test.ts`
 ```typescript
-jest.mock('../db/connection.js', () => ({
+vi.mock('../db/connection.js', () => ({
   prisma: {
     user: {
-      findFirst: jest.fn(),
-      create: jest.fn()
+      findFirst: vi.fn(),
+      create: vi.fn()
     }
   }
 }));
@@ -60,12 +60,12 @@ jest.mock('../db/connection.js', () => ({
 ### Prisma Client Mocking
 ```typescript
 // Unit Tests - Mock Prisma
-jest.mock('../db/connection.js', () => ({
+vi.mock('../db/connection.js', () => ({
   prisma: {
     user: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      findUnique: jest.fn()
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn()
     }
   }
 }));
@@ -78,9 +78,9 @@ const prisma = testDb.getPrisma();
 ### bcrypt Mocking
 ```typescript
 // Unit Tests
-jest.mock('bcryptjs', () => ({
-  hash: jest.fn().mockResolvedValue('hashed-password'),
-  compare: jest.fn().mockResolvedValue(true)
+vi.mock('bcryptjs', () => ({
+  hash: vi.fn().mockResolvedValue('hashed-password'),
+  compare: vi.fn().mockResolvedValue(true)
 }));
 
 // Integration Tests - Real bcrypt
@@ -90,9 +90,9 @@ import bcrypt from 'bcryptjs';
 ### JWT Mocking
 ```typescript
 // Unit Tests
-jest.mock('jsonwebtoken', () => ({
-  sign: jest.fn().mockReturnValue('mock-token'),
-  verify: jest.fn().mockReturnValue({ userId: 'test-id' })
+vi.mock('jsonwebtoken', () => ({
+  sign: vi.fn().mockReturnValue('mock-token'),
+  verify: vi.fn().mockReturnValue({ userId: 'test-id' })
 }));
 
 // Integration Tests - Real JWT
@@ -183,8 +183,8 @@ const testUser = await factories.createUser({
 ## Tools & Utilities
 
 ### Mock Libraries
-- **Jest**: Standard Mocking Framework
-- **jest-cucumber**: Gherkin zu Jest Mapping
+- **Vitest**: Standard Mocking Framework
+- **vitest-cucumber (or alternative BDD library)**: Gherkin zu Vitest Mapping
 - **supertest**: HTTP API Testing
 
 ### Test Utilities
@@ -210,7 +210,7 @@ const testUser = await factories.createUser({
 4. **Type Safety**: TypeScript Mock Definitions
 
 ### Lösungsansätze
-1. Verwende `jest.mocked()` für Type Safety
+1. Verwende `vi.mocked()` für Type Safety
 2. Nutze `beforeEach/afterEach` für Clean State
 3. Implementiere proper `async/await` in Tests
 4. Definiere Mock Types explizit

@@ -12,14 +12,17 @@ vi.mock('../db/connection', () => ({
       findMany: vi.fn(),
       create: vi.fn(),
       findUnique: vi.fn(),
-      update: vi.fn()
+      update: vi.fn(),
+      delete: vi.fn()
     },
     lobbyMember: {
       findFirst: vi.fn(),
       create: vi.fn(),
       deleteMany: vi.fn(),
+      delete: vi.fn(),
       count: vi.fn()
-    }
+    },
+    $transaction: vi.fn()
   }
 }));
 
@@ -185,7 +188,37 @@ describe('Lobby Controller', () => {
         updatedAt: new Date()
       };
 
-      mockedPrisma.lobby.create.mockResolvedValue(mockCreatedLobby);
+      const mockCompleteCreatedLobby = {
+        ...mockCreatedLobby,
+        members: [
+          {
+            userId: 'user-1',
+            joinedAt: new Date(),
+            user: {
+              id: 'user-1',
+              username: 'testuser'
+            }
+          }
+        ]
+      };
+
+      // Mock the transaction to return the created lobby
+      mockedPrisma.$transaction.mockImplementation(async (callback) => {
+        return await callback({
+          lobby: {
+            create: vi.fn().mockResolvedValue(mockCreatedLobby)
+          },
+          lobbyMember: {
+            create: vi.fn().mockResolvedValue({})
+          }
+        });
+      });
+
+      // Mock finding the lobby with members after creation
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockCompleteCreatedLobby);
+      
+      // Mock the findFirst for user existing membership check
+      mockedPrisma.lobbyMember.findFirst.mockResolvedValue(null);
 
       const response = await request(app)
         .post('/lobbies')
@@ -198,15 +231,14 @@ describe('Lobby Controller', () => {
           id: 'lobby-new',
           name: 'New Test Lobby',
           maxPlayers: 4,
-          status: 'WAITING'
-        }
-      });
-
-      expect(mockedPrisma.lobby.create).toHaveBeenCalledWith({
-        data: {
-          name: 'New Test Lobby',
-          maxPlayers: 4,
-          status: 'WAITING'
+          currentPlayers: 1,
+          status: 'WAITING',
+          members: [
+            {
+              userId: 'user-1',
+              username: 'testuser'
+            }
+          ]
         }
       });
     });
@@ -224,7 +256,10 @@ describe('Lobby Controller', () => {
     });
 
     it('should handle database errors', async () => {
-      mockedPrisma.lobby.create.mockRejectedValue(new Error('Database error'));
+      // Mock findFirst to pass the existing membership check
+      mockedPrisma.lobbyMember.findFirst.mockResolvedValue(null);
+      // Mock transaction to fail
+      mockedPrisma.$transaction.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
         .post('/lobbies')
@@ -246,25 +281,54 @@ describe('Lobby Controller', () => {
         maxPlayers: 4,
         status: 'WAITING',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        members: [
+          { userId: 'user-2' },
+          { userId: 'user-3' }
+        ]
       };
 
-      // Mock: lobby exists
-      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
-      
-      // Mock: user not already in lobby
+      const mockUpdatedLobby = {
+        ...mockLobby,
+        members: [
+          {
+            userId: 'user-2',
+            joinedAt: new Date(),
+            user: { id: 'user-2', username: 'user2' }
+          },
+          {
+            userId: 'user-3',
+            joinedAt: new Date(),
+            user: { id: 'user-3', username: 'user3' }
+          },
+          {
+            userId: 'user-1',
+            joinedAt: new Date(),
+            user: { id: 'user-1', username: 'testuser' }
+          }
+        ]
+      };
+
+      // Mock: user not already in lobby (first call)
       mockedPrisma.lobbyMember.findFirst.mockResolvedValue(null);
       
-      // Mock: current member count
-      mockedPrisma.lobbyMember.count.mockResolvedValue(2);
+      // Mock: lobby exists with members (first call to get lobby for join)
+      mockedPrisma.lobby.findUnique.mockResolvedValueOnce(mockLobby);
       
-      // Mock: member creation
-      const mockMember = {
-        lobbyId: 'lobby-1',
-        userId: 'user-1',
-        joinedAt: new Date()
-      };
-      mockedPrisma.lobbyMember.create.mockResolvedValue(mockMember);
+      // Mock: updated lobby after join (second call to get complete data)
+      mockedPrisma.lobby.findUnique.mockResolvedValueOnce(mockUpdatedLobby);
+
+      // Mock the transaction
+      mockedPrisma.$transaction.mockImplementation(async (callback) => {
+        return await callback({
+          lobbyMember: {
+            create: vi.fn().mockResolvedValue({})
+          },
+          lobby: {
+            update: vi.fn().mockResolvedValue({})
+          }
+        });
+      });
 
       const response = await request(app)
         .post('/lobbies/lobby-1/join');
@@ -272,14 +336,17 @@ describe('Lobby Controller', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         success: true,
-        message: 'Successfully joined lobby'
-      });
-
-      expect(mockedPrisma.lobbyMember.create).toHaveBeenCalledWith({
         data: {
-          lobbyId: 'lobby-1',
-          userId: 'user-1'
-        }
+          id: 'lobby-1',
+          name: 'Test Lobby',
+          maxPlayers: 4,
+          currentPlayers: 3,
+          status: 'WAITING',
+          members: expect.arrayContaining([
+            expect.objectContaining({ userId: 'user-1', username: 'testuser' })
+          ])
+        },
+        message: 'Joined lobby successfully'
       });
     });
 
@@ -297,18 +364,23 @@ describe('Lobby Controller', () => {
     });
 
     it('should return error for full lobby', async () => {
-      const mockLobby = {
+      const mockFullLobby = {
         id: 'lobby-1',
         name: 'Test Lobby',
         maxPlayers: 4,
         status: 'WAITING',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        members: [
+          { userId: 'user-2' },
+          { userId: 'user-3' },
+          { userId: 'user-4' },
+          { userId: 'user-5' }
+        ]
       };
 
-      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockFullLobby);
       mockedPrisma.lobbyMember.findFirst.mockResolvedValue(null);
-      mockedPrisma.lobbyMember.count.mockResolvedValue(4); // Full lobby
 
       const response = await request(app)
         .post('/lobbies/lobby-1/join');
@@ -345,7 +417,7 @@ describe('Lobby Controller', () => {
       expect(response.status).toBe(400);
       expect(response.body).toMatchObject({
         success: false,
-        error: 'User already in lobby'
+        error: 'You are already in an active lobby'
       });
     });
   });
@@ -358,18 +430,34 @@ describe('Lobby Controller', () => {
         maxPlayers: 4,
         status: 'WAITING',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        members: [
+          { userId: 'user-1' },
+          { userId: 'user-2' }
+        ]
       };
 
-      const mockExistingMember = {
+      const mockMembership = {
+        id: 'membership-1',
         lobbyId: 'lobby-1',
         userId: 'user-1',
-        joinedAt: new Date()
+        joinedAt: new Date(),
+        lobby: mockLobby
       };
 
-      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
-      mockedPrisma.lobbyMember.findFirst.mockResolvedValue(mockExistingMember);
-      mockedPrisma.lobbyMember.deleteMany.mockResolvedValue({ count: 1 });
+      mockedPrisma.lobbyMember.findFirst.mockResolvedValue(mockMembership);
+      
+      // Mock the transaction
+      mockedPrisma.$transaction.mockImplementation(async (callback) => {
+        return await callback({
+          lobbyMember: {
+            delete: vi.fn().mockResolvedValue({})
+          },
+          lobby: {
+            update: vi.fn().mockResolvedValue({})
+          }
+        });
+      });
 
       const response = await request(app)
         .delete('/lobbies/lobby-1/leave');
@@ -377,27 +465,20 @@ describe('Lobby Controller', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         success: true,
-        message: 'Successfully left lobby'
-      });
-
-      expect(mockedPrisma.lobbyMember.deleteMany).toHaveBeenCalledWith({
-        where: {
-          lobbyId: 'lobby-1',
-          userId: 'user-1'
-        }
+        message: 'Left lobby successfully'
       });
     });
 
     it('should return error for non-existent lobby', async () => {
-      mockedPrisma.lobby.findUnique.mockResolvedValue(null);
+      mockedPrisma.lobbyMember.findFirst.mockResolvedValue(null);
 
       const response = await request(app)
         .delete('/lobbies/nonexistent/leave');
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(400);
       expect(response.body).toMatchObject({
         success: false,
-        error: 'Lobby not found'
+        error: 'You are not a member of this lobby'
       });
     });
 
@@ -420,7 +501,7 @@ describe('Lobby Controller', () => {
       expect(response.status).toBe(400);
       expect(response.body).toMatchObject({
         success: false,
-        error: 'User not in lobby'
+        error: 'You are not a member of this lobby'
       });
     });
   });

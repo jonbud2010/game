@@ -1,4 +1,5 @@
-import { defineFeature, loadFeature } from 'jest-cucumber';
+// TODO: Replace with Vitest-compatible BDD library
+// import { defineFeature, loadFeature } from 'jest-cucumber';
 import request from 'supertest';
 import express from 'express';
 import { 

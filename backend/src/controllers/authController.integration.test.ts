@@ -8,8 +8,8 @@ import request from 'supertest';
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { testDb, createTestUsers } from '../../jest.integration.setup';
-import { authRoutes } from '../routes/authRoutes';
+import { testDb, createTestUsers } from '../../vitest.integration.setup';
+import authRoutes from '../routes/authRoutes';
 
 // Express App für Integration Tests
 const app = express();
@@ -29,7 +29,6 @@ describe('Authentication Integration Tests', () => {
         .post('/api/auth/register')
         .send(userData)
         .expect(201);
-
       expect(response.body).toMatchObject({
         message: 'User registered successfully',
         user: {

@@ -4,9 +4,28 @@ import {
   getLobbyMatches,
   getMatchById,
   getLeagueTable,
-  getLeagueStatus
+  getLeagueStatus,
+  generateMatchdayMatches,
+  simulateMatch,
+  simulateMatchday,
+  createLeague,
+  simulateEntireLeague
 } from './matchController';
 import { prisma } from '../db/client';
+
+// Mock shared package functions
+vi.mock('@football-tcg/shared', () => ({
+  simulateCompleteMatch: vi.fn(),
+  simulateLeague: vi.fn(),
+  generateLeagueMatches: vi.fn(),
+  calculateTeamStrength: vi.fn(),
+  LEAGUE_REWARDS: {
+    1: 250,
+    2: 200,
+    3: 150,
+    4: 100
+  }
+}));
 
 // Mock Prisma
 vi.mock('../db/client', () => ({
@@ -242,7 +261,7 @@ describe('Match Controller', () => {
         .mockResolvedValueOnce(18) // Total matches
         .mockResolvedValueOnce(12) // Played matches
         .mockResolvedValueOnce(6) // Matchday 1 total
-        .mockResolvedValueOnceImpl(() => Promise.resolve(6)) // Matchday 1 played
+        .mockResolvedValueOnce(6) // Matchday 1 played
         .mockResolvedValueOnce(6) // Matchday 2 total
         .mockResolvedValueOnce(6) // Matchday 2 played
         .mockResolvedValueOnce(6) // Matchday 3 total
@@ -294,6 +313,361 @@ describe('Match Controller', () => {
           lobbyStatus: 'IN_PROGRESS'
         })
       });
+    });
+  });
+
+  describe('generateMatchdayMatches', () => {
+    beforeEach(() => {
+      mockRequest.params = { lobbyId: 'lobby1' };
+      mockRequest.body = { matchDay: 1 };
+    });
+
+    it('should generate matches for a matchday successfully', async () => {
+      const { generateLeagueMatches } = await import('@football-tcg/shared');
+      const mockLobby = {
+        id: 'lobby1',
+        members: [
+          { userId: 'user1' },
+          { userId: 'user2' },
+          { userId: 'user3' },
+          { userId: 'user4' }
+        ]
+      };
+      const mockTeams = [
+        { id: 'team1', name: 'Team 1', userId: 'user1', matchDay: 1, teamPlayers: [] },
+        { id: 'team2', name: 'Team 2', userId: 'user2', matchDay: 1, teamPlayers: [] },
+        { id: 'team3', name: 'Team 3', userId: 'user3', matchDay: 1, teamPlayers: [] },
+        { id: 'team4', name: 'Team 4', userId: 'user4', matchDay: 1, teamPlayers: [] }
+      ];
+      const mockMatches = [
+        { id: 'match1', homeTeamId: 'team1', awayTeamId: 'team2' }
+      ];
+
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.match.findMany.mockResolvedValue([]);
+      mockedPrisma.team.findMany.mockResolvedValue(mockTeams);
+      vi.mocked(generateLeagueMatches).mockReturnValue([
+        { homeTeam: mockTeams[0], awayTeam: mockTeams[1], matchNumber: 1 }
+      ]);
+      mockedPrisma.match.create.mockResolvedValue(mockMatches[0]);
+
+      await generateMatchdayMatches(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(201);
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          message: expect.stringContaining('Generated')
+        })
+      );
+    });
+
+    it('should return error if lobby not found', async () => {
+      mockedPrisma.lobby.findUnique.mockResolvedValue(null);
+
+      await generateMatchdayMatches(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Lobby not found' });
+    });
+
+    it('should return error if lobby does not have 4 players', async () => {
+      const mockLobby = {
+        id: 'lobby1',
+        members: [{ userId: 'user1' }, { userId: 'user2' }]
+      };
+
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+
+      await generateMatchdayMatches(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Lobby must have exactly 4 players to generate matches' });
+    });
+  });
+
+  describe('simulateMatch', () => {
+    beforeEach(() => {
+      mockRequest.params = { id: 'match1' };
+    });
+
+    it('should simulate match successfully', async () => {
+      const { simulateCompleteMatch } = await import('@football-tcg/shared');
+      const mockMatch = {
+        id: 'match1',
+        played: false,
+        homeTeam: {
+          id: 'team1',
+          name: 'Team 1',
+          userId: 'user1',
+          formationId: 'formation1',
+          teamPlayers: []
+        },
+        awayTeam: {
+          id: 'team2',
+          name: 'Team 2',
+          userId: 'user2',
+          formationId: 'formation2',
+          teamPlayers: []
+        },
+        lobby: {
+          members: [{ userId: 'user1' }]
+        }
+      };
+      const mockSimulationResult = {
+        simulation: { events: [], team1Chances: 100, team2Chances: 100, team1Percentage: 50, team2Percentage: 50 },
+        result: { 
+          homeScore: 2, 
+          awayScore: 1, 
+          homePoints: 3, 
+          awayPoints: 0,
+          homeTeam: { userId: 'user1' },
+          awayTeam: { userId: 'user2' }
+        },
+        homeStrength: { teamId: 'team1', totalStrength: 100 },
+        awayStrength: { teamId: 'team2', totalStrength: 90 }
+      };
+
+      mockedPrisma.match.findUnique.mockResolvedValue(mockMatch);
+      vi.mocked(simulateCompleteMatch).mockReturnValue(mockSimulationResult);
+      mockedPrisma.match.update.mockResolvedValue({ ...mockMatch, played: true });
+      mockedPrisma.leagueTable.upsert.mockResolvedValue({});
+
+      await simulateMatch(mockRequest as Request, mockResponse as Response);
+
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          message: 'Match simulated successfully'
+        })
+      );
+    });
+
+    it('should return error if match not found', async () => {
+      mockedPrisma.match.findUnique.mockResolvedValue(null);
+
+      await simulateMatch(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(404);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Match not found' });
+    });
+
+    it('should return error if match already played', async () => {
+      const mockMatch = {
+        id: 'match1',
+        played: true,
+        lobby: { members: [{ userId: 'user1' }] }
+      };
+
+      mockedPrisma.match.findUnique.mockResolvedValue(mockMatch);
+
+      await simulateMatch(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'Match has already been played' });
+    });
+  });
+
+  describe('simulateMatchday', () => {
+    beforeEach(() => {
+      mockRequest.params = { lobbyId: 'lobby1' };
+      mockRequest.body = { matchDay: 1 };
+    });
+
+    it('should simulate all matches for a matchday', async () => {
+      const { simulateCompleteMatch } = await import('@football-tcg/shared');
+      const mockLobby = {
+        id: 'lobby1',
+        members: [{ userId: 'user1' }]
+      };
+      const mockMatches = [
+        {
+          id: 'match1',
+          homeTeam: {
+            id: 'team1',
+            name: 'Team 1',
+            teamPlayers: []
+          },
+          awayTeam: {
+            id: 'team2',
+            name: 'Team 2',
+            teamPlayers: []
+          }
+        }
+      ];
+      const mockSimulationResult = {
+        simulation: { events: [] },
+        result: { 
+          homeScore: 1, 
+          awayScore: 0,
+          homeTeam: { userId: 'user1' },
+          awayTeam: { userId: 'user2' }
+        }
+      };
+
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.match.findMany.mockResolvedValue(mockMatches);
+      vi.mocked(simulateCompleteMatch).mockReturnValue(mockSimulationResult);
+      mockedPrisma.match.update.mockResolvedValue({});
+      mockedPrisma.leagueTable.upsert.mockResolvedValue({});
+
+      await simulateMatchday(mockRequest as Request, mockResponse as Response);
+
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          message: expect.stringContaining('Simulated')
+        })
+      );
+    });
+
+    it('should return error if no unplayed matches found', async () => {
+      const mockLobby = {
+        id: 'lobby1',
+        members: [{ userId: 'user1' }]
+      };
+
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.match.findMany.mockResolvedValue([]);
+
+      await simulateMatchday(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'No unplayed matches found for this matchday' });
+    });
+  });
+
+  describe('createLeague', () => {
+    beforeEach(() => {
+      mockRequest.params = { lobbyId: 'lobby1' };
+    });
+
+    it('should create league successfully', async () => {
+      const { generateLeagueMatches } = await import('@football-tcg/shared');
+      const mockLobby = {
+        id: 'lobby1',
+        members: [
+          { userId: 'user1' },
+          { userId: 'user2' },
+          { userId: 'user3' },
+          { userId: 'user4' }
+        ]
+      };
+      const mockTeams = [
+        { id: 'team1', teamPlayers: [] },
+        { id: 'team2', teamPlayers: [] },
+        { id: 'team3', teamPlayers: [] },
+        { id: 'team4', teamPlayers: [] }
+      ];
+
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.match.findMany.mockResolvedValue([]);
+      mockedPrisma.team.findMany.mockResolvedValue(mockTeams);
+      vi.mocked(generateLeagueMatches).mockReturnValue([
+        { homeTeam: mockTeams[0], awayTeam: mockTeams[1], matchNumber: 1 }
+      ]);
+      mockedPrisma.match.create.mockResolvedValue({ id: 'match1', matchDay: 1 });
+      mockedPrisma.lobby.update.mockResolvedValue({});
+
+      await createLeague(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(201);
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          message: expect.stringContaining('League created')
+        })
+      );
+    });
+
+    it('should return error if league already exists', async () => {
+      const mockLobby = {
+        id: 'lobby1',
+        members: [
+          { userId: 'user1' },
+          { userId: 'user2' },
+          { userId: 'user3' },
+          { userId: 'user4' }
+        ]
+      };
+
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.match.findMany.mockResolvedValue([{ id: 'existing-match' }]);
+
+      await createLeague(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(409);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'League already exists for this lobby' });
+    });
+  });
+
+  describe('simulateEntireLeague', () => {
+    beforeEach(() => {
+      mockRequest.params = { lobbyId: 'lobby1' };
+    });
+
+    it('should simulate entire league successfully', async () => {
+      const { simulateCompleteMatch } = await import('@football-tcg/shared');
+      const mockLobby = {
+        id: 'lobby1',
+        members: [{ userId: 'user1' }]
+      };
+      const mockMatches = [
+        {
+          id: 'match1',
+          matchDay: 1,
+          homeTeam: {
+            id: 'team1',
+            name: 'Team 1',
+            teamPlayers: []
+          },
+          awayTeam: {
+            id: 'team2',
+            name: 'Team 2',
+            teamPlayers: []
+          }
+        }
+      ];
+      const mockSimulationResult = {
+        simulation: { events: [] },
+        result: { 
+          homeScore: 2, 
+          awayScore: 1,
+          homeTeam: { userId: 'user1' },
+          awayTeam: { userId: 'user2' }
+        }
+      };
+
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.match.findMany.mockResolvedValue(mockMatches);
+      vi.mocked(simulateCompleteMatch).mockReturnValue(mockSimulationResult);
+      mockedPrisma.match.update.mockResolvedValue({});
+      mockedPrisma.leagueTable.upsert.mockResolvedValue({});
+      mockedPrisma.match.count.mockResolvedValue(0);
+
+      await simulateEntireLeague(mockRequest as Request, mockResponse as Response);
+
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          message: expect.stringContaining('Simulated')
+        })
+      );
+    });
+
+    it('should return error if no unplayed matches found', async () => {
+      const mockLobby = {
+        id: 'lobby1',
+        members: [{ userId: 'user1' }]
+      };
+
+      mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.match.findMany.mockResolvedValue([]);
+
+      await simulateEntireLeague(mockRequest as Request, mockResponse as Response);
+
+      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockJson).toHaveBeenCalledWith({ error: 'No unplayed matches found' });
     });
   });
 });

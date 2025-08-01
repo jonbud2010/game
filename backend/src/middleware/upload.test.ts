@@ -50,7 +50,7 @@ describe('Upload Middleware', () => {
     };
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup sharp mock
     mockedSharp.mockReturnValue(mockSharpInstance as any);
@@ -130,7 +130,7 @@ describe('Upload Middleware', () => {
 
   describe('uploadSingleImage middleware', () => {
     let middleware: any;
-    const mockMulterSingle = jest.fn();
+    const mockMulterSingle = vi.fn();
     const mockMulterInstance = {
       single: mockMulterSingle
     };
@@ -309,16 +309,16 @@ describe('Upload Middleware', () => {
   describe('setupStaticFileServing', () => {
     it('should setup express static middleware', () => {
       const mockApp = {
-        use: jest.fn()
+        use: vi.fn()
       };
-      const mockStatic = jest.fn();
+      const mockStatic = vi.fn();
       
       // Mock express.static
       const originalRequire = require;
       const mockExpress = { static: mockStatic };
       
-      jest.mock('express', () => mockExpress);
-      require = jest.fn().mockReturnValue(mockExpress);
+      vi.mock('express', () => mockExpress);
+      require = vi.fn().mockReturnValue(mockExpress);
 
       setupStaticFileServing(mockApp);
 
@@ -331,12 +331,12 @@ describe('Upload Middleware', () => {
 
   describe('multer configuration', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should configure multer with correct options', () => {
       // Re-import to trigger multer configuration
-      jest.resetModules();
+      vi.resetModules();
       require('./upload');
 
       expect(mockedMulter).toHaveBeenCalledWith({
@@ -350,7 +350,7 @@ describe('Upload Middleware', () => {
     });
 
     it('should accept valid file types', () => {
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       const validFile: Express.Multer.File = {
         mimetype: 'image/jpeg'
       } as Express.Multer.File;
@@ -367,7 +367,7 @@ describe('Upload Middleware', () => {
     });
 
     it('should reject invalid file types', () => {
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       const invalidFile: Express.Multer.File = {
         mimetype: 'text/plain'
       } as Express.Multer.File;

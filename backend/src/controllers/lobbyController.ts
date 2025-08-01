@@ -111,6 +111,14 @@ export const createLobby = async (req: AuthenticatedRequest, res: Response): Pro
     const { name } = req.body;
     const userId = req.user!.userId;
 
+    // Validation
+    if (!name || name.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        error: 'Lobby name is required'
+      });
+    }
+
     // Check if user is already in a lobby
     const existingMembership = await prisma.lobbyMember.findFirst({
       where: {

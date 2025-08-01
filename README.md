@@ -71,7 +71,7 @@ cd backend && yarn tsx src/index.ts  # Direkter TypeScript-Start
 - **React 19** mit TypeScript
 - **Vite** für Build & Dev Server
 - **CSS Modules** für Styling
-- **Jest + Testing Library** für Tests
+- **Vitest + Testing Library** für Tests
 
 ### Backend (`/backend`)
 - **Node.js + Express** REST API
@@ -135,8 +135,8 @@ yarn build:backend   # Nur Backend bauen
 # Quality (Alle Workspaces)
 yarn lint            # ESLint für alle Packages
 yarn type-check      # TypeScript Check
-yarn test            # Jest Tests
-yarn test:watch      # Jest Watch Mode
+yarn test            # Vitest Tests
+yarn test:watch      # Vitest Watch Mode
 
 # Workspace-spezifisch
 yarn workspace @football-tcg/frontend add react-router-dom
@@ -149,7 +149,7 @@ yarn workspace @football-tcg/shared build
 - **TypeScript Strict Mode** für Typsicherheit
 - **ESLint + Prettier** für Code-Formatierung  
 - **Husky Pre-commit Hooks** für Qualitätschecks
-- **Jest + Testing Library** für umfassende Tests
+- **Vitest + Testing Library** für umfassende Tests
 
 ### 🔧 Troubleshooting
 

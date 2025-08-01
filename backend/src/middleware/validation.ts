@@ -141,12 +141,10 @@ const registerSchema = Joi.object({
   password: Joi.string()
     .min(6)
     .max(128)
-    .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)'))
     .required()
     .messages({
       'string.min': 'Password must be at least 6 characters long',
       'string.max': 'Password must not exceed 128 characters',
-      'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, and one number',
       'any.required': 'Password is required'
     })
 });

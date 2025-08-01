@@ -95,9 +95,21 @@ describe('Player Controller', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toMatchObject({
-        success: true,
-        data: mockPlayers
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data[0]).toMatchObject({
+        id: 'player-1',
+        name: 'Test Player 1',
+        position: 'ST',
+        color: 'red',
+        points: 85
+      });
+      expect(response.body.data[1]).toMatchObject({
+        id: 'player-2', 
+        name: 'Test Player 2',
+        position: 'GK',
+        color: 'blue',
+        points: 78
       });
 
       expect(mockedPrisma.player.findMany).toHaveBeenCalledWith({
@@ -133,9 +145,14 @@ describe('Player Controller', () => {
       const response = await request(app).get('/players');
 
       expect(response.status).toBe(200);
-      expect(response.body).toMatchObject({
-        success: true,
-        data: mockPlayers
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0]).toMatchObject({
+        id: 'player-1',
+        name: 'Test Player 1',
+        position: 'ST',
+        color: 'red',
+        points: 85
       });
 
       expect(mockedPrisma.player.findMany).toHaveBeenCalledWith({
@@ -173,6 +190,7 @@ describe('Player Controller', () => {
       const mockCreatedPlayer = {
         id: 'player-new',
         ...validPlayerData,
+        color: 'HELLGRUEN', // Mock should return the transformed color
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -184,13 +202,24 @@ describe('Player Controller', () => {
         .send(validPlayerData);
 
       expect(response.status).toBe(201);
-      expect(response.body).toMatchObject({
-        success: true,
-        data: mockCreatedPlayer
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        name: 'New Player',
+        position: 'CM',
+        points: 82,
+        marketPrice: 180
       });
+      // The actual color should be the converted German name
+      expect(response.body.data.color).toBe('HELLGRUEN');
 
       expect(mockedPrisma.player.create).toHaveBeenCalledWith({
-        data: validPlayerData
+        data: expect.objectContaining({
+          name: 'New Player',
+          position: 'CM',
+          color: 'HELLGRUEN',
+          points: 82,
+          marketPrice: 180
+        })
       });
     });
 
@@ -259,9 +288,12 @@ describe('Player Controller', () => {
         .send(updateData);
 
       expect(response.status).toBe(200);
-      expect(response.body).toMatchObject({
-        success: true,
-        data: mockUpdatedPlayer
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        id: 'player-1',
+        name: 'Updated Player',
+        points: 90,
+        marketPrice: 250
       });
 
       expect(mockedPrisma.player.update).toHaveBeenCalledWith({

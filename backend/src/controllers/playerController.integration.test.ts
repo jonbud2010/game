@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { testDb, createTestUsers, createTestPlayers } from '../../jest.integration.setup';
+import { testDb, createTestUsers, createTestPlayers } from '../../vitest.integration.setup';
 import { playerRoutes } from '../routes/playerRoutes';
 import { authRoutes } from '../routes/authRoutes';
 

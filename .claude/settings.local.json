@@ -88,8 +88,11 @@
       "Bash(fi)",
       "Bash(done)",
       "Bash(yarn workspace @football-tcg/shared test)",
-      "Bash(yarn jest:*)",
-      "Bash(yarn workspace @football-tcg/frontend test)"
+      "Bash(yarn test:*)",
+      "Bash(yarn workspace @football-tcg/frontend test)",
+      "Bash(npx vitest run:*)",
+      "Bash(yarn workspace @football-tcg/backend prisma migrate:*)",
+      "Bash(DATABASE_URL=\"file:./test.db\" npx prisma migrate deploy)"
     ],
     "deny": []
   }

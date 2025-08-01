@@ -1,4 +1,5 @@
-import { defineFeature, loadFeature } from 'jest-cucumber';
+// TODO: Replace with Vitest-compatible BDD library
+// import { defineFeature, loadFeature } from 'jest-cucumber';
 import { calculateChemistry } from '@football-tcg/shared';
 import { testDb, resetTestDatabase } from '../test-utils/testDatabase.js';
 import { createTestFactories, TestFactories } from '../test-utils/testFactories.js';

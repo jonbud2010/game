@@ -19,12 +19,19 @@ vi.mock('../db/connection', () => ({
 
 // Mock bcrypt
 vi.mock('bcryptjs', () => ({
+  default: {
+    hash: vi.fn(),
+    compare: vi.fn()
+  },
   hash: vi.fn(),
   compare: vi.fn()
 }));
 
 // Mock jwt
 vi.mock('jsonwebtoken', () => ({
+  default: {
+    sign: vi.fn()
+  },
   sign: vi.fn()
 }));
 
@@ -73,7 +80,7 @@ describe('Auth Controller', () => {
         email: 'test@example.com',
         passwordHash: 'hashed-password',
         coins: 1000,
-        role: 'USER' as const,
+        role: 'PLAYER' as const,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -88,17 +95,15 @@ describe('Auth Controller', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toMatchObject({
-        success: true,
-        data: {
-          user: {
-            id: 'user-1',
-            username: 'testuser',
-            email: 'test@example.com',
-            coins: 1000,
-            role: 'USER'
-          },
-          token: 'mock-jwt-token'
-        }
+        message: 'User registered successfully',
+        user: {
+          id: 'user-1',
+          username: 'testuser',
+          email: 'test@example.com',
+          coins: 1000,
+          role: 'PLAYER'
+        },
+        token: 'mock-jwt-token'
       });
 
       // Verify bcrypt.hash was called with correct parameters
@@ -111,7 +116,15 @@ describe('Auth Controller', () => {
           email: 'test@example.com',
           passwordHash: 'hashed-password',
           coins: 1000,
-          role: 'USER'
+          role: 'PLAYER'
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          coins: true,
+          role: true,
+          createdAt: true
         }
       });
     });
@@ -124,7 +137,7 @@ describe('Auth Controller', () => {
         email: 'test@example.com',
         passwordHash: 'hash',
         coins: 1000,
-        role: 'USER' as const,
+        role: 'PLAYER' as const,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -165,8 +178,7 @@ describe('Auth Controller', () => {
 
       expect(response.status).toBe(500);
       expect(response.body).toMatchObject({
-        success: false,
-        error: 'Failed to register user'
+        error: 'Internal server error'
       });
     });
   });
@@ -185,7 +197,7 @@ describe('Auth Controller', () => {
         email: 'test@example.com',
         passwordHash: 'hashed-password',
         coins: 1000,
-        role: 'USER' as const,
+        role: 'PLAYER' as const,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -203,17 +215,15 @@ describe('Auth Controller', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
-        success: true,
-        data: {
-          user: {
-            id: 'user-1',
-            username: 'testuser',
-            email: 'test@example.com',
-            coins: 1000,
-            role: 'USER'
-          },
-          token: 'mock-jwt-token'
-        }
+        message: 'Login successful',
+        user: {
+          id: 'user-1',
+          username: 'testuser',
+          email: 'test@example.com',
+          coins: 1000,
+          role: 'PLAYER'
+        },
+        token: 'mock-jwt-token'
       });
 
       // Verify password comparison
@@ -242,7 +252,7 @@ describe('Auth Controller', () => {
         email: 'test@example.com',
         passwordHash: 'hashed-password',
         coins: 1000,
-        role: 'USER' as const,
+        role: 'PLAYER' as const,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -283,8 +293,7 @@ describe('Auth Controller', () => {
 
       expect(response.status).toBe(500);
       expect(response.body).toMatchObject({
-        success: false,
-        error: 'Failed to login'
+        error: 'Internal server error'
       });
     });
   });

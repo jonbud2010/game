@@ -1,18 +1,38 @@
 import { Request, Response } from 'express';
-import { prisma } from '../db/client';
+import { prisma } from '../db/connection';
 
 /**
  * Player Controller
  * Handles CRUD operations for football players
  */
 
+// Color mapping for English to German color names
+const englishToGerman: { [key: string]: string } = {
+  'green': 'hellgruen',
+  'darkgreen': 'dunkelgruen',
+  'blue': 'hellblau',
+  'darkblue': 'dunkelblau',
+  'red': 'rot',
+  'yellow': 'gelb',
+  'purple': 'lila',
+  'orange': 'orange'
+};
+
 // Get all players
 export const getAllPlayers = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { position, color, minPoints, maxPrice } = req.query;
+    
+    const where: any = {};
+    
+    if (position) where.position = position;
+    if (color) where.color = color;
+    if (minPoints) where.points = { ...where.points, gte: parseInt(minPoints as string) };
+    if (maxPrice) where.marketPrice = { ...where.marketPrice, lte: parseInt(maxPrice as string) };
+
     const players = await prisma.player.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
+      where,
+      orderBy: { points: 'desc' }
     });
 
     res.json({
@@ -23,6 +43,7 @@ export const getAllPlayers = async (req: Request, res: Response): Promise<void> 
   } catch (error) {
     console.error('Error fetching players:', error);
     res.status(500).json({
+      success: false,
       error: 'Failed to fetch players',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -62,6 +83,7 @@ export const getPlayerById = async (req: Request, res: Response): Promise<void> 
 
     if (!player) {
       res.status(404).json({
+        success: false,
         error: 'Player not found',
         message: `No player found with ID: ${id}`
       });
@@ -75,6 +97,7 @@ export const getPlayerById = async (req: Request, res: Response): Promise<void> 
   } catch (error) {
     console.error('Error fetching player:', error);
     res.status(500).json({
+      success: false,
       error: 'Failed to fetch player',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -90,8 +113,49 @@ export const createPlayer = async (req: Request, res: Response): Promise<void> =
     
     const { name, points, position, color, marketPrice, theme, percentage } = req.body;
     
+    // Validation
+    const validationErrors: string[] = [];
+    
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      validationErrors.push('Name is required and must be a non-empty string');
+    }
+    
+    if (points === undefined || points === null || typeof points !== 'number' || points < 0) {
+      validationErrors.push('Points must be a non-negative number');
+    }
+    
+    const validPositions = ['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST', 'CF', 'LF', 'RF'];
+    if (!position || !validPositions.includes(position)) {
+      validationErrors.push(`Position must be one of: ${validPositions.join(', ')}`);
+    }
+    
+    const validColors = ['dunkelgruen', 'hellgruen', 'dunkelblau', 'hellblau', 'rot', 'gelb', 'lila', 'orange'];
+    
+    if (!color || (!validColors.includes(color.toLowerCase()) && !englishToGerman[color.toLowerCase()])) {
+      validationErrors.push(`Color must be one of: ${validColors.join(', ')} or English equivalents`);
+    }
+    
+    if (marketPrice !== undefined && (typeof marketPrice !== 'number' || marketPrice < 0)) {
+      validationErrors.push('Market price must be a non-negative number');
+    }
+    
+    if (validationErrors.length > 0) {
+      res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validationErrors
+      });
+      return;
+    }
+    
     // Default imageUrl if not provided (will be updated via file upload)
     const imageUrl = req.body.imageUrl || '/images/players/default.jpg';
+    
+    // Convert English color names to German if needed
+    let finalColor = color ? color.toLowerCase() : 'hellgruen';
+    if (englishToGerman[finalColor]) {
+      finalColor = englishToGerman[finalColor];
+    }
 
     const player = await prisma.player.create({
       data: {
@@ -99,9 +163,9 @@ export const createPlayer = async (req: Request, res: Response): Promise<void> =
         imageUrl,
         points,
         position,
-        color: color.toUpperCase(),
-        marketPrice,
-        theme,
+        color: finalColor.toUpperCase(),
+        marketPrice: marketPrice || 0,
+        theme: theme || 'basic',
         percentage: percentage || 0.05
       }
     });
@@ -117,6 +181,7 @@ export const createPlayer = async (req: Request, res: Response): Promise<void> =
     // Handle unique constraint violations
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       res.status(400).json({
+        success: false,
         error: 'Player already exists',
         message: 'A player with this name already exists'
       });
@@ -124,6 +189,7 @@ export const createPlayer = async (req: Request, res: Response): Promise<void> =
     }
 
     res.status(500).json({
+      success: false,
       error: 'Failed to create player',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -148,6 +214,7 @@ export const updatePlayer = async (req: Request, res: Response): Promise<void> =
 
     if (!existingPlayer) {
       res.status(404).json({
+        success: false,
         error: 'Player not found',
         message: `No player found with ID: ${id}`
       });
@@ -170,6 +237,7 @@ export const updatePlayer = async (req: Request, res: Response): Promise<void> =
     // Handle unique constraint violations
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       res.status(400).json({
+        success: false,
         error: 'Update conflict',
         message: 'A player with these details already exists'
       });
@@ -177,6 +245,7 @@ export const updatePlayer = async (req: Request, res: Response): Promise<void> =
     }
 
     res.status(500).json({
+      success: false,
       error: 'Failed to update player',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -201,6 +270,7 @@ export const deletePlayer = async (req: Request, res: Response): Promise<void> =
 
     if (!existingPlayer) {
       res.status(404).json({
+        success: false,
         error: 'Player not found',
         message: `No player found with ID: ${id}`
       });
@@ -208,18 +278,19 @@ export const deletePlayer = async (req: Request, res: Response): Promise<void> =
     }
 
     // Check if force delete is required
-    const hasReferences = existingPlayer.userPlayers.length > 0 || 
-                         existingPlayer.teamPlayers.length > 0 ||
-                         existingPlayer.packPlayers.length > 0;
+    const hasReferences = (existingPlayer.userPlayers && existingPlayer.userPlayers.length > 0) || 
+                         (existingPlayer.teamPlayers && existingPlayer.teamPlayers.length > 0) ||
+                         (existingPlayer.packPlayers && existingPlayer.packPlayers.length > 0);
 
     if (hasReferences && !forceDelete) {
       res.status(400).json({
+        success: false,
         error: 'Cannot delete player',
         message: 'Player is currently in use. Use ?force=true to force delete and remove all references.',
         details: {
-          ownedByUsers: existingPlayer.userPlayers.length,
-          usedInTeams: existingPlayer.teamPlayers.length,
-          inPacks: existingPlayer.packPlayers.length
+          ownedByUsers: existingPlayer.userPlayers ? existingPlayer.userPlayers.length : 0,
+          usedInTeams: existingPlayer.teamPlayers ? existingPlayer.teamPlayers.length : 0,
+          inPacks: existingPlayer.packPlayers ? existingPlayer.packPlayers.length : 0
         },
         forceDeleteUrl: `/players/${id}?force=true`
       });
@@ -234,7 +305,7 @@ export const deletePlayer = async (req: Request, res: Response): Promise<void> =
     }
     
     // Remove from user collections
-    if (existingPlayer.userPlayers.length > 0) {
+    if (existingPlayer.userPlayers && existingPlayer.userPlayers.length > 0) {
       await prisma.userPlayer.deleteMany({
         where: { playerId: id }
       });
@@ -242,7 +313,7 @@ export const deletePlayer = async (req: Request, res: Response): Promise<void> =
     }
 
     // Remove from team lineups  
-    if (existingPlayer.teamPlayers.length > 0) {
+    if (existingPlayer.teamPlayers && existingPlayer.teamPlayers.length > 0) {
       await prisma.teamPlayer.deleteMany({
         where: { playerId: id }
       });
@@ -250,7 +321,7 @@ export const deletePlayer = async (req: Request, res: Response): Promise<void> =
     }
 
     // Remove from pack assignments
-    if (existingPlayer.packPlayers.length > 0) {
+    if (existingPlayer.packPlayers && existingPlayer.packPlayers.length > 0) {
       await prisma.packPlayer.deleteMany({
         where: { playerId: id }
       });
@@ -270,6 +341,7 @@ export const deletePlayer = async (req: Request, res: Response): Promise<void> =
   } catch (error) {
     console.error('Error deleting player:', error);
     res.status(500).json({
+      success: false,
       error: 'Failed to delete player',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -346,6 +418,7 @@ export const getPlayersByFilter = async (req: Request, res: Response): Promise<v
   } catch (error) {
     console.error('Error filtering players:', error);
     res.status(500).json({
+      success: false,
       error: 'Failed to filter players',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -359,6 +432,7 @@ export const getUserCollection = async (req: Request, res: Response): Promise<vo
 
     if (!userId) {
       res.status(401).json({
+        success: false,
         error: 'User not authenticated',
         message: 'You must be logged in to view your collection'
       });
@@ -391,6 +465,7 @@ export const getUserCollection = async (req: Request, res: Response): Promise<vo
   } catch (error) {
     console.error('Error fetching user collection:', error);
     res.status(500).json({
+      success: false,
       error: 'Failed to fetch collection',
       details: error instanceof Error ? error.message : 'Unknown error'
     });

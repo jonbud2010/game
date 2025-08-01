@@ -10,6 +10,22 @@ import {
 } from './teamController';
 import { prisma } from '../db/client';
 
+// Mock @football-tcg/shared module
+vi.mock('@football-tcg/shared', () => ({
+  calculateTeamChemistry: vi.fn(),
+  validateTeamChemistry: vi.fn(),
+  MATCH_SETTINGS: {
+    PLAYERS_PER_TEAM: 11,
+    EXACT_CHEMISTRY_COLORS: 3,
+    MIN_PLAYERS_PER_COLOR: 2
+  }
+}));
+
+// Import mocked functions after mocking
+import { calculateTeamChemistry, validateTeamChemistry } from '@football-tcg/shared';
+const mockCalculateTeamChemistry = vi.mocked(calculateTeamChemistry);
+const mockValidateTeamChemistry = vi.mocked(validateTeamChemistry);
+
 // Mock Prisma
 vi.mock('../db/client', () => ({
   prisma: {
@@ -36,10 +52,6 @@ vi.mock('../db/client', () => ({
     }
   }
 }));
-
-// Mock shared functions inline
-const mockCalculateTeamChemistry = vi.fn();
-const mockValidateTeamChemistry = vi.fn();
 
 const mockedPrisma = vi.mocked(prisma);
 
@@ -571,7 +583,7 @@ describe('Team Controller', () => {
       };
 
       mockedPrisma.team.findFirst.mockResolvedValue(mockTeam);
-      mockedValidateTeamChemistry.mockImplementation(() => {
+      mockValidateTeamChemistry.mockImplementation(() => {
         throw new Error('Chemistry validation failed');
       });
 

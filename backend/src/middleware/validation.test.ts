@@ -623,11 +623,11 @@ describe('Validation Middleware', () => {
 
       // Simulate an error in the validation process
       const originalConsoleError = console.error;
-      console.error = jest.fn();
+      console.error = vi.fn();
 
       // Override JSON.parse to throw a different kind of error
       const originalJSONParse = JSON.parse;
-      JSON.parse = jest.fn().mockImplementation(() => {
+      JSON.parse = vi.fn().mockImplementation(() => {
         throw new TypeError('Unexpected error');
       });
 

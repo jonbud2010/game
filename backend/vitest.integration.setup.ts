@@ -1,18 +1,17 @@
 /**
- * Jest Integration Test Setup
+ * Vitest Integration Test Setup
  * Konfiguration für Integration Tests mit echter SQLite Database
  */
 
 import { PrismaClient } from '@prisma/client';
+import { beforeEach, afterAll, beforeAll } from 'vitest';
 
-// Test Database Client
-export const testDb = new PrismaClient({
-  datasources: {
-    db: {
-      url: 'file:./test.db'
-    }
-  }
-});
+// Set environment variables for test database
+process.env.DATABASE_URL = 'file:./test.db';
+process.env.JWT_SECRET = 'test-jwt-secret-key-for-integration-tests';
+
+// Test Database Client - uses the DATABASE_URL environment variable
+export const testDb = new PrismaClient();
 
 // Setup vor jedem Test
 beforeEach(async () => {

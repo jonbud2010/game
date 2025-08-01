@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
-import { prisma } from '../db/connection';
+import { prisma } from '../db/client';
 
 interface RegisterRequest {
   username: string;
@@ -29,6 +29,13 @@ export async function register(req: Request<{}, {}, RegisterRequest>, res: Respo
   try {
     const { username, email, password } = req.body;
 
+    // Validate required fields
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        error: 'Username, email, and password are required'
+      });
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -40,9 +47,15 @@ export async function register(req: Request<{}, {}, RegisterRequest>, res: Respo
     });
 
     if (existingUser) {
-      return res.status(400).json({
-        error: 'User with this email or username already exists'
-      });
+      if (existingUser.email === email) {
+        return res.status(400).json({
+          error: 'Email already registered'
+        });
+      } else {
+        return res.status(400).json({
+          error: 'Username already exists'
+        });
+      }
     }
 
     // Hash password
@@ -85,6 +98,13 @@ export async function register(req: Request<{}, {}, RegisterRequest>, res: Respo
 export async function login(req: Request<{}, {}, LoginRequest>, res: Response): Promise<Response> {
   try {
     const { email, password } = req.body;
+
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({
+        error: 'Email and password are required'
+      });
+    }
 
     // Find user by email
     const user = await prisma.user.findUnique({

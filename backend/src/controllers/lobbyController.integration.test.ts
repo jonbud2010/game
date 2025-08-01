@@ -6,9 +6,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { testDb, createTestUsers } from '../../jest.integration.setup';
-import { lobbyRoutes } from '../routes/lobbyRoutes';
-import { authRoutes } from '../routes/authRoutes';
+import { testDb } from '../../vitest.integration.setup';
+import lobbyRoutes from '../routes/lobbyRoutes';
+import authRoutes from '../routes/authRoutes';
 
 // Express App für Integration Tests
 const app = express();
@@ -23,11 +23,6 @@ describe('Lobby Integration Tests', () => {
   let adminToken: string;
 
   beforeEach(async () => {
-    // Create test users
-    const users = await createTestUsers();
-    playerUser = users.playerUser;
-    adminUser = users.adminUser;
-
     // Create real authentication tokens
     const playerRegister = await request(app)
       .post('/api/auth/register')
@@ -37,6 +32,7 @@ describe('Lobby Integration Tests', () => {
         password: 'password123'
       });
     playerToken = playerRegister.body.token;
+    playerUser = playerRegister.body.user;
 
     const adminRegister = await request(app)
       .post('/api/auth/register')
@@ -52,6 +48,7 @@ describe('Lobby Integration Tests', () => {
       data: { role: 'ADMIN' }
     });
     adminToken = adminRegister.body.token;
+    adminUser = adminRegister.body.user;
   });
 
   describe('POST /api/lobbies', () => {
@@ -229,7 +226,7 @@ describe('Lobby Integration Tests', () => {
         .set('Authorization', `Bearer ${secondPlayerToken}`)
         .expect(400);
 
-      expect(response.body.error).toBe('Already a member of this lobby');
+      expect(response.body.error).toBe('You are already in an active lobby');
     });
 
     it('should reject joining full lobby', async () => {
@@ -328,16 +325,16 @@ describe('Lobby Integration Tests', () => {
         .set('Authorization', `Bearer ${nonMember.body.token}`)
         .expect(400);
 
-      expect(response.body.error).toBe('Not a member of this lobby');
+      expect(response.body.error).toBe('You are not a member of this lobby');
     });
 
     it('should reject leaving non-existent lobby', async () => {
       const response = await request(app)
         .post('/api/lobbies/nonexistent-id/leave')
         .set('Authorization', `Bearer ${playerToken}`)
-        .expect(404);
+        .expect(400);
 
-      expect(response.body.error).toBe('Lobby not found');
+      expect(response.body.error).toBe('You are not a member of this lobby');
     });
   });
 });

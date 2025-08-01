@@ -250,7 +250,8 @@ describe('Pack Controller', () => {
 
     it('should handle unique constraint violations', async () => {
       const error = { code: 'P2002' };
-      mockedPrisma.player.findMany.mockResolvedValue([]);
+      // Mock that all players exist (2 players found for 2 player IDs)
+      mockedPrisma.player.findMany.mockResolvedValue([{ id: 'p1' }, { id: 'p2' }]);
       mockedPrisma.$transaction.mockRejectedValue(error);
 
       await createPack(mockRequest as Request, mockResponse as Response);

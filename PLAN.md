@@ -24,14 +24,14 @@ Ein browserbasiertes Fußball-Sammelkartenspiel für genau 4 Spieler mit komplex
 - **Framework**: React 19 mit TypeScript + Vite
 - **State Management**: Context API mit Custom Hooks
 - **Styling**: CSS mit Mobile-First Design
-- **Testing**: Jest + React Testing Library (implementiert)
+- **Testing**: Vitest + React Testing Library (implementiert)
 
 ### Backend (`/backend`)
 - **Runtime**: Node.js mit Express.js + TypeScript
 - **Datenbank**: SQLite (dev) / PostgreSQL (prod) mit Prisma ORM
 - **Authentifizierung**: JWT + bcrypt Hashing
 - **File Upload**: Multer + Sharp (Bildkomprimierung)
-- **Testing**: Jest mit supertest (70% Coverage-Ziel konfiguriert)
+- **Testing**: Vitest mit supertest (70% Coverage-Ziel konfiguriert)
 
 ### Shared (`/shared`)
 - **Types**: Game Types, API Interfaces
@@ -85,7 +85,7 @@ Ein browserbasiertes Fußball-Sammelkartenspiel für genau 4 Spieler mit komplex
 ### Polish & Initial Testing ✅
 - **UI/UX**: Mobile-First Responsive Design, Loading States, Error Boundaries
 - **Performance**: Code Splitting, Lazy Loading, Bundle Optimierung
-- **Basic Testing**: Jest Setup für alle 3 Packages mit initialen Tests
+- **Basic Testing**: Vitest Setup für alle 3 Packages mit initialen Tests
 - **Accessibility**: WCAG 2.1 Compliance, Keyboard Navigation, Screen Reader Support
 
 **Aktueller Status**: Funktionsfähiges Multiplayer-Spiel mit vollständiger Feature-Set
@@ -109,7 +109,7 @@ Ein browserbasiertes Fußball-Sammelkartenspiel für genau 4 Spieler mit komplex
 ```bash
 yarn add --dev @cucumber/cucumber jest-cucumber
 ```
-- **jest-cucumber Integration**: Gherkin zu Jest Test Mapping
+- **jest-cucumber Integration**: Gherkin zu Vitest Test Mapping
 - **Test Database Setup**: SQLite Test-DB für Integration Tests
 - **Mock Strategy**: Definition welche Components gemockt vs. real getestet werden
 - **Test Data Factory**: Seed-Data Generator für konsistente Test-Setups
@@ -121,7 +121,7 @@ yarn add --dev @cucumber/cucumber jest-cucumber
 
 #### Deliverables:
 - [x] 7 Feature Files mit detaillierten Gherkin Scenarios ✅
-- [x] Jest-Cucumber Test Runner Configuration ✅
+- [x] Vitest-Cucumber Test Runner Configuration ✅
 - [x] Test Database Schema und Seed Scripts ✅
 - [x] Mock Strategy Documentation ✅
 
@@ -190,7 +190,7 @@ And('the token should contain user role')
 
 ### ⚠️ Verbleibendes Problem:
 - **Yarn Workspace Dependencies**: ts-jest kann nicht korrekt in Workspace-Setup installiert werden
-- **Jest Configuration**: Workspace-spezifische Node Module Resolution Issues
+- **Vitest Configuration**: Workspace-spezifische Node Module Resolution Issues
 
 ### 📋 Test Coverage Scope:
 - **Controller Logic**: CRUD operations, validation, error handling
@@ -297,7 +297,7 @@ yarn test:integration --coverage
 5. **Documentation Update**: Bug Fixes und Test Cases dokumentieren
 
 #### 9.3 Test Infrastructure Optimization
-- **Parallel Test Execution**: Jest Worker Optimization
+- **Parallel Test Execution**: Vitest Worker Optimization
 - **Test Database Performance**: Index Optimization, Query Performance
 - **CI/CD Integration**: GitHub Actions für Automated Testing
 - **Test Reporting**: HTML Coverage Reports, Trend Analysis
@@ -320,7 +320,7 @@ yarn test:integration --coverage
 
 ### BDD Framework Stack
 - **Gherkin**: Feature files für business-readable specifications
-- **jest-cucumber**: Gherkin to Jest test mapping
+- **jest-cucumber**: Gherkin to Vitest test mapping
 - **supertest**: HTTP API testing mit Express integration
 - **Prisma Test Database**: SQLite für schnelle, isolierte Integration tests
 

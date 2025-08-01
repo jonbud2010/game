@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
+    "test:file": "vitest run --reporter=verbose",
     "clean": "rm -rf dist node_modules",
     "kill-port": "node scripts/kill-port.js",
     "dev:clean": "npm run kill-port && npm run dev",
