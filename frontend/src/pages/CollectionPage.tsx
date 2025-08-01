@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService, type Player } from '../services/api';
+import { apiService, type Player, type UserPlayer } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-
-interface UserPlayer {
-  id: string;
-  playerId: string;
-  acquiredAt: string;
-  player: Player;
-}
 
 const CollectionPage: React.FC = () => {
   const { user } = useAuth();
@@ -28,15 +21,10 @@ const CollectionPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Note: This API endpoint would need to be implemented in the backend
-        // For now, we'll create a placeholder
-        setUserPlayers([]);
-        
-        // In the real implementation, this would be:
-        // const response = await apiService.getUserCollection();
-        // if (response.success && response.data) {
-        //   setUserPlayers(response.data);
-        // }
+        const response = await apiService.getUserCollection();
+        if (response.success && response.data) {
+          setUserPlayers(response.data);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load collection');
       } finally {

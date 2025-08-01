@@ -8,7 +8,8 @@ import {
   createPlayer,
   updatePlayer,
   deletePlayer,
-  getPlayersByFilter
+  getPlayersByFilter,
+  getUserCollection
 } from '../controllers/playerController';
 
 const router = Router();
@@ -17,6 +18,9 @@ const router = Router();
 router.get('/', getAllPlayers);
 router.get('/filter', getPlayersByFilter);
 router.get('/:id', validateId, getPlayerById);
+
+// User routes (authenticated users)
+router.get('/collection/my', authenticateToken, getUserCollection);
 
 // Admin-only routes
 router.post('/', authenticateToken, requireAdmin, ...uploadSingleImage('players'), validateCreatePlayer, createPlayer);

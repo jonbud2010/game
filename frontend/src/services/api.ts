@@ -58,6 +58,13 @@ export interface Player {
   percentage: number;
 }
 
+export interface UserPlayer {
+  id: string;
+  playerId: string;
+  acquiredAt: string;
+  player: Player;
+}
+
 export interface Formation {
   id: string;
   name: string;
@@ -493,10 +500,9 @@ class ApiService {
     return this.makeRequest<ApiResponse<LeagueStatus>>(`/matches/lobby/${lobbyId}/status`);
   }
 
-  // User collection methods (placeholder for future implementation)
-  async getUserCollection(): Promise<ApiResponse<any[]>> {
-    // This would need to be implemented in the backend
-    return Promise.resolve({ success: true, data: [] });
+  // User collection methods
+  async getUserCollection(): Promise<ApiResponse<UserPlayer[]>> {
+    return this.makeRequest<ApiResponse<UserPlayer[]>>('/players/collection/my');
   }
 }
 

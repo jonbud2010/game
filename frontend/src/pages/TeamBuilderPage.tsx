@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiService, type Team, type Formation, type Player } from '../services/api';
+import { apiService, type Team, type Formation, type Player, type UserPlayer } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-
-interface UserPlayer {
-  id: string;
-  playerId: string;
-  acquiredAt: string;
-  player: Player;
-}
+// Note: Chemistry utilities need to be properly exported from shared package
 
 interface TeamPlayer {
   positionId: string;
@@ -76,9 +70,10 @@ const TeamBuilderPage: React.FC = () => {
   // Load user's collection
   const loadUserPlayers = async () => {
     try {
-      // This would need to be implemented in the API service
-      // For now, we'll use a placeholder
-      setUserPlayers([]);
+      const response = await apiService.getUserCollection();
+      if (response.success && response.data) {
+        setUserPlayers(response.data);
+      }
     } catch (err) {
       console.error('Failed to load user players:', err);
     }
@@ -132,9 +127,36 @@ const TeamBuilderPage: React.FC = () => {
     })));
   };
 
-  // Formation positions (this would ideally come from formation data)
+  // Get formation positions from selected formation data
   const getFormationPositions = () => {
-    // Default 4-4-2 formation positions
+    if (!selectedFormationId) {
+      // Default 4-4-2 formation positions as fallback
+      return [
+        { id: 'pos-0', x: 50, y: 10, position: 'GK' },
+        { id: 'pos-1', x: 20, y: 25, position: 'LB' },
+        { id: 'pos-2', x: 35, y: 25, position: 'CB' },
+        { id: 'pos-3', x: 65, y: 25, position: 'CB' },
+        { id: 'pos-4', x: 80, y: 25, position: 'RB' },
+        { id: 'pos-5', x: 20, y: 50, position: 'LM' },
+        { id: 'pos-6', x: 40, y: 50, position: 'CM' },
+        { id: 'pos-7', x: 60, y: 50, position: 'CM' },
+        { id: 'pos-8', x: 80, y: 50, position: 'RM' },
+        { id: 'pos-9', x: 35, y: 75, position: 'ST' },
+        { id: 'pos-10', x: 65, y: 75, position: 'ST' }
+      ];
+    }
+
+    const selectedFormation = formations.find(f => f.id === selectedFormationId);
+    if (selectedFormation?.positions && Array.isArray(selectedFormation.positions)) {
+      return selectedFormation.positions.map((pos, index) => ({
+        id: `pos-${index}`,
+        x: pos.x,
+        y: pos.y,
+        position: pos.position
+      }));
+    }
+
+    // Fallback to default if formation data is invalid
     return [
       { id: 'pos-0', x: 50, y: 10, position: 'GK' },
       { id: 'pos-1', x: 20, y: 25, position: 'LB' },
@@ -161,13 +183,33 @@ const TeamBuilderPage: React.FC = () => {
     e.dataTransfer.dropEffect = 'move';
   };
 
+  // Get list of player names already in the team
+  const getUnavailablePlayerNames = (): string[] => {
+    return teamPlayers
+      .filter(tp => tp.player)
+      .map(tp => tp.player!.name);
+  };
+
+  // Check if a player is available for placement
+  const isPlayerAvailable = (player: Player): boolean => {
+    const unavailableNames = getUnavailablePlayerNames();
+    return !unavailableNames.includes(player.name);
+  };
+
   const handleDrop = (e: React.DragEvent, positionIndex: number) => {
     e.preventDefault();
     if (!draggedPlayer) return;
 
-    // Check if player is already in the team
+    // Check if player name is already in the team (unless it's the same player being moved)
     const existingPosition = teamPlayers.findIndex(tp => tp.playerId === draggedPlayer.id);
+    const isMovingExistingPlayer = existingPosition !== -1;
     
+    if (!isMovingExistingPlayer && !isPlayerAvailable(draggedPlayer)) {
+      setError(`Spieler "${draggedPlayer.name}" ist bereits im Team. Jeder Spieler kann nur einmal verwendet werden.`);
+      setDraggedPlayer(null);
+      return;
+    }
+
     // Update team players
     const newTeamPlayers = [...teamPlayers];
     
@@ -189,6 +231,11 @@ const TeamBuilderPage: React.FC = () => {
     
     setTeamPlayers(newTeamPlayers);
     setDraggedPlayer(null);
+    
+    // Clear any previous error messages
+    if (error) {
+      setError(null);
+    }
   };
 
   const handleRemovePlayer = (positionIndex: number) => {
@@ -235,7 +282,7 @@ const TeamBuilderPage: React.FC = () => {
         response = await apiService.createTeam(teamData);
       }
 
-      if (response.success) {
+      if (response.success && response.data) {
         setCurrentTeam(response.data);
         setError(null);
         // Show success message or redirect
@@ -254,22 +301,51 @@ const TeamBuilderPage: React.FC = () => {
     const totalPoints = playersInTeam.reduce((sum, tp) => sum + (tp.player?.points || 0), 0);
     const filledPositions = playersInTeam.length;
     
-    // Simple chemistry calculation (would use actual chemistry utils in practice)
-    const colors = new Map();
+    // Calculate color distribution and chemistry points
+    const colors = new Map<string, number>();
     playersInTeam.forEach(tp => {
       if (tp.player?.color) {
-        colors.set(tp.player.color, (colors.get(tp.player.color) || 0) + 1);
+        const color = tp.player.color.toLowerCase();
+        colors.set(color, (colors.get(color) || 0) + 1);
       }
     });
     
     let chemistryPoints = 0;
+    const chemistryBreakdown: Array<{
+      color: string;
+      playerCount: number;
+      bonus: number;
+    }> = [];
+    
     for (const [color, count] of colors) {
-      if (count >= 2) {
-        chemistryPoints += count * count; // Simplified chemistry calculation
+      if (count >= 2 && count <= 7) {
+        const bonus = count * count; // Simplified: n² points per color
+        chemistryPoints += bonus;
+        chemistryBreakdown.push({ color, playerCount: count, bonus });
+      }
+    }
+    
+    // Validation rules: 11 players, exactly 3 colors, min 2 players per color
+    const validationErrors: string[] = [];
+    if (filledPositions === 11) {
+      if (colors.size !== 3) {
+        validationErrors.push(`Team muss genau 3 verschiedene Farben haben (aktuell: ${colors.size})`);
+      }
+      for (const [color, count] of colors) {
+        if (count < 2) {
+          validationErrors.push(`Farbe ${color} muss mindestens 2 Spieler haben (aktuell: ${count})`);
+        }
       }
     }
 
-    return { totalPoints, chemistryPoints, filledPositions };
+    return { 
+      totalPoints, 
+      chemistryPoints, 
+      filledPositions, 
+      chemistryBreakdown: chemistryBreakdown.sort((a, b) => b.bonus - a.bonus),
+      validationErrors,
+      isValidTeam: filledPositions === 11 && validationErrors.length === 0
+    };
   };
 
   const stats = calculateTeamStats();
@@ -404,34 +480,75 @@ const TeamBuilderPage: React.FC = () => {
 
           {/* Player Collection */}
           <div className="player-collection">
-            <h3>Your Players</h3>
-            <div className="players-grid">
-              {userPlayers.map(up => (
-                <div
-                  key={up.id}
-                  className="player-card draggable"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, up.player)}
+            <h3>Your Players ({userPlayers.length})</h3>
+            {userPlayers.length === 0 ? (
+              <div className="empty-collection">
+                <p>🃏 No players in your collection</p>
+                <p><small>Open packs to collect players!</small></p>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => window.location.href = '/pack-store'}
                 >
-                  <img
-                    src={up.player.imageUrl || '/images/players/default.jpg'}
-                    alt={up.player.name}
-                    className="player-image"
-                  />
-                  <div className="player-info">
-                    <div className="player-name">{up.player.name}</div>
-                    <div className="player-details">
-                      <span className="player-position">{up.player.position}</span>
-                      <span className="player-points">{up.player.points}pts</span>
+                  Go to Pack Store
+                </button>
+              </div>
+            ) : (
+              <div className="players-grid">
+                {userPlayers.map(up => {
+                  const isInTeam = teamPlayers.some(tp => tp.playerId === up.player.id);
+                  const isUnavailable = !isPlayerAvailable(up.player) && !isInTeam;
+                  const unavailableNames = getUnavailablePlayerNames();
+                  const conflictingName = isUnavailable ? unavailableNames.find(name => name === up.player.name) : null;
+                  
+                  return (
+                    <div
+                      key={up.id}
+                      className={`player-card draggable ${
+                        isInTeam ? 'in-team' : isUnavailable ? 'unavailable' : ''
+                      }`}
+                      draggable={!isUnavailable}
+                      onDragStart={(e) => {
+                        if (isUnavailable) {
+                          e.preventDefault();
+                          return;
+                        }
+                        handleDragStart(e, up.player);
+                      }}
+                      title={
+                        isInTeam 
+                          ? 'Already in team' 
+                          : isUnavailable 
+                            ? `Spieler "${up.player.name}" ist bereits im Team` 
+                            : 'Drag to formation'
+                      }
+                    >
+                      <img
+                        src={up.player.imageUrl || '/images/players/default.jpg'}
+                        alt={up.player.name}
+                        className="player-image"
+                      />
+                      <div className="player-info">
+                        <div className="player-name">{up.player.name}</div>
+                        <div className="player-details">
+                          <span className="player-position">{up.player.position}</span>
+                          <span className="player-points">{up.player.points}pts</span>
+                        </div>
+                        <div 
+                          className="player-color-badge" 
+                          style={{ backgroundColor: `var(--color-${up.player.color})` }}
+                          title={up.player.color}
+                        >
+                          {up.player.color.substring(0, 1)}
+                        </div>
+                      </div>
+                      {isInTeam && (
+                        <div className="in-team-indicator">✓</div>
+                      )}
                     </div>
-                    <div 
-                      className="player-color" 
-                      style={{ backgroundColor: `var(--color-${up.player.color})` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -441,7 +558,9 @@ const TeamBuilderPage: React.FC = () => {
           <div className="stats-grid">
             <div className="stat">
               <label>Players:</label>
-              <span>{stats.filledPositions}/11</span>
+              <span className={stats.filledPositions === 11 ? 'complete' : 'incomplete'}>
+                {stats.filledPositions}/11
+              </span>
             </div>
             <div className="stat">
               <label>Total Points:</label>
@@ -449,13 +568,53 @@ const TeamBuilderPage: React.FC = () => {
             </div>
             <div className="stat">
               <label>Chemistry:</label>
-              <span>{stats.chemistryPoints}</span>
+              <span className={stats.chemistryPoints > 0 ? 'positive' : ''}>
+                {stats.chemistryPoints}
+              </span>
             </div>
             <div className="stat">
               <label>Team Strength:</label>
-              <span>{stats.totalPoints + stats.chemistryPoints}</span>
+              <span className="team-strength">
+                {stats.totalPoints + stats.chemistryPoints}
+              </span>
             </div>
           </div>
+          
+          {stats.validationErrors && stats.validationErrors.length > 0 && (
+            <div className="chemistry-errors">
+              <h4>⚠️ Chemistry Issues:</h4>
+              <ul>
+                {stats.validationErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {stats.chemistryBreakdown && stats.chemistryBreakdown.length > 0 && (
+            <div className="chemistry-breakdown">
+              <h4>Chemistry Bonuses:</h4>
+              <div className="chemistry-bonuses">
+                {stats.chemistryBreakdown.map((bonus, index) => (
+                  <div key={index} className="chemistry-bonus">
+                    <div 
+                      className="color-indicator" 
+                      style={{ backgroundColor: `var(--color-${bonus.color})` }}
+                    />
+                    <span className="color-name">{bonus.color}</span>
+                    <span className="player-count">{bonus.playerCount} players</span>
+                    <span className="bonus-points">+{bonus.bonus}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {stats.isValidTeam && (
+            <div className="team-valid-indicator">
+              ✅ Team is valid and ready to play!
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -463,18 +622,21 @@ const TeamBuilderPage: React.FC = () => {
           <button
             className="btn btn-primary"
             onClick={handleSaveTeam}
-            disabled={saving || stats.filledPositions !== 11}
+            disabled={saving || !stats.isValidTeam}
+            title={!stats.isValidTeam ? 'Complete team with valid chemistry to save' : ''}
           >
             {saving ? 'Saving...' : currentTeam ? 'Update Team' : 'Create Team'}
           </button>
           
-          {currentTeam && (
-            <button
-              className="btn btn-secondary"
-              onClick={() => {/* Validate team */}}
-            >
-              Validate Team
-            </button>
+          {!stats.isValidTeam && stats.filledPositions > 0 && (
+            <div className="team-validation-help">
+              <small>
+                {stats.filledPositions < 11 
+                  ? `Add ${11 - stats.filledPositions} more players` 
+                  : 'Fix chemistry issues to save team'
+                }
+              </small>
+            </div>
           )}
         </div>
       </div>

@@ -351,3 +351,48 @@ export const getPlayersByFilter = async (req: Request, res: Response): Promise<v
     });
   }
 };
+
+// Get user's player collection
+export const getUserCollection = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({
+        error: 'User not authenticated',
+        message: 'You must be logged in to view your collection'
+      });
+      return;
+    }
+
+    const userPlayers = await prisma.userPlayer.findMany({
+      where: { userId },
+      include: {
+        player: true
+      },
+      orderBy: {
+        acquiredAt: 'desc'
+      }
+    });
+
+    // Transform data to match frontend interface
+    const collection = userPlayers.map(up => ({
+      id: up.id,
+      playerId: up.playerId,
+      acquiredAt: up.acquiredAt.toISOString(),
+      player: up.player
+    }));
+
+    res.json({
+      success: true,
+      data: collection,
+      count: collection.length
+    });
+  } catch (error) {
+    console.error('Error fetching user collection:', error);
+    res.status(500).json({
+      error: 'Failed to fetch collection',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};

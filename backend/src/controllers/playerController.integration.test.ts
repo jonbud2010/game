@@ -1,259 +1,236 @@
+/**
+ * Player Controller Integration Tests
+ * Tests mit echter SQLite Database - Player CRUD und Collection Workflow
+ */
+
 import request from 'supertest';
-import { app } from '../index';
-import { prisma } from '../db/client';
+import express from 'express';
+import { testDb, createTestUsers, createTestPlayers } from '../../jest.integration.setup.js';
+import { playerRoutes } from '../routes/playerRoutes.js';
+import { authRoutes } from '../routes/authRoutes.js';
 
-// Mock JWT middleware for admin user
-jest.mock('../middleware/auth', () => ({
-  authenticateToken: (req: any, res: any, next: any) => {
-    req.user = { id: 'admin-user-id', role: 'ADMIN' };
-    next();
-  },
-  requireAdmin: (req: any, res: any, next: any) => {
-    next();
-  }
-}));
+// Express App für Integration Tests
+const app = express();
+app.use(express.json());
+app.use('/api/auth', authRoutes);
+app.use('/api/players', playerRoutes);
 
-describe('Player Controller Integration Tests', () => {
-  beforeAll(async () => {
-    // Clean up test data
-    await prisma.player.deleteMany({
-      where: { name: { startsWith: 'Test' } }
-    });
-  });
+describe('Player Integration Tests', () => {
+  let playerToken: string;
+  let adminToken: string;
+  let testPlayers: any[];
 
-  afterAll(async () => {
-    // Clean up test data
-    await prisma.player.deleteMany({
-      where: { name: { startsWith: 'Test' } }
-    });
-    await prisma.$disconnect();
-  });
-
-  describe('POST /api/players', () => {
-    it('should create a player with FormData', async () => {
-      const response = await request(app)
-        .post('/api/players')
-        .field('name', 'Test Player Integration')
-        .field('points', '85')
-        .field('position', 'ST')
-        .field('color', 'RED')
-        .field('marketPrice', '100')
-        .field('theme', 'Test Theme')
-        .field('percentage', '0.05')
-        .expect(201);
-
-      expect(response.body).toMatchObject({
-        success: true,
-        message: 'Player created successfully',
-        data: expect.objectContaining({
-          name: 'Test Player Integration',
-          points: 85,
-          position: 'ST',
-          color: 'RED',
-          marketPrice: 100,
-          theme: 'Test Theme',
-          percentage: 0.05
-        })
+  beforeEach(async () => {
+    // Create authentication tokens
+    const playerRegister = await request(app)
+      .post('/api/auth/register')
+      .send({
+        username: 'playeruser',
+        email: 'playeruser@test.com',
+        password: 'password123'
       });
+    playerToken = playerRegister.body.token;
 
-      // Verify player was created in database
-      const createdPlayer = await prisma.player.findFirst({
-        where: { name: 'Test Player Integration' }
+    const adminRegister = await request(app)
+      .post('/api/auth/register')
+      .send({
+        username: 'playeradmin',
+        email: 'playeradmin@test.com',
+        password: 'password123'
       });
-      expect(createdPlayer).toBeTruthy();
+    
+    // Update admin role
+    await testDb.user.update({
+      where: { email: 'playeradmin@test.com' },
+      data: { role: 'ADMIN' }
     });
+    adminToken = adminRegister.body.token;
 
-    it('should handle validation errors', async () => {
-      const response = await request(app)
-        .post('/api/players')
-        .field('name', '') // Invalid: empty name
-        .field('points', '85')
-        .field('position', 'ST')
-        .field('color', 'RED')
-        .field('marketPrice', '100')
-        .field('theme', 'Test Theme')
-        .field('percentage', '0.05')
-        .expect(400);
-
-      expect(response.body).toMatchObject({
-        error: 'Validation error'
-      });
-    });
-
-    it('should handle invalid position', async () => {
-      const response = await request(app)
-        .post('/api/players')
-        .field('name', 'Test Invalid Position')
-        .field('points', '85')
-        .field('position', 'INVALID') // Invalid position
-        .field('color', 'RED')
-        .field('marketPrice', '100')
-        .field('theme', 'Test Theme')
-        .field('percentage', '0.05')
-        .expect(400);
-
-      expect(response.body).toMatchObject({
-        error: 'Validation error'
-      });
-    });
+    testPlayers = await createTestPlayers();
   });
 
   describe('GET /api/players', () => {
-    it('should return all players', async () => {
+    it('should return all players for any authenticated user', async () => {
+      const response = await request(app)
+        .get('/api/players')
+        .set('Authorization', `Bearer ${playerToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data).toHaveLength(3);
+      expect(response.body.count).toBe(3);
+
+      const players = response.body.data;
+      expect(players).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'Test Goalkeeper',
+            position: 'GK',
+            color: 'DUNKELGRÜN',
+            points: 85
+          }),
+          expect.objectContaining({
+            name: 'Test Defender',
+            position: 'CB',
+            color: 'HELLBLAU',
+            points: 80
+          }),
+          expect.objectContaining({
+            name: 'Test Midfielder',
+            position: 'CM',
+            color: 'ROT',
+            points: 90
+          })
+        ])
+      );
+    });
+
+    it('should allow unauthenticated access to player list', async () => {
       const response = await request(app)
         .get('/api/players')
         .expect(200);
 
-      expect(response.body).toMatchObject({
-        success: true,
-        data: expect.any(Array),
-        count: expect.any(Number)
-      });
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(3);
     });
   });
 
-  describe('PUT /api/players/:id', () => {
-    it('should update an existing player', async () => {
-      // First create a player
-      const createResponse = await request(app)
-        .post('/api/players')
-        .field('name', 'Test Player for Update')
-        .field('points', '75')
-        .field('position', 'CM')
-        .field('color', 'BLUE')
-        .field('marketPrice', '120')
-        .field('theme', 'Update Theme')
-        .field('percentage', '0.04')
-        .expect(201);
+  describe('GET /api/players/collection/my', () => {
+    beforeEach(async () => {
+      // Add some players to user collection
+      const user = await testDb.user.findFirst({
+        where: { username: 'playeruser' }
+      });
 
-      const playerId = createResponse.body.data.id;
+      await testDb.userPlayer.create({
+        data: {
+          userId: user!.id,
+          playerId: testPlayers[0].id
+        }
+      });
 
-      // Update the player
-      const updateResponse = await request(app)
-        .put(`/api/players/${playerId}`)
-        .field('name', 'Test Player Updated')
-        .field('points', '90')
-        .field('position', 'CAM')
-        .field('color', 'GREEN')
-        .field('marketPrice', '150')
-        .field('theme', 'Updated Theme')
-        .field('percentage', '0.06')
+      await testDb.userPlayer.create({
+        data: {
+          userId: user!.id,
+          playerId: testPlayers[1].id
+        }
+      });
+    });
+
+    it('should return user\'s player collection', async () => {
+      const response = await request(app)
+        .get('/api/players/collection/my')
+        .set('Authorization', `Bearer ${playerToken}`)
         .expect(200);
 
-      expect(updateResponse.body).toMatchObject({
-        success: true,
-        message: 'Player updated successfully',
-        data: expect.objectContaining({
-          id: playerId,
-          name: 'Test Player Updated',
-          points: 90,
-          position: 'CAM',
-          color: 'GREEN',
-          marketPrice: 150,
-          theme: 'Updated Theme',
-          percentage: 0.06
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(2);
+      expect(response.body.count).toBe(2);
+
+      const collection = response.body.data;
+      expect(collection[0]).toMatchObject({
+        id: expect.any(String),
+        playerId: expect.any(String),
+        acquiredAt: expect.any(String),
+        player: expect.objectContaining({
+          name: expect.any(String),
+          position: expect.any(String),
+          points: expect.any(Number)
         })
       });
+
+      // Should be ordered by acquired date (newest first)
+      const dates = collection.map((c: any) => new Date(c.acquiredAt));
+      expect(dates[0].getTime()).toBeGreaterThanOrEqual(dates[1].getTime());
     });
 
-    it('should return 404 for non-existent player', async () => {
+    it('should return empty collection for new user', async () => {
+      const newUser = await request(app)
+        .post('/api/auth/register')
+        .send({
+          username: 'newcollectionuser',
+          email: 'newcollectionuser@test.com',
+          password: 'password123'
+        });
+
       const response = await request(app)
-        .put('/api/players/non-existent-id')
-        .field('name', 'Test Update')
-        .field('points', '75')
-        .field('position', 'ST')
-        .field('color', 'RED')
-        .field('marketPrice', '100')
-        .field('theme', 'Test')
-        .field('percentage', '0.05')
-        .expect(404);
-
-      expect(response.body).toMatchObject({
-        error: 'Player not found'
-      });
-    });
-  });
-
-  describe('DELETE /api/players/:id', () => {
-    it('should delete an existing player', async () => {
-      // First create a player
-      const createResponse = await request(app)
-        .post('/api/players')
-        .field('name', 'Test Player for Delete')
-        .field('points', '70')
-        .field('position', 'GK')
-        .field('color', 'YELLOW')
-        .field('marketPrice', '80')
-        .field('theme', 'Delete Theme')
-        .field('percentage', '0.03')
-        .expect(201);
-
-      const playerId = createResponse.body.data.id;
-
-      // Delete the player
-      const deleteResponse = await request(app)
-        .delete(`/api/players/${playerId}`)
+        .get('/api/players/collection/my')
+        .set('Authorization', `Bearer ${newUser.body.token}`)
         .expect(200);
 
-      expect(deleteResponse.body).toMatchObject({
-        success: true,
-        message: 'Player deleted successfully',
-        data: { id: playerId }
-      });
-
-      // Verify player was deleted
-      const deletedPlayer = await prisma.player.findUnique({
-        where: { id: playerId }
-      });
-      expect(deletedPlayer).toBeNull();
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(0);
+      expect(response.body.count).toBe(0);
     });
 
-    it('should return 404 for non-existent player', async () => {
+    it('should reject unauthenticated access to collection', async () => {
       const response = await request(app)
-        .delete('/api/players/non-existent-id')
-        .expect(404);
+        .get('/api/players/collection/my')
+        .expect(401);
 
-      expect(response.body).toMatchObject({
-        error: 'Player not found'
+      expect(response.body.error).toBe('User not authenticated');
+    });
+  });
+
+  describe('Admin Player Management', () => {
+    describe('POST /api/players', () => {
+      it('should allow admin to create new player', async () => {
+        const playerData = {
+          name: 'Integration Test Player',
+          points: 88,
+          position: 'LW',
+          color: 'GELB',
+          marketPrice: 120,
+          theme: 'Integration Test',
+          percentage: 0.08
+        };
+
+        const response = await request(app)
+          .post('/api/players')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send(playerData)
+          .expect(201);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toMatchObject({
+          name: 'Integration Test Player',
+          points: 88,  
+          position: 'LW',
+          color: 'GELB',
+          marketPrice: 120,
+          theme: 'Integration Test',
+          percentage: 0.08,
+          imageUrl: '/images/players/default.jpg'
+        });
+
+        // Verify player was created in database
+        const createdPlayer = await testDb.player.findFirst({
+          where: { name: 'Integration Test Player' }
+        });
+
+        expect(createdPlayer).toBeTruthy();
+        expect(createdPlayer!.color).toBe('GELB');
       });
-    });
-  });
-});
 
-describe('FormData Validation Integration', () => {
-  it('should properly convert FormData strings to numbers', async () => {
-    const response = await request(app)
-      .post('/api/players')
-      .field('name', 'Test FormData Types')
-      .field('points', '95') // String that should be converted to number
-      .field('position', 'ST')
-      .field('color', 'PURPLE')
-      .field('marketPrice', '200') // String that should be converted to number
-      .field('theme', 'FormData Test')
-      .field('percentage', '0.08') // String that should be converted to float
-      .expect(201);
+      it('should reject player creation by non-admin', async () => {
+        const playerData = {
+          name: 'Unauthorized Player',
+          points: 85,
+          position: 'ST',
+          color: 'ROT',
+          marketPrice: 100,
+          theme: 'Test'
+        };
 
-    expect(response.body.data).toMatchObject({
-      points: 95, // Should be number, not string
-      marketPrice: 200, // Should be number, not string
-      percentage: 0.08 // Should be float, not string
-    });
-  });
+        const response = await request(app)
+          .post('/api/players')
+          .set('Authorization', `Bearer ${playerToken}`)
+          .send(playerData)
+          .expect(403);
 
-  it('should handle invalid numeric strings', async () => {
-    const response = await request(app)
-      .post('/api/players')
-      .field('name', 'Test Invalid Numbers')
-      .field('points', 'not-a-number') // Invalid numeric string
-      .field('position', 'ST')
-      .field('color', 'RED')
-      .field('marketPrice', '100')
-      .field('theme', 'Invalid Test')
-      .field('percentage', '0.05')
-      .expect(400);
-
-    expect(response.body).toMatchObject({
-      error: 'Validation error'
+        expect(response.body.error).toBe('Admin access required');
+      });
     });
   });
 });

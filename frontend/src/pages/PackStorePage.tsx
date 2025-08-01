@@ -3,7 +3,7 @@ import { apiService, type Pack, type Player, type PackOpenResult } from '../serv
 import { useAuth } from '../contexts/AuthContext';
 
 const PackStorePage: React.FC = () => {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState<string | null>(null);
@@ -53,13 +53,7 @@ const PackStorePage: React.FC = () => {
         setPackResult(response.data);
         setShowResultModal(true);
         
-        // Update user coins
-        if (setUser && user) {
-          setUser({
-            ...user,
-            coins: response.data.remainingCoins
-          });
-        }
+        // Note: User coins will be updated on next page refresh/API call
         
         // Reload packs to update player counts and status
         const packsResponse = await apiService.getAvailablePacks();
@@ -226,6 +220,15 @@ const PackStorePage: React.FC = () => {
             </div>
             
             <div className="modal-actions">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  closeResultModal();
+                  window.location.href = '/team-builder';
+                }}
+              >
+                🏈 Add to Team
+              </button>
               <button className="btn btn-primary" onClick={closeResultModal}>
                 Continue
               </button>
