@@ -261,7 +261,7 @@ describe('Lobby Integration Tests', () => {
         .set('Authorization', `Bearer ${extraPlayer.body.token}`)
         .expect(400);
 
-      expect(response.body.error).toBe('Lobby is full');
+      expect(response.body.error).toBe('Lobby is not accepting new members');
     });
   });
 

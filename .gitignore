@@ -103,3 +103,6 @@ yarn.lock
 
 # Keep Yarn configuration
 !.yarnrc.yml
+
+# Test artifacts
+test-*.db*
