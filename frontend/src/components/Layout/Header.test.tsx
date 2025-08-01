@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
@@ -5,14 +6,14 @@ import Header from './Header';
 import { AuthProvider } from '../../contexts/AuthContext';
 
 // Mock the AuthContext
-const mockLogout = jest.fn();
+const mockLogout = vi.fn();
 
 const createMockAuthContext = (isAuthenticated: boolean = false, user: any = null) => ({
   user,
   isAuthenticated,
-  login: jest.fn(),
+  login: vi.fn(),
   logout: mockLogout,
-  register: jest.fn(),
+  register: vi.fn(),
   loading: false
 });
 
@@ -42,7 +43,7 @@ const TestWrapper: React.FC<{
 
 describe('Header Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when user is not authenticated', () => {

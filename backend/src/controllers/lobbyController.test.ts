@@ -1,37 +1,38 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { getAllLobbies, createLobby, joinLobby, leaveLobby } from './lobbyController.js';
-import { prisma } from '../db/connection.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { getAllLobbies, createLobby, joinLobby, leaveLobby } from './lobbyController';
+import { prisma } from '../db/connection';
+import { authenticateToken } from '../middleware/auth';
 
 // Mock Prisma
-jest.mock('../db/connection.js', () => ({
+vi.mock('../db/connection', () => ({
   prisma: {
     lobby: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn()
+      findMany: vi.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn()
     },
     lobbyMember: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      deleteMany: jest.fn(),
-      count: jest.fn()
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn()
     }
   }
 }));
 
 // Mock auth middleware
-jest.mock('../middleware/auth.js', () => ({
-  authenticateToken: jest.fn((req, res, next) => {
+vi.mock('../middleware/auth', () => ({
+  authenticateToken: vi.fn((req, res, next) => {
     // Mock authenticated user
     req.user = { userId: 'user-1', role: 'USER' };
     next();
   })
 }));
 
-const mockedPrisma = jest.mocked(prisma);
+const mockedPrisma = vi.mocked(prisma);
 
 describe('Lobby Controller', () => {
   let app: express.Application;
@@ -47,7 +48,7 @@ describe('Lobby Controller', () => {
     app.delete('/lobbies/:id/leave', authenticateToken, leaveLobby);
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('GET /lobbies', () => {

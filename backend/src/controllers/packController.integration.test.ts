@@ -3,11 +3,12 @@
  * Tests mit echter SQLite Database - Complete Pack Opening Workflow
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { testDb, createTestUsers, createTestPlayers, createTestPack } from '../../jest.integration.setup.js';
-import { packRoutes } from '../routes/packRoutes.js';
-import { authRoutes } from '../routes/authRoutes.js';
+import { testDb, createTestUsers, createTestPlayers, createTestPack } from '../../jest.integration.setup';
+import { packRoutes } from '../routes/packRoutes';
+import { authRoutes } from '../routes/authRoutes';
 
 // Express App für Integration Tests
 const app = express();

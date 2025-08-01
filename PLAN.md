@@ -107,7 +107,7 @@ Ein browserbasiertes Fußball-Sammelkartenspiel für genau 4 Spieler mit komplex
 
 #### 6.2 Test Infrastructure Setup
 ```bash
-npm install --save-dev @cucumber/cucumber jest-cucumber
+yarn add --dev @cucumber/cucumber jest-cucumber
 ```
 - **jest-cucumber Integration**: Gherkin zu Jest Test Mapping
 - **Test Database Setup**: SQLite Test-DB für Integration Tests
@@ -359,19 +359,19 @@ yarn test:integration --coverage
 ### Testing Commands
 ```bash
 # Development
-cmd /c yarn.cmd dev                    # Start frontend + backend
-cmd /c yarn.cmd test                   # Run all tests
-cmd /c yarn.cmd test:watch             # Watch mode tests
-cmd /c yarn.cmd test --coverage        # Coverage report
+yarn dev                    # Start frontend + backend
+yarn test                   # Run all tests
+yarn test:watch             # Watch mode tests
+yarn test --coverage        # Coverage report
 
 # Backend-specific
-cd backend && npm test                 # Backend unit tests
-cd backend && npm run test:integration # Integration tests with SQLite
-cd backend && npm run test:coverage    # Backend coverage report
+cd backend && yarn test                 # Backend unit tests
+cd backend && yarn test:integration # Integration tests with SQLite
+cd backend && yarn test:coverage    # Backend coverage report
 
 # Quality Assurance
-cmd /c yarn.cmd lint                   # ESLint all workspaces
-cmd /c yarn.cmd type-check            # TypeScript validation
+yarn lint                   # ESLint all workspaces
+yarn type-check            # TypeScript validation
 ```
 
 ### Database Commands

@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import {
   validateRegistration,
@@ -8,19 +9,19 @@ import {
   validateCreatePack,
   validatePackPlayerManagement,
   validateId
-} from './validation.js';
+} from './validation';
 
 describe('Validation Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
+  let mockJson: ReturnType<typeof vi.fn>;
+  let mockStatus: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockJson = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    mockNext = jest.fn();
+    mockJson = vi.fn();
+    mockStatus = vi.fn().mockReturnValue({ json: mockJson });
+    mockNext = vi.fn();
     
     mockRequest = {
       body: {},
@@ -32,7 +33,7 @@ describe('Validation Middleware', () => {
     };
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validateRegistration', () => {

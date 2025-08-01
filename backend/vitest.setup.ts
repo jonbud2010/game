@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { testDb } from './src/test-utils/testDatabase.js';
+import { testDb } from './src/test-utils/testDatabase';
 
 // Load test environment variables
 config({ path: '.env.test' });
@@ -24,9 +24,9 @@ afterAll(async () => {
 global.console = {
   ...console,
   // Uncomment below to hide logs during tests
-  // log: jest.fn(),
-  // debug: jest.fn(),
-  // info: jest.fn(),
-  // warn: jest.fn(),
-  // error: jest.fn(),
+  // log: vi.fn(),
+  // debug: vi.fn(),
+  // info: vi.fn(),
+  // warn: vi.fn(),
+  // error: vi.fn(),
 };

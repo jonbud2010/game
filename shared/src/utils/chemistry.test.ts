@@ -1,6 +1,7 @@
-import { calculateTeamChemistry, getChemistryBreakdown, validateTeamChemistry } from './chemistry.js';
-import { CHEMISTRY_POINTS, MATCH_SETTINGS } from '../constants/game.js';
-import type { Team, PlayerColor, ChemistryBonus } from '../types/game.js';
+import { describe, it, expect } from 'vitest';
+import { calculateTeamChemistry, getChemistryBreakdown, validateTeamChemistry } from './chemistry';
+import { CHEMISTRY_POINTS, MATCH_SETTINGS } from '../constants/game';
+import type { Team, PlayerColor, ChemistryBonus } from '../types/game';
 
 describe('Chemistry Utils', () => {
   const mockTeam: Team = {

@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
@@ -6,14 +7,14 @@ import { AuthProvider, useAuth } from './AuthContext';
 const mockLocalStorage = (() => {
   let store: Record<string, string> = {};
   return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
       store[key] = value;
     }),
-    removeItem: jest.fn((key: string) => {
+    removeItem: vi.fn((key: string) => {
       delete store[key];
     }),
-    clear: jest.fn(() => {
+    clear: vi.fn(() => {
       store = {};
     })
   };
@@ -22,8 +23,8 @@ const mockLocalStorage = (() => {
 Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
 // Mock fetch
-global.fetch = jest.fn();
-const mockFetch = jest.mocked(fetch);
+global.fetch = vi.fn();
+const mockFetch = vi.mocked(fetch);
 
 // Test component to access context
 const TestComponent: React.FC = () => {
@@ -47,7 +48,7 @@ const TestComponent: React.FC = () => {
 
 describe('AuthContext', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockLocalStorage.clear();
   });
 

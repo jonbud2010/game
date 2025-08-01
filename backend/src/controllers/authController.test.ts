@@ -1,35 +1,36 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { register, login } from './authController.js';
-import { prisma } from '../db/connection.js';
+import { register, login } from './authController';
+import { prisma } from '../db/connection';
 
 // Mock Prisma
-jest.mock('../db/connection.js', () => ({
+vi.mock('../db/connection', () => ({
   prisma: {
     user: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      findUnique: jest.fn()
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn()
     }
   }
 }));
 
 // Mock bcrypt
-jest.mock('bcryptjs', () => ({
-  hash: jest.fn(),
-  compare: jest.fn()
+vi.mock('bcryptjs', () => ({
+  hash: vi.fn(),
+  compare: vi.fn()
 }));
 
 // Mock jwt
-jest.mock('jsonwebtoken', () => ({
-  sign: jest.fn()
+vi.mock('jsonwebtoken', () => ({
+  sign: vi.fn()
 }));
 
-const mockedPrisma = jest.mocked(prisma);
-const mockedBcrypt = jest.mocked(bcrypt);
-const mockedJwt = jest.mocked(jwt);
+const mockedPrisma = vi.mocked(prisma);
+const mockedBcrypt = vi.mocked(bcrypt);
+const mockedJwt = vi.mocked(jwt);
 
 describe('Auth Controller', () => {
   let app: express.Application;
@@ -41,7 +42,7 @@ describe('Auth Controller', () => {
     app.post('/auth/login', login);
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Set default JWT_SECRET for tests
     process.env.JWT_SECRET = 'test-jwt-secret';

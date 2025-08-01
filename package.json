@@ -17,13 +17,13 @@
     "build": "yarn workspace @football-tcg/shared build && yarn workspace @football-tcg/frontend build && yarn workspace @football-tcg/backend build",
     "build:frontend": "yarn workspace @football-tcg/frontend build",
     "build:backend": "yarn workspace @football-tcg/backend build",
-    "lint": "yarn workspaces run lint",
-    "lint:fix": "yarn workspaces run lint:fix",
-    "type-check": "yarn workspaces run type-check",
-    "test": "yarn workspaces run test",
-    "test:watch": "yarn workspaces run test:watch",
-    "clean": "yarn workspaces run clean && rm -rf node_modules",
-    "postinstall": "yarn workspaces run postinstall || true"
+    "lint": "yarn workspaces foreach --all run lint",
+    "lint:fix": "yarn workspaces foreach --all run lint:fix",
+    "type-check": "yarn workspaces foreach --all run type-check",
+    "test": "yarn workspaces foreach --all run test",
+    "test:watch": "yarn workspaces foreach --all run test:watch",
+    "clean": "yarn workspaces foreach --all run clean && rm -rf node_modules",
+    "postinstall": "yarn workspaces foreach --all run postinstall || true"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

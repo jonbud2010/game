@@ -3,12 +3,13 @@
  * Tests mit echter SQLite Database - Full API Flow Testing
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { testDb, createTestUsers } from '../../jest.integration.setup.js';
-import { authRoutes } from '../routes/authRoutes.js';
+import { testDb, createTestUsers } from '../../jest.integration.setup';
+import { authRoutes } from '../routes/authRoutes';
 
 // Express App für Integration Tests
 const app = express();
@@ -54,7 +55,7 @@ describe('Authentication Integration Tests', () => {
 
       // Verify password was hashed
       expect(createdUser?.passwordHash).not.toBe('password123');
-      const isValidPassword = await bcrypt.compare('password123', createdUser!.passwordHash);
+      const isValidPassword = await bcrypt.compare('password123', createdUser?.passwordHash || '');
       expect(isValidPassword).toBe(true);
     });
 

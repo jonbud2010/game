@@ -1,29 +1,30 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { getAllPlayers, createPlayer, updatePlayer, deletePlayer } from './playerController.js';
-import { prisma } from '../db/connection.js';
-import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+import { getAllPlayers, createPlayer, updatePlayer, deletePlayer } from './playerController';
+import { prisma } from '../db/connection';
+import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 // Mock Prisma
-jest.mock('../db/connection.js', () => ({
+vi.mock('../db/connection', () => ({
   prisma: {
     player: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
+      findMany: vi.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn()
     }
   }
 }));
 
 // Mock auth middleware
-jest.mock('../middleware/auth.js', () => ({
-  authenticateToken: jest.fn((req, res, next) => {
+vi.mock('../middleware/auth', () => ({
+  authenticateToken: vi.fn((req, res, next) => {
     req.user = { userId: 'user-1', role: 'ADMIN' };
     next();
   }),
-  requireAdmin: jest.fn((req, res, next) => {
+  requireAdmin: vi.fn((req, res, next) => {
     if (req.user?.role === 'ADMIN') {
       next();
     } else {
@@ -32,7 +33,7 @@ jest.mock('../middleware/auth.js', () => ({
   })
 }));
 
-const mockedPrisma = jest.mocked(prisma);
+const mockedPrisma = vi.mocked(prisma);
 
 describe('Player Controller', () => {
   let app: express.Application;
@@ -48,7 +49,7 @@ describe('Player Controller', () => {
     app.delete('/players/:id', authenticateToken, requireAdmin, deletePlayer);
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('GET /players', () => {

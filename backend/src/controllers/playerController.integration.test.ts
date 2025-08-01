@@ -3,11 +3,12 @@
  * Tests mit echter SQLite Database - Player CRUD und Collection Workflow
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { testDb, createTestUsers, createTestPlayers } from '../../jest.integration.setup.js';
-import { playerRoutes } from '../routes/playerRoutes.js';
-import { authRoutes } from '../routes/authRoutes.js';
+import { testDb, createTestUsers, createTestPlayers } from '../../jest.integration.setup';
+import { playerRoutes } from '../routes/playerRoutes';
+import { authRoutes } from '../routes/authRoutes';
 
 // Express App für Integration Tests
 const app = express();

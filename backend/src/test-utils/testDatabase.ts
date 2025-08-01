@@ -13,7 +13,9 @@ export class TestDatabase {
   private testDbPath: string;
 
   private constructor() {
-    this.testDbPath = path.join(process.cwd(), 'test.db');
+    // Use unique database name to avoid conflicts
+    const timestamp = Date.now();
+    this.testDbPath = path.join(process.cwd(), `test-${timestamp}.db`);
     this.prisma = new PrismaClient({
       datasources: {
         db: {
@@ -45,10 +47,10 @@ export class TestDatabase {
       }
 
       // Generate Prisma client
-      execSync('npx prisma generate', { stdio: 'pipe' });
+      execSync('yarn prisma generate', { stdio: 'pipe' });
 
-      // Run migrations
-      execSync('npx prisma migrate deploy', { 
+      // Push schema to database (better for testing than migrations)
+      execSync('yarn prisma db push --force-reset --skip-generate', { 
         stdio: 'pipe',
         env: { ...process.env, DATABASE_URL: `file:${this.testDbPath}` }
       });
@@ -135,10 +137,24 @@ export class TestDatabase {
   }
 
   /**
-   * Close database connection
+   * Close database connection and cleanup test files
    */
   public async disconnect(): Promise<void> {
     await this.prisma.$disconnect();
+    
+    // Clean up test database file
+    try {
+      if (fs.existsSync(this.testDbPath)) {
+        fs.unlinkSync(this.testDbPath);
+      }
+      // Also clean up journal file if it exists
+      const journalPath = `${this.testDbPath}-journal`;
+      if (fs.existsSync(journalPath)) {
+        fs.unlinkSync(journalPath);
+      }
+    } catch (error) {
+      console.warn('Failed to cleanup test database files:', error);
+    }
   }
 
   /**

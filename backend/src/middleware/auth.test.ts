@@ -1,32 +1,33 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { authenticateToken, requireAdmin, optionalAuth } from './auth.js';
-import { prisma } from '../db/client.js';
+import { authenticateToken, requireAdmin, optionalAuth } from './auth';
+import { prisma } from '../db/client';
 
 // Mock dependencies
-jest.mock('jsonwebtoken');
-jest.mock('../db/client.js', () => ({
+vi.mock('jsonwebtoken');
+vi.mock('../db/client', () => ({
   prisma: {
     user: {
-      findUnique: jest.fn()
+      findUnique: vi.fn()
     }
   }
 }));
 
-const mockedJwt = jest.mocked(jwt);
-const mockedPrisma = jest.mocked(prisma);
+const mockedJwt = vi.mocked(jwt);
+const mockedPrisma = vi.mocked(prisma);
 
 describe('Auth Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
+  let mockJson: ReturnType<typeof vi.fn>;
+  let mockStatus: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockJson = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    mockNext = jest.fn();
+    mockJson = vi.fn();
+    mockStatus = vi.fn().mockReturnValue({ json: mockJson });
+    mockNext = vi.fn();
     
     mockRequest = {
       headers: {}
@@ -37,7 +38,7 @@ describe('Auth Middleware', () => {
     };
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Set default JWT_SECRET for tests
     process.env.JWT_SECRET = 'test-jwt-secret';

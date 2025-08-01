@@ -1,51 +1,52 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Request, Response } from 'express';
 import {
   getLobbyMatches,
   getMatchById,
   getLeagueTable,
   getLeagueStatus
-} from './matchController.js';
-import { prisma } from '../db/client.js';
+} from './matchController';
+import { prisma } from '../db/client';
 
 // Mock Prisma
-jest.mock('../db/client.js', () => ({
+vi.mock('../db/client', () => ({
   prisma: {
     match: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      count: jest.fn()
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn()
     },
     lobby: {
-      findUnique: jest.fn(),
-      update: jest.fn()
+      findUnique: vi.fn(),
+      update: vi.fn()
     },
     team: {
-      findMany: jest.fn()
+      findMany: vi.fn()
     },
     leagueTable: {
-      findMany: jest.fn(),
-      upsert: jest.fn(),
-      update: jest.fn()
+      findMany: vi.fn(),
+      upsert: vi.fn(),
+      update: vi.fn()
     },
     user: {
-      update: jest.fn()
+      update: vi.fn()
     }
   }
 }));
 
-const mockedPrisma = jest.mocked(prisma);
+const mockedPrisma = vi.mocked(prisma);
 
 describe('Match Controller', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
+  let mockJson: ReturnType<typeof vi.fn>;
+  let mockStatus: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockJson = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
+    mockJson = vi.fn();
+    mockStatus = vi.fn().mockReturnValue({ json: mockJson });
     
     mockRequest = {
       user: { id: 'user1', role: 'USER' }
@@ -56,7 +57,7 @@ describe('Match Controller', () => {
     };
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getLobbyMatches', () => {

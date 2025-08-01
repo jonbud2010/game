@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import {
   calculateTeamStrength,
   calculateWinChances,
@@ -7,9 +8,9 @@ import {
   simulateLeague,
   type TeamWithPlayers,
   type TeamStrength
-} from './matchEngine.js';
-import { MATCH_SETTINGS, LEAGUE_POINTS } from '../constants/game.js';
-import type { Player, PlayerColor } from '../types/game.js';
+} from './matchEngine';
+import { MATCH_SETTINGS, LEAGUE_POINTS } from '../constants/game';
+import type { Player, PlayerColor } from '../types/game';
 
 describe('Match Engine Utils', () => {
   const mockPlayer1: Player = {

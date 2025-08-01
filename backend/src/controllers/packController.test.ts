@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Request, Response } from 'express';
 import {
   getAllPacks,
@@ -10,52 +11,52 @@ import {
   getAvailablePacks,
   openPack,
   recalculatePackPercentages
-} from './packController.js';
-import { prisma } from '../db/client.js';
+} from './packController';
+import { prisma } from '../db/client';
 
 // Mock Prisma
-jest.mock('../db/client.js', () => ({
+vi.mock('../db/client', () => ({
   prisma: {
     pack: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn()
     },
     player: {
-      findMany: jest.fn(),
-      update: jest.fn()
+      findMany: vi.fn(),
+      update: vi.fn()
     },
     packPlayer: {
-      findMany: jest.fn(),
-      createMany: jest.fn(),
-      deleteMany: jest.fn(),
-      delete: jest.fn(),
-      count: jest.fn()
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn()
     },
     user: {
-      findUnique: jest.fn(),
-      update: jest.fn()
+      findUnique: vi.fn(),
+      update: vi.fn()
     },
     userPlayer: {
-      create: jest.fn()
+      create: vi.fn()
     },
-    $transaction: jest.fn()
+    $transaction: vi.fn()
   }
 }));
 
-const mockedPrisma = jest.mocked(prisma);
+const mockedPrisma = vi.mocked(prisma);
 
 describe('Pack Controller', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
+  let mockJson: ReturnType<typeof vi.fn>;
+  let mockStatus: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockJson = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
+    mockJson = vi.fn();
+    mockStatus = vi.fn().mockReturnValue({ json: mockJson });
     
     mockRequest = {
       user: { id: 'user1', role: 'ADMIN' }
@@ -66,7 +67,7 @@ describe('Pack Controller', () => {
     };
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getAllPacks', () => {
@@ -216,11 +217,11 @@ describe('Pack Controller', () => {
       mockedPrisma.$transaction.mockImplementation(async (callback) => {
         return await callback({
           pack: {
-            create: jest.fn().mockResolvedValue({ id: '1', name: 'New Pack', price: 150 }),
-            findUnique: jest.fn().mockResolvedValue(mockPack)
+            create: vi.fn().mockResolvedValue({ id: '1', name: 'New Pack', price: 150 }),
+            findUnique: vi.fn().mockResolvedValue(mockPack)
           },
           packPlayer: {
-            createMany: jest.fn().mockResolvedValue({ count: 2 })
+            createMany: vi.fn().mockResolvedValue({ count: 2 })
           }
         });
       });
@@ -351,14 +352,14 @@ describe('Pack Controller', () => {
         .mockResolvedValueOnce({ coins: 100 }); // Second call for updated coins
 
       // Mock Math.random to always return 0.2 (should select first player with 0.3 percentage)
-      jest.spyOn(Math, 'random').mockReturnValue(0.2);
+      vi.spyOn(Math, 'random').mockReturnValue(0.2);
 
       mockedPrisma.$transaction.mockImplementation(async (callback) => {
         return await callback({
-          user: { update: jest.fn() },
-          userPlayer: { create: jest.fn().mockResolvedValue({ id: 'up1' }) },
-          packPlayer: { delete: jest.fn(), count: jest.fn().mockResolvedValue(1) },
-          pack: { update: jest.fn() }
+          user: { update: vi.fn() },
+          userPlayer: { create: vi.fn().mockResolvedValue({ id: 'up1' }) },
+          packPlayer: { delete: vi.fn(), count: vi.fn().mockResolvedValue(1) },
+          pack: { update: vi.fn() }
         });
       });
 
@@ -383,7 +384,7 @@ describe('Pack Controller', () => {
       });
 
       // Restore Math.random
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should return 401 when user not authenticated', async () => {

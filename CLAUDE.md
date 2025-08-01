@@ -20,26 +20,22 @@ The shared package exports game types, chemistry calculation utilities, and cons
 
 ### Starting Development Services
 ```bash
-# On Windows (use yarn.cmd):
-cmd /c yarn.cmd dev              # Start both frontend and backend
-cmd /c yarn.cmd dev:frontend     # Frontend only (port 5173)
-cmd /c yarn.cmd dev:backend      # Backend only (port 3001)
+yarn dev              # Start both frontend and backend
+yarn dev:frontend     # Frontend only (port 5173)
+yarn dev:backend      # Backend only (port 3001)
 
 # Clean start (kills dangling processes first):
-cmd /c yarn.cmd dev:backend:clean  # Kill port 3001 processes, then start backend
+yarn dev:backend:clean  # Kill port 3001 processes, then start backend
 
 # Alternative backend start (if yarn dev fails):
-cd backend && npx tsx src/index.ts  # Direct TypeScript execution
-
-# On Linux/Mac:
-node .yarn/releases/yarn-4.9.2.cjs dev
+cd backend && yarn tsx src/index.ts  # Direct TypeScript execution
 ```
 
 ### Building
 ```bash
-cmd /c yarn.cmd build            # Build all packages (shared first)
-cmd /c yarn.cmd build:frontend   # Frontend only
-cmd /c yarn.cmd build:backend    # Backend only (✅ working)
+yarn build            # Build all packages (shared first)
+yarn build:frontend   # Frontend only
+yarn build:backend    # Backend only (✅ working)
 
 # Backend uses tsx for both development and production start
 # TypeScript compilation (tsc) generates dist files for type checking
@@ -47,36 +43,36 @@ cmd /c yarn.cmd build:backend    # Backend only (✅ working)
 
 ### Quality Assurance
 ```bash
-cmd /c yarn.cmd lint             # ESLint all workspaces
-cmd /c yarn.cmd type-check       # TypeScript check all
-cmd /c yarn.cmd test             # Jest tests all
-cmd /c yarn.cmd test:watch       # Watch mode tests
+yarn lint             # ESLint all workspaces
+yarn type-check       # TypeScript check all
+yarn test             # Vitest tests all workspaces
+yarn test:watch       # Watch mode tests
+yarn test:coverage    # Run tests with coverage report
+yarn test:ui          # Open Vitest UI (frontend/backend only)
 ```
 
 ### Database Tools Setup
 
-**SQLite Installation (Windows)**:
-SQLite tools are installed system-wide for convenient access from any directory:
-- **Location**: `C:\sqlite\bin\`
-- **Tools included**: sqlite3.exe, sqldiff.exe, sqlite3_analyzer.exe
-- **PATH**: Added to Windows PATH environment variable for global access
+**SQLite Installation**:
+SQLite tools are available in WSL:
+```bash
+sudo apt update
+sudo apt install sqlite3
+```
 
 **Verification**:
 ```bash
 sqlite3 --version    # Should display SQLite version
 ```
 
-**Note**: After PATH modification, restart command prompt/terminal or reboot system to access sqlite3 globally. 
-Until restart, use full path: `C:\sqlite\bin\sqlite3`
-
 ### Database Operations (Backend)
 
 **Local Development (SQLite)**:
 ```bash
 cd backend
-npx prisma generate          # Generate Prisma client
-npx prisma migrate dev       # Run migrations
-npx prisma db seed           # Seed test data
+yarn prisma generate          # Generate Prisma client
+yarn prisma migrate dev       # Run migrations
+yarn prisma db seed           # Seed test data
 
 # SQLite CLI commands (available globally):
 sqlite3 dev.db               # Open database in SQLite CLI
@@ -85,9 +81,9 @@ sqlite3 prisma/dev.db        # Open Prisma database directly
 
 **Production (PostgreSQL)** - Use schema.production.prisma:
 ```bash
-cmd /c yarn.cmd workspace @football-tcg/backend db:migrate
-cmd /c yarn.cmd workspace @football-tcg/backend db:generate
-cmd /c yarn.cmd workspace @football-tcg/backend db:seed
+yarn workspace @football-tcg/backend db:migrate
+yarn workspace @football-tcg/backend db:generate
+yarn workspace @football-tcg/backend db:seed
 ```
 
 ## Game Architecture & Business Logic
@@ -155,10 +151,10 @@ If the backend crashes on startup, common issues include:
 1. **Port Already in Use (EADDRINUSE)**:
    ```bash
    # Kill any processes on port 3001:
-   cmd /c yarn.cmd kill-port
+   yarn kill-port
    
    # Or use the clean start command:
-   cmd /c yarn.cmd dev:backend:clean
+   yarn dev:backend:clean
    ```
 
 2. **Module Import Errors**: 
@@ -168,14 +164,14 @@ If the backend crashes on startup, common issues include:
 3. **Database Connection Issues**:
    ```bash
    cd backend
-   npx prisma generate    # Regenerate Prisma client
-   npx prisma migrate dev # Apply latest migrations
+   yarn prisma generate    # Regenerate Prisma client
+   yarn prisma migrate dev # Apply latest migrations
    ```
 
 4. **Alternative Backend Start**:
    ```bash
    cd backend
-   npx tsx src/index.ts   # Direct TypeScript execution bypasses build issues
+   yarn tsx src/index.ts   # Direct TypeScript execution bypasses build issues
    ```
 
 5. **Environment Variables**: 
@@ -185,7 +181,7 @@ If the backend crashes on startup, common issues include:
 The backend now properly supports both development and production builds:
 - Development: Uses `tsx` for fast TypeScript execution
 - Production: TypeScript compiles successfully with `tsc`
-- Type checking: `npm run type-check` validates without emitting files
+- Type checking: `yarn type-check` validates without emitting files
 
 ### Database Issues
 - SQLite database files are located in `backend/dev.db` and `backend/prisma/dev.db`
@@ -194,7 +190,7 @@ The backend now properly supports both development and production builds:
 ## Important Notes
 
 - This is a German-language project (comments and UI in German)
-- Uses Yarn Berry (v4.9.2) - always use `yarn.cmd` on Windows
+- Uses Yarn Berry (v4.9.2) with WSL
 - SQLite database (dev.db) is used for local development, PostgreSQL for production
 - Shared package must be built before frontend/backend due to workspace dependencies
 - Game rules are complex - refer to PLAN.md for detailed specifications

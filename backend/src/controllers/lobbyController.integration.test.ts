@@ -3,11 +3,12 @@
  * Tests mit echter SQLite Database - Complete Lobby Workflow
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { testDb, createTestUsers } from '../../jest.integration.setup.js';
-import { lobbyRoutes } from '../routes/lobbyRoutes.js';
-import { authRoutes } from '../routes/authRoutes.js';
+import { testDb, createTestUsers } from '../../jest.integration.setup';
+import { lobbyRoutes } from '../routes/lobbyRoutes';
+import { authRoutes } from '../routes/authRoutes';
 
 // Express App für Integration Tests
 const app = express();

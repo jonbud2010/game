@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
@@ -9,35 +10,35 @@ import {
   handleUploadError,
   deleteImageFile,
   setupStaticFileServing
-} from './upload.js';
+} from './upload';
 
 // Mock dependencies
-jest.mock('fs/promises');
-jest.mock('sharp');
-jest.mock('multer');
+vi.mock('fs/promises');
+vi.mock('sharp');
+vi.mock('multer');
 
-const mockedFs = jest.mocked(fs);
-const mockedSharp = jest.mocked(sharp);
-const mockedMulter = jest.mocked(multer);
+const mockedFs = vi.mocked(fs);
+const mockedSharp = vi.mocked(sharp);
+const mockedMulter = vi.mocked(multer);
 
 // Mock sharp instance
 const mockSharpInstance = {
-  resize: jest.fn().mockReturnThis(),
-  webp: jest.fn().mockReturnThis(),
-  toBuffer: jest.fn()
+  resize: vi.fn().mockReturnThis(),
+  webp: vi.fn().mockReturnThis(),
+  toBuffer: vi.fn()
 };
 
 describe('Upload Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
+  let mockJson: ReturnType<typeof vi.fn>;
+  let mockStatus: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockJson = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    mockNext = jest.fn();
+    mockJson = vi.fn();
+    mockStatus = vi.fn().mockReturnValue({ json: mockJson });
+    mockNext = vi.fn();
     
     mockRequest = {
       body: {},

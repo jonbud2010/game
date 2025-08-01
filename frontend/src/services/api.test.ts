@@ -1,21 +1,22 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiService } from './api';
 
 // Mock fetch for testing
-global.fetch = jest.fn();
-const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
+global.fetch = vi.fn();
+const mockFetch = fetch as ReturnType<typeof vi.fn>;
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn()
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn()
 } as any;
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 describe('ApiService Player Methods', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorageMock.getItem.mockReturnValue('mock-token');
   });
 

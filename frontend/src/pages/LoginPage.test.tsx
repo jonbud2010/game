@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
@@ -5,21 +6,24 @@ import LoginPage from './LoginPage';
 import { AuthProvider } from '../contexts/AuthContext';
 
 // Mock useNavigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate
-}));
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate
+  };
+});
 
 // Mock the AuthContext
-const mockLogin = jest.fn();
+const mockLogin = vi.fn();
 
 const createMockAuthContext = () => ({
   user: null,
   isAuthenticated: false,
   login: mockLogin,
-  logout: jest.fn(),
-  register: jest.fn(),
+  logout: vi.fn(),
+  register: vi.fn(),
   loading: false
 });
 
@@ -36,7 +40,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 describe('LoginPage Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render login form elements', () => {

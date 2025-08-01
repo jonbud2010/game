@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Request, Response } from 'express';
 import {
   getAllFormations,
@@ -6,33 +7,33 @@ import {
   updateFormation,
   deleteFormation,
   getFormationStats
-} from './formationController.js';
-import { prisma } from '../db/client.js';
+} from './formationController';
+import { prisma } from '../db/client';
 
 // Mock Prisma
-jest.mock('../db/client.js', () => ({
+vi.mock('../db/client', () => ({
   prisma: {
     formation: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn()
     }
   }
 }));
 
-const mockedPrisma = jest.mocked(prisma);
+const mockedPrisma = vi.mocked(prisma);
 
 describe('Formation Controller', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
+  let mockJson: ReturnType<typeof vi.fn>;
+  let mockStatus: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockJson = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
+    mockJson = vi.fn();
+    mockStatus = vi.fn().mockReturnValue({ json: mockJson });
     
     mockRequest = {};
     mockResponse = {
@@ -41,7 +42,7 @@ describe('Formation Controller', () => {
     };
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getAllFormations', () => {

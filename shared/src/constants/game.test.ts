@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import {
   PLAYER_POSITIONS,
   PLAYER_COLORS,
@@ -7,7 +8,7 @@ import {
   MATCH_SETTINGS,
   LOBBY_SETTINGS,
   VALIDATION_RULES
-} from './game.js';
+} from './game';
 
 describe('Game Constants', () => {
   describe('PLAYER_POSITIONS', () => {

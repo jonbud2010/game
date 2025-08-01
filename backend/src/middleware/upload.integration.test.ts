@@ -3,13 +3,14 @@
  * Tests mit echten File-Uploads und Sharp Image Processing
  */
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { testDb } from '../../jest.integration.setup.js';
-import { playerRoutes } from '../routes/playerRoutes.js';
-import { authRoutes } from '../routes/authRoutes.js';
+import { testDb } from '../../jest.integration.setup';
+import { playerRoutes } from '../routes/playerRoutes';
+import { authRoutes } from '../routes/authRoutes';
 
 // Express App für Integration Tests
 const app = express();

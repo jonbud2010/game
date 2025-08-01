@@ -23,23 +23,17 @@ git clone https://github.com/your-username/football-tcg.git
 cd football-tcg
 
 # Dependencies installieren (Yarn 4 Workspaces)
-# Auf Windows:
-cmd /c yarn.cmd install
-# Auf Linux/Mac:
-node .yarn/releases/yarn-4.9.2.cjs install
+yarn install
 
 # Beide Services starten (Frontend + Backend)
-# Windows:
-cmd /c yarn.cmd dev
-# Linux/Mac:
-node .yarn/releases/yarn-4.9.2.cjs dev
+yarn dev
 
 # Oder einzeln starten:
-cmd /c yarn.cmd dev:frontend  # Frontend: http://localhost:5173
-cmd /c yarn.cmd dev:backend   # Backend: http://localhost:3001
+yarn dev:frontend  # Frontend: http://localhost:5173
+yarn dev:backend   # Backend: http://localhost:3001
 
 # Falls Backend-Probleme auftreten:
-cd backend && npx tsx src/index.ts  # Direkter TypeScript-Start
+cd backend && yarn tsx src/index.ts  # Direkter TypeScript-Start
 ```
 
 **Yarn 4 Setup:** Das Projekt nutzt Yarn Berry (v4.9.2) für moderne Workspace-Features. Die lokale Installation ist bereits konfiguriert.
@@ -127,27 +121,27 @@ football-tcg/
 ### Verfügbare Scripts
 
 ```bash
-# Development (Root) - Windows
-cmd /c yarn.cmd dev             # Beide Services starten
-cmd /c yarn.cmd dev:frontend    # Nur Frontend (Port 5173)
-cmd /c yarn.cmd dev:backend     # Nur Backend (Port 3001)
-cmd /c yarn.cmd dev:backend:clean  # Backend mit Port-Freigabe
+# Development (Root)
+yarn dev             # Beide Services starten
+yarn dev:frontend    # Nur Frontend (Port 5173)
+yarn dev:backend     # Nur Backend (Port 3001)
+yarn dev:backend:clean  # Backend mit Port-Freigabe
 
 # Build
-cmd /c yarn.cmd build           # Alle Packages bauen
-cmd /c yarn.cmd build:frontend  # Nur Frontend bauen
-cmd /c yarn.cmd build:backend   # Nur Backend bauen
+yarn build           # Alle Packages bauen
+yarn build:frontend  # Nur Frontend bauen
+yarn build:backend   # Nur Backend bauen
 
 # Quality (Alle Workspaces)
-cmd /c yarn.cmd lint            # ESLint für alle Packages
-cmd /c yarn.cmd type-check      # TypeScript Check
-cmd /c yarn.cmd test            # Jest Tests
-cmd /c yarn.cmd test:watch      # Jest Watch Mode
+yarn lint            # ESLint für alle Packages
+yarn type-check      # TypeScript Check
+yarn test            # Jest Tests
+yarn test:watch      # Jest Watch Mode
 
 # Workspace-spezifisch
-cmd /c yarn.cmd workspace @football-tcg/frontend add react-router-dom
-cmd /c yarn.cmd workspace @football-tcg/backend add prisma
-cmd /c yarn.cmd workspace @football-tcg/shared build
+yarn workspace @football-tcg/frontend add react-router-dom
+yarn workspace @football-tcg/backend add prisma
+yarn workspace @football-tcg/shared build
 ```
 
 ### Code-Qualität
@@ -162,25 +156,24 @@ cmd /c yarn.cmd workspace @football-tcg/shared build
 **Backend startet nicht?**
 ```bash
 # Port 3001 freigeben (tötet hängende Prozesse):
-cmd /c yarn.cmd kill-port
+yarn kill-port
 
 # Backend mit sauberem Start:
-cmd /c yarn.cmd dev:backend:clean
+yarn dev:backend:clean
 
 # Backend direkt mit tsx starten:
-cd backend && npx tsx src/index.ts
+cd backend && yarn tsx src/index.ts
 
 # Oder Prisma-Client neu generieren:
-cd backend && npx prisma generate
+cd backend && yarn prisma generate
 ```
 
 **Yarn-Workspace Probleme?**
-- Immer `yarn.cmd` auf Windows verwenden
-- Shared Package erst bauen: `cmd /c yarn.cmd workspace @football-tcg/shared build`
+- Shared Package erst bauen: `yarn workspace @football-tcg/shared build`
 
 **Datenbank-Probleme?**
 - SQLite-Datei: `backend/dev.db`
-- Migrationen: `cd backend && npx prisma migrate dev`
+- Migrationen: `cd backend && yarn prisma migrate dev`
 
 ## 📋 Development Status
 
@@ -196,18 +189,25 @@ Siehe [PLAN.md](./PLAN.md) für den vollständigen Entwicklungsplan.
 - [x] User Management & JWT Authentifizierung
 - [x] Lobby-System (Erstellen, Beitreten, Verlassen)
 - [x] Entwicklungsplan & Dokumentation
+- [x] Test Database Infrastructure (SQLite)
+- [x] Mock Strategy Documentation
 
-### 🚧 In Arbeit
-- [ ] Spieler-System mit CRUD-Operationen (Stub vorhanden)
-- [ ] Pack-System & Ziehungs-Mechanik
-- [ ] Frontend-Backend Integration
+### 🚧 Teilweise Abgeschlossen
+- [x] Unit Tests Implementation (20+ Test Files)
+- [x] Comprehensive Mocking (Prisma, JWT, File System)
+- [x] Coverage Report Setup
+- [x] Backend Test Design & Gherkin Scenarios
+- [x] BDD Framework Setup (jest-cucumber)
+- [⚠️] Test Execution (Yarn Workspace Dependencies Issue)
+- [ ] Test Coverage Optimization (Target: 80%)
+- [ ] Bug Discovery & Resolution
+- [ ] Performance Optimization
+- [ ] CI/CD Integration
 
 ### 📅 Geplant
-- [ ] Team-Building Interface
-- [ ] Match-Engine Implementation
-- [ ] Liga-System & Tabellen
-- [ ] Admin-Panel
-- [ ] Mobile-Responsive UI
+- [ ] Production Deployment
+- [ ] Mobile-Responsive UI Enhancements
+- [ ] Advanced Analytics
 
 ## 🤝 Contributing
 
