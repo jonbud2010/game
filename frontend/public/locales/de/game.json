@@ -113,5 +113,34 @@
     "sort_points": "Punkte",
     "sort_price": "Preis",
     "sort_acquired": "Erwerbsdatum"
+  },
+  "lobbies": {
+    "title": "Lobbies",
+    "subtitle": "Tritt einer Lobby bei oder erstelle eine neue",
+    "create_new": "Neue Lobby erstellen",
+    "creating": "Erstelle...",
+    "refresh": "Lobbies aktualisieren",
+    "refreshing": "Lädt...",
+    "loading": "Lade Lobbies...",
+    "no_lobbies": "Keine Lobbies verfügbar",
+    "no_lobbies_description": "Erstelle eine neue Lobby, um zu beginnen!",
+    "join": "Beitreten",
+    "joining": "Beitrete...",
+    "full": "Voll",
+    "not_available": "Nicht verfügbar",
+    "players": "Spieler",
+    "members": "Mitglieder:",
+    "status": {
+      "waiting": "Warten auf Spieler",
+      "in_progress": "Spiel läuft",
+      "finished": "Beendet"
+    },
+    "create_modal": {
+      "title": "Neue Lobby erstellen",
+      "name_label": "Lobby Name:",
+      "name_placeholder": "z.B. Bundesliga Turnier",
+      "cancel": "Abbrechen",
+      "create": "Erstellen"
+    }
   }
 }

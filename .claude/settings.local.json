@@ -96,7 +96,10 @@
       "Bash(yarn workspace @football-tcg/shared test:file:*)",
       "Bash(yarn workspace @football-tcg/frontend add:*)",
       "Bash(yarn workspace @football-tcg/frontend type-check:*)",
-      "Bash(yarn workspace @football-tcg/frontend:*)"
+      "Bash(yarn workspace @football-tcg/frontend:*)",
+      "Bash(timeout 5 yarn workspace @football-tcg/frontend dev)",
+      "Bash(yarn validate-translations:*)",
+      "Bash(timeout 10s yarn workspace @football-tcg/frontend dev)"
     ],
     "deny": []
   }

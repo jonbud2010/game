@@ -3,10 +3,14 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import Header from './Header';
-import { AuthProvider } from '../../contexts/AuthContext';
 
-// Mock the AuthContext
+// Mock the useAuth hook
 const mockLogout = vi.fn();
+const mockUseAuth = vi.fn();
+
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => mockUseAuth()
+}));
 
 const createMockAuthContext = (isAuthenticated: boolean = false, user: any = null) => ({
   user,
@@ -14,10 +18,10 @@ const createMockAuthContext = (isAuthenticated: boolean = false, user: any = nul
   login: vi.fn(),
   logout: mockLogout,
   register: vi.fn(),
-  loading: false
+  isLoading: false
 });
 
-// Wrapper component to provide context
+// Wrapper component to provide router context
 const TestWrapper: React.FC<{ 
   children: React.ReactNode; 
   isAuthenticated?: boolean; 
@@ -32,11 +36,12 @@ const TestWrapper: React.FC<{
   const Router = initialEntries ? MemoryRouter : BrowserRouter;
   const routerProps = initialEntries ? { initialEntries } : {};
 
+  // Set up the mock for this render
+  mockUseAuth.mockReturnValue(createMockAuthContext(isAuthenticated, user));
+
   return (
     <Router {...routerProps}>
-      <AuthProvider value={createMockAuthContext(isAuthenticated, user)}>
-        {children}
-      </AuthProvider>
+      {children}
     </Router>
   );
 };
@@ -84,7 +89,7 @@ describe('Header Component', () => {
       );
 
       expect(screen.queryByText('Abmelden')).not.toBeInTheDocument();
-      expect(screen.queryByText(/Münzen/)).not.toBeInTheDocument();
+      expect(screen.queryByText('1500')).not.toBeInTheDocument();
     });
   });
 
@@ -105,7 +110,7 @@ describe('Header Component', () => {
       );
 
       expect(screen.getByText('testuser')).toBeInTheDocument();
-      expect(screen.getByText('1500 Münzen')).toBeInTheDocument();
+      expect(screen.getByText('1500')).toBeInTheDocument();
     });
 
     it('should show logout button when authenticated', () => {

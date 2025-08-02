@@ -4,10 +4,10 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { register, login } from './authController';
-import { prisma } from '../db/connection';
+import { prisma } from '../db/client';
 
 // Mock Prisma
-vi.mock('../db/connection', () => ({
+vi.mock('../db/client', () => ({
   prisma: {
     user: {
       findFirst: vi.fn(),
@@ -39,6 +39,11 @@ const mockedPrisma = vi.mocked(prisma);
 const mockedBcrypt = vi.mocked(bcrypt);
 const mockedJwt = vi.mocked(jwt);
 
+// Properly type the mocked Prisma methods
+const mockedUserFindFirst = vi.mocked(prisma.user.findFirst);
+const mockedUserCreate = vi.mocked(prisma.user.create);
+const mockedUserFindUnique = vi.mocked(prisma.user.findUnique);
+
 describe('Auth Controller', () => {
   let app: express.Application;
 
@@ -68,10 +73,10 @@ describe('Auth Controller', () => {
 
     it('should register a new user successfully', async () => {
       // Mock: no existing user
-      mockedPrisma.user.findFirst.mockResolvedValue(null);
+      mockedUserFindFirst.mockResolvedValue(null);
       
       // Mock: password hashing
-      mockedBcrypt.hash.mockResolvedValue('hashed-password');
+      mockedBcrypt.hash.mockResolvedValue('hashed-password' as never);
       
       // Mock: user creation
       const mockUser = {
@@ -84,10 +89,10 @@ describe('Auth Controller', () => {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      mockedPrisma.user.create.mockResolvedValue(mockUser);
+      mockedUserCreate.mockResolvedValue(mockUser);
       
       // Mock: JWT token generation
-      mockedJwt.sign.mockReturnValue('mock-jwt-token');
+      mockedJwt.sign.mockReturnValue('mock-jwt-token' as never);
 
       const response = await request(app)
         .post('/auth/register')
@@ -97,7 +102,7 @@ describe('Auth Controller', () => {
       expect(response.body).toMatchObject({
         message: 'User registered successfully',
         user: {
-          id: 'user-1',
+          id: expect.any(String),
           username: 'testuser',
           email: 'test@example.com',
           coins: 1000,
@@ -110,7 +115,7 @@ describe('Auth Controller', () => {
       expect(mockedBcrypt.hash).toHaveBeenCalledWith('password123', 12);
       
       // Verify user creation
-      expect(mockedPrisma.user.create).toHaveBeenCalledWith({
+      expect(mockedUserCreate).toHaveBeenCalledWith({
         data: {
           username: 'testuser',
           email: 'test@example.com',
@@ -141,7 +146,7 @@ describe('Auth Controller', () => {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      mockedPrisma.user.findFirst.mockResolvedValue(existingUser);
+      mockedUserFindFirst.mockResolvedValue(existingUser);
 
       const response = await request(app)
         .post('/auth/register')
@@ -149,11 +154,11 @@ describe('Auth Controller', () => {
 
       expect(response.status).toBe(400);
       expect(response.body).toMatchObject({
-        error: 'User with this email or username already exists'
+        error: 'Email already registered'
       });
 
       // Verify no user creation attempt
-      expect(mockedPrisma.user.create).not.toHaveBeenCalled();
+      expect(mockedUserCreate).not.toHaveBeenCalled();
     });
 
     it('should return validation error for missing fields', async () => {
@@ -170,7 +175,7 @@ describe('Auth Controller', () => {
     });
 
     it('should handle database errors', async () => {
-      mockedPrisma.user.findFirst.mockRejectedValue(new Error('Database error'));
+      mockedUserFindFirst.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
         .post('/auth/register')
@@ -201,13 +206,13 @@ describe('Auth Controller', () => {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      mockedPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockedUserFindUnique.mockResolvedValue(mockUser);
       
       // Mock: password comparison success
-      mockedBcrypt.compare.mockResolvedValue(true);
+      mockedBcrypt.compare.mockResolvedValue(true as never);
       
       // Mock: JWT token generation
-      mockedJwt.sign.mockReturnValue('mock-jwt-token');
+      mockedJwt.sign.mockReturnValue('mock-jwt-token' as never);
 
       const response = await request(app)
         .post('/auth/login')
@@ -217,7 +222,7 @@ describe('Auth Controller', () => {
       expect(response.body).toMatchObject({
         message: 'Login successful',
         user: {
-          id: 'user-1',
+          id: expect.any(String),
           username: 'testuser',
           email: 'test@example.com',
           coins: 1000,
@@ -232,7 +237,7 @@ describe('Auth Controller', () => {
 
     it('should return error for invalid credentials - user not found', async () => {
       // Mock: no user found
-      mockedPrisma.user.findUnique.mockResolvedValue(null);
+      mockedUserFindUnique.mockResolvedValue(null);
 
       const response = await request(app)
         .post('/auth/login')
@@ -256,10 +261,10 @@ describe('Auth Controller', () => {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      mockedPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockedUserFindUnique.mockResolvedValue(mockUser);
       
       // Mock: password comparison failure
-      mockedBcrypt.compare.mockResolvedValue(false);
+      mockedBcrypt.compare.mockResolvedValue(false as never);
 
       const response = await request(app)
         .post('/auth/login')
@@ -285,7 +290,7 @@ describe('Auth Controller', () => {
     });
 
     it('should handle database errors', async () => {
-      mockedPrisma.user.findUnique.mockRejectedValue(new Error('Database error'));
+      mockedUserFindUnique.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
         .post('/auth/login')

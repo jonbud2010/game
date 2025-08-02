@@ -22,6 +22,9 @@
     "type-check": "yarn workspaces foreach --all run type-check",
     "test": "yarn workspaces foreach --all run test",
     "test:watch": "yarn workspaces foreach --all run test:watch",
+    "validate-translations": "yarn workspace @football-tcg/frontend validate-translations",
+    "validate-translations:fix": "yarn workspace @football-tcg/frontend validate-translations:fix",
+    "validate-translations:verbose": "yarn workspace @football-tcg/frontend validate-translations:verbose",
     "clean": "yarn workspaces foreach --all run clean && rm -rf node_modules",
     "postinstall": "yarn workspaces foreach --all run postinstall || true"
   },

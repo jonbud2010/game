@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService, type Lobby } from '../services/api';
+import { useTranslation } from '../hooks/useTranslation';
 
 const LobbyPage: React.FC = () => {
   const [lobbies, setLobbies] = useState<Lobby[]>([]);
@@ -8,6 +9,8 @@ const LobbyPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newLobbyName, setNewLobbyName] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { t: game } = useTranslation('game');
+  const { t: common } = useTranslation('common');
 
   const loadLobbies = async () => {
     try {
@@ -65,9 +68,9 @@ const LobbyPage: React.FC = () => {
 
   const getStatusText = (status: Lobby['status']) => {
     switch (status) {
-      case 'WAITING': return 'Warten auf Spieler';
-      case 'IN_PROGRESS': return 'Spiel läuft';
-      case 'FINISHED': return 'Beendet';
+      case 'WAITING': return game('lobbies.status.waiting');
+      case 'IN_PROGRESS': return game('lobbies.status.in_progress');
+      case 'FINISHED': return game('lobbies.status.finished');
       default: return status;
     }
   };
@@ -88,8 +91,8 @@ const LobbyPage: React.FC = () => {
   return (
     <div className="lobby-page">
       <div className="page-header">
-        <h1>🏟️ Lobbies</h1>
-        <p>Tritt einer Lobby bei oder erstelle eine neue</p>
+        <h1>🏟️ {game('lobbies.title')}</h1>
+        <p>{game('lobbies.subtitle')}</p>
       </div>
       
       {error && (
@@ -105,39 +108,39 @@ const LobbyPage: React.FC = () => {
           onClick={() => setShowCreateModal(true)}
           disabled={!!actionLoading}
         >
-          {actionLoading === 'create' ? 'Erstelle...' : 'Neue Lobby erstellen'}
+          {actionLoading === 'create' ? game('lobbies.creating') : game('lobbies.create_new')}
         </button>
         <button 
           className="btn btn-secondary"
           onClick={loadLobbies}
           disabled={loading}
         >
-          {loading ? 'Lädt...' : 'Lobbies aktualisieren'}
+          {loading ? game('lobbies.refreshing') : game('lobbies.refresh')}
         </button>
       </div>
       
       <div className="lobby-list">
         {loading ? (
           <div className="loading">
-            <p>🔄 Lade Lobbies...</p>
+            <p>🔄 {game('lobbies.loading')}</p>
           </div>
         ) : lobbies.length === 0 ? (
           <div className="no-lobbies">
-            <p>📭 Keine Lobbies verfügbar</p>
-            <p>Erstelle eine neue Lobby, um zu beginnen!</p>
+            <p>📭 {game('lobbies.no_lobbies')}</p>
+            <p>{game('lobbies.no_lobbies_description')}</p>
           </div>
         ) : (
           lobbies.map(lobby => (
             <div key={lobby.id} className="lobby-item">
               <div className="lobby-info">
                 <h3>{lobby.name}</h3>
-                <p>{lobby.currentPlayers}/{lobby.maxPlayers} Spieler</p>
+                <p>{lobby.currentPlayers}/{lobby.maxPlayers} {game('lobbies.players')}</p>
                 <span className={`status ${getStatusClass(lobby.status)}`}>
                   {getStatusText(lobby.status)}
                 </span>
               </div>
               <div className="lobby-members">
-                <h4>Mitglieder:</h4>
+                <h4>{game('lobbies.members')}</h4>
                 <ul>
                   {lobby.members.map(member => (
                     <li key={member.userId}>{member.username}</li>
@@ -154,9 +157,9 @@ const LobbyPage: React.FC = () => {
                     actionLoading === lobby.id
                   }
                 >
-                  {actionLoading === lobby.id ? 'Beitrete...' : 
-                   lobby.currentPlayers >= lobby.maxPlayers ? 'Voll' : 
-                   lobby.status !== 'WAITING' ? 'Nicht verfügbar' : 'Beitreten'}
+                  {actionLoading === lobby.id ? game('lobbies.joining') : 
+                   lobby.currentPlayers >= lobby.maxPlayers ? game('lobbies.full') : 
+                   lobby.status !== 'WAITING' ? game('lobbies.not_available') : game('lobbies.join')}
                 </button>
               </div>
             </div>
@@ -169,7 +172,7 @@ const LobbyPage: React.FC = () => {
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Neue Lobby erstellen</h2>
+              <h2>{game('lobbies.create_modal.title')}</h2>
               <button 
                 className="modal-close"
                 onClick={() => setShowCreateModal(false)}
@@ -179,13 +182,13 @@ const LobbyPage: React.FC = () => {
             </div>
             <form onSubmit={handleCreateLobby} className="modal-content">
               <div className="form-group">
-                <label htmlFor="lobbyName">Lobby Name:</label>
+                <label htmlFor="lobbyName">{game('lobbies.create_modal.name_label')}</label>
                 <input
                   id="lobbyName"
                   type="text"
                   value={newLobbyName}
                   onChange={(e) => setNewLobbyName(e.target.value)}
-                  placeholder="z.B. Bundesliga Turnier"
+                  placeholder={game('lobbies.create_modal.name_placeholder')}
                   maxLength={50}
                   required
                 />
@@ -197,14 +200,14 @@ const LobbyPage: React.FC = () => {
                   onClick={() => setShowCreateModal(false)}
                   disabled={!!actionLoading}
                 >
-                  Abbrechen
+                  {game('lobbies.create_modal.cancel')}
                 </button>
                 <button 
                   type="submit" 
                   className="btn btn-primary"
                   disabled={!newLobbyName.trim() || !!actionLoading}
                 >
-                  {actionLoading === 'create' ? 'Erstelle...' : 'Erstellen'}
+                  {actionLoading === 'create' ? game('lobbies.creating') : game('lobbies.create_modal.create')}
                 </button>
               </div>
             </form>

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService, type Player, type UserPlayer } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const CollectionPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const [userPlayers, setUserPlayers] = useState<UserPlayer[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<UserPlayer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +102,7 @@ const CollectionPage: React.FC = () => {
   if (loading) {
     return (
       <div className="collection-page">
-        <div className="loading">Loading your collection...</div>
+        <div className="loading">{t('messages.loading_collection')}</div>
       </div>
     );
   }
@@ -108,8 +110,8 @@ const CollectionPage: React.FC = () => {
   return (
     <div className="collection-page">
       <div className="page-header">
-        <h1>📚 Meine Sammlung</h1>
-        <p>Verwalte deine Spielerkarten und erstelle Teams</p>
+        <h1>📚 {t('pages.collection.title')}</h1>
+        <p>{t('pages.collection.subtitle')}</p>
       </div>
 
       {error && (
@@ -121,20 +123,20 @@ const CollectionPage: React.FC = () => {
       
       <div className="collection-stats">
         <div className="stat-card">
-          <h3>Gesammelte Karten</h3>
+          <h3>{t('pages.collection.collected_cards')}</h3>
           <span className="stat-value">{stats.totalCards}</span>
-          <small>({stats.uniquePlayers} unique)</small>
+          <small>({stats.uniquePlayers} {t('pages.collection.unique')})</small>
         </div>
         <div className="stat-card">
-          <h3>Münzen</h3>
+          <h3>{t('labels.coins')}</h3>
           <span className="stat-value">{user?.coins || 0}</span>
         </div>
         <div className="stat-card">
-          <h3>Gesamtpunkte</h3>
+          <h3>{t('pages.collection.total_points')}</h3>
           <span className="stat-value">{stats.totalPoints}</span>
         </div>
         <div className="stat-card">
-          <h3>Farben</h3>
+          <h3>{t('pages.collection.colors')}</h3>
           <span className="stat-value">{Object.keys(stats.colorDistribution).length}</span>
         </div>
       </div>
@@ -148,7 +150,7 @@ const CollectionPage: React.FC = () => {
                 value={positionFilter}
                 onChange={(e) => setPositionFilter(e.target.value)}
               >
-                <option value="">Alle Positionen</option>
+                <option value="">{t('pages.collection.all_positions')}</option>
                 {availablePositions.map(position => (
                   <option key={position} value={position}>{position}</option>
                 ))}
@@ -159,7 +161,7 @@ const CollectionPage: React.FC = () => {
                 value={colorFilter}
                 onChange={(e) => setColorFilter(e.target.value)}
               >
-                <option value="">Alle Farben</option>
+                <option value="">{t('pages.collection.all_colors')}</option>
                 {availableColors.map(color => (
                   <option key={color} value={color}>{color.charAt(0).toUpperCase() + color.slice(1)}</option>
                 ))}
@@ -170,25 +172,25 @@ const CollectionPage: React.FC = () => {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="points">Highest Points</option>
-                <option value="name">Alphabetical</option>
+                <option value="newest">{t('pages.collection.newest_first')}</option>
+                <option value="oldest">{t('pages.collection.oldest_first')}</option>
+                <option value="points">{t('pages.collection.highest_points')}</option>
+                <option value="name">{t('pages.collection.alphabetical')}</option>
               </select>
             </div>
 
             <div className="collection-actions">
               <button className="btn btn-secondary" onClick={handleNavigateToTeamBuilder}>
-                🏗️ Team Builder
+                🏗️ {t('pages.collection.team_builder')}
               </button>
               <button className="btn btn-primary" onClick={handleNavigateToPackStore}>
-                🎁 Open Packs
+                🎁 {t('pages.collection.open_packs')}
               </button>
             </div>
           </div>
 
           <div className="collection-summary">
-            <p>Showing {filteredPlayers.length} of {userPlayers.length} cards</p>
+            <p>{t('pages.collection.showing_cards', {count: filteredPlayers.length, total: userPlayers.length})}</p>
           </div>
         </>
       )}
@@ -197,17 +199,17 @@ const CollectionPage: React.FC = () => {
         {userPlayers.length === 0 ? (
           <div className="empty-collection">
             <div className="empty-icon">🃏</div>
-            <h3>Keine Karten in deiner Sammlung</h3>
-            <p>Öffne Packs, um Spieler zu sammeln und Teams zu erstellen!</p>
+            <h3>{t('pages.collection.no_cards')}</h3>
+            <p>{t('pages.collection.no_cards_description')}</p>
             <div className="empty-actions">
               <button className="btn btn-primary" onClick={handleNavigateToPackStore}>
-                🎁 Zum Pack Store
+                🎁 {t('pages.collection.to_pack_store')}
               </button>
             </div>
           </div>
         ) : filteredPlayers.length === 0 ? (
           <div className="no-results">
-            <p>Keine Spieler entsprechen den aktuellen Filtern</p>
+            <p>{t('pages.collection.no_results')}</p>
             <button 
               className="btn btn-secondary"
               onClick={() => {
@@ -215,7 +217,7 @@ const CollectionPage: React.FC = () => {
                 setColorFilter('');
               }}
             >
-              Filter zurücksetzen
+              {t('pages.collection.reset_filters')}
             </button>
           </div>
         ) : (
@@ -251,7 +253,7 @@ const CollectionPage: React.FC = () => {
                 <button 
                   className="btn btn-small btn-secondary"
                   onClick={handleNavigateToTeamBuilder}
-                  title="Use in team"
+                  title={t('pages.collection.use_in_team')}
                 >
                   ⚽
                 </button>
@@ -264,7 +266,7 @@ const CollectionPage: React.FC = () => {
       {userPlayers.length > 0 && (
         <div className="collection-footer">
           <div className="color-distribution">
-            <h4>Color Distribution:</h4>
+            <h4>{t('pages.collection.color_distribution')}</h4>
             <div className="color-bars">
               {Object.entries(stats.colorDistribution).map(([color, count]) => (
                 <div key={color} className="color-bar">

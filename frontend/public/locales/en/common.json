@@ -63,5 +63,99 @@
   "user": {
     "welcome": "Welcome, {{username}}!",
     "coins_balance": "Coins"
+  },
+  "pages": {
+    "home": {
+      "title": "Football Trading Card Game",
+      "subtitle": "Collect cards, build teams and fight in the league!",
+      "join_game": "Join Game",
+      "my_collection": "My Collection",
+      "pack_store": "Pack Store",
+      "features": {
+        "collect_cards": {
+          "title": "Collect Cards",
+          "description": "Open packs and collect the best football players"
+        },
+        "team_chemistry": {
+          "title": "Team Chemistry",
+          "description": "Combine colors for powerful bonuses"
+        },
+        "league_system": {
+          "title": "League System",
+          "description": "Fight against 3 other players in the league"
+        }
+      }
+    },
+    "login": {
+      "welcome_back": "Welcome back!",
+      "no_account": "No account yet?",
+      "register_here": "Register here"
+    },
+    "register": {
+      "title": "Register",
+      "subtitle": "Create your account and start collecting!",
+      "password_mismatch": "Passwords do not match",
+      "registration_failed": "Registration failed. Please try again.",
+      "registering": "Registering...",
+      "have_account": "Already have an account?",
+      "login_here": "Login here"
+    },
+    "collection": {
+      "title": "My Collection",
+      "subtitle": "Manage your player cards and create teams",
+      "collected_cards": "Collected Cards",
+      "unique": "unique",
+      "total_points": "Total Points",
+      "colors": "Colors",
+      "all_positions": "All Positions",
+      "all_colors": "All Colors",
+      "newest_first": "Newest First",
+      "oldest_first": "Oldest First",
+      "highest_points": "Highest Points",
+      "alphabetical": "Alphabetical",
+      "team_builder": "Team Builder",
+      "open_packs": "Open Packs",
+      "showing_cards": "Showing {{count}} of {{total}} cards",
+      "no_cards": "No cards in your collection",
+      "no_cards_description": "Open packs to collect players and create teams!",
+      "to_pack_store": "To Pack Store",
+      "no_results": "No players match the current filters",
+      "reset_filters": "Reset Filters",
+      "color_distribution": "Color Distribution:",
+      "use_in_team": "Use in team"
+    }
+  },
+  "messages": {
+    "loading_collection": "Loading your collection...",
+    "error_occurred": "An error occurred",
+    "something_went_wrong": "Something went wrong. Please try again.",
+    "try_again": "Try again",
+    "go_home": "Go Home"
+  },
+  "footer": {
+    "company": {
+      "title": "Company",
+      "about": "About Us",
+      "careers": "Careers",
+      "contact": "Contact",
+      "privacy": "Privacy",
+      "terms": "Terms of Service"
+    },
+    "game": {
+      "title": "Game",
+      "how_to_play": "How to Play",
+      "rules": "Rules",
+      "faq": "FAQ",
+      "community": "Community",
+      "support": "Support"
+    },
+    "social": {
+      "title": "Social Media",
+      "discord": "Discord",
+      "twitter": "Twitter",
+      "reddit": "Reddit",
+      "youtube": "YouTube"
+    },
+    "copyright": "© 2024 Football Trading Card Game. All rights reserved."
   }
 }

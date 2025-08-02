@@ -1,5 +1,55 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
+// Initialize i18next for tests
+i18n
+  .use(initReactI18next)
+  .init({
+    lng: 'de',
+    fallbackLng: 'de',
+    debug: false,
+    interpolation: {
+      escapeValue: false,
+    },
+    resources: {
+      de: {
+        common: {
+          navigation: {
+            home: "Home",
+            lobbies: "Lobbies",
+            collection: "Sammlung",
+            packs: "Packs",
+            team_builder: "Team Builder",
+            league: "Liga",
+            admin: "Admin"
+          },
+          buttons: {
+            login: "Anmelden",
+            logout: "Abmelden",
+            register: "Registrieren"
+          },
+          forms: {
+            email: "E-Mail",
+            password: "Passwort"
+          },
+          pages: {
+            login: {
+              welcome_back: "Willkommen zurück!",
+              no_account: "Noch kein Account?"
+            }
+          },
+          status: {
+            loading: "Lädt..."
+          },
+          user: {
+            coins_balance: "Münzen"
+          }
+        }
+      }
+    }
+  });
 
 // Mock matchMedia for responsive design tests
 Object.defineProperty(window, 'matchMedia', {

@@ -15,6 +15,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
+    "validate-translations": "node scripts/validate-translations.cjs",
+    "validate-translations:fix": "node scripts/validate-translations.cjs --fix",
+    "validate-translations:verbose": "node scripts/validate-translations.cjs --verbose",
     "clean": "rm -rf dist node_modules .vite"
   },
   "dependencies": {

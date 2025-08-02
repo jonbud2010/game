@@ -63,5 +63,99 @@
   "user": {
     "welcome": "Willkommen, {{username}}!",
     "coins_balance": "Münzen"
+  },
+  "pages": {
+    "home": {
+      "title": "Football Trading Card Game",
+      "subtitle": "Sammle Karten, baue Teams und kämpfe in der Liga!",
+      "join_game": "Spiel beitreten",
+      "my_collection": "Meine Sammlung",
+      "pack_store": "Pack Store",
+      "features": {
+        "collect_cards": {
+          "title": "Sammle Karten",
+          "description": "Öffne Packs und sammle die besten Fußballspieler"
+        },
+        "team_chemistry": {
+          "title": "Team-Chemie",
+          "description": "Kombiniere Farben für mächtige Boni"
+        },
+        "league_system": {
+          "title": "Liga-System",
+          "description": "Kämpfe gegen 3 andere Spieler in der Liga"
+        }
+      }
+    },
+    "login": {
+      "welcome_back": "Willkommen zurück!",
+      "no_account": "Noch kein Konto?",
+      "register_here": "Hier registrieren"
+    },
+    "register": {
+      "title": "Registrieren",
+      "subtitle": "Erstelle dein Konto und beginne zu sammeln!",
+      "password_mismatch": "Passwörter stimmen nicht überein",
+      "registration_failed": "Registrierung fehlgeschlagen. Bitte versuche es erneut.",
+      "registering": "Wird registriert...",
+      "have_account": "Bereits ein Konto?",
+      "login_here": "Hier anmelden"
+    },
+    "collection": {
+      "title": "Meine Sammlung",
+      "subtitle": "Verwalte deine Spielerkarten und erstelle Teams",
+      "collected_cards": "Gesammelte Karten",
+      "unique": "einzigartig",
+      "total_points": "Gesamtpunkte",
+      "colors": "Farben",
+      "all_positions": "Alle Positionen",
+      "all_colors": "Alle Farben",
+      "newest_first": "Neueste zuerst",
+      "oldest_first": "Älteste zuerst",
+      "highest_points": "Höchste Punkte",
+      "alphabetical": "Alphabetisch",
+      "team_builder": "Team Builder",
+      "open_packs": "Packs öffnen",
+      "showing_cards": "Zeige {{count}} von {{total}} Karten",
+      "no_cards": "Keine Karten in deiner Sammlung",
+      "no_cards_description": "Öffne Packs, um Spieler zu sammeln und Teams zu erstellen!",
+      "to_pack_store": "Zum Pack Store",
+      "no_results": "Keine Spieler entsprechen den aktuellen Filtern",
+      "reset_filters": "Filter zurücksetzen",
+      "color_distribution": "Farbverteilung:",
+      "use_in_team": "Im Team verwenden"
+    }
+  },
+  "messages": {
+    "loading_collection": "Sammlung wird geladen...",
+    "error_occurred": "Ein Fehler ist aufgetreten",
+    "something_went_wrong": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "try_again": "Versuche es erneut",
+    "go_home": "Zur Startseite"
+  },
+  "footer": {
+    "company": {
+      "title": "Unternehmen",
+      "about": "Über uns",
+      "careers": "Karriere",
+      "contact": "Kontakt",
+      "privacy": "Datenschutz",
+      "terms": "Nutzungsbedingungen"
+    },
+    "game": {
+      "title": "Spiel",
+      "how_to_play": "Wie spielt man",
+      "rules": "Regeln",
+      "faq": "FAQ",
+      "community": "Community",
+      "support": "Support"
+    },
+    "social": {
+      "title": "Social Media",
+      "discord": "Discord",
+      "twitter": "Twitter",
+      "reddit": "Reddit",
+      "youtube": "YouTube"
+    },
+    "copyright": "© 2024 Football Trading Card Game. Alle Rechte vorbehalten."
   }
 }

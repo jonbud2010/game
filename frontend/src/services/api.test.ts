@@ -44,7 +44,7 @@ describe('ApiService Player Methods', () => {
       const result = await apiService.getPlayers();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/players',
+        '/api/players',
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ describe('ApiService Player Methods', () => {
       const result = await apiService.createPlayer(formData);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/players',
+        '/api/players',
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
@@ -118,7 +118,7 @@ describe('ApiService Player Methods', () => {
       const result = await apiService.deletePlayer('test-id');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/players/test-id',
+        '/api/players/test-id',
         expect.objectContaining({
           method: 'DELETE',
           headers: expect.objectContaining({

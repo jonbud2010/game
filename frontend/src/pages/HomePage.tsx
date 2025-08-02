@@ -1,38 +1,41 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '../hooks/useTranslation';
 
 const HomePage: React.FC = () => {
+  const { t } = useTranslation('common');
+  
   return (
     <div className="home-page">
       <div className="hero-section">
-        <h1>⚽ Football Trading Card Game</h1>
-        <p>Sammle Karten, baue Teams und kämpfe in der Liga!</p>
+        <h1>⚽ {t('pages.home.title')}</h1>
+        <p>{t('pages.home.subtitle')}</p>
         
         <div className="action-buttons">
           <Link to="/lobby" className="btn btn-primary">
-            Spiel beitreten
+            {t('pages.home.join_game')}
           </Link>
           <Link to="/collection" className="btn btn-secondary">
-            Meine Sammlung
+            {t('pages.home.my_collection')}
           </Link>
           <Link to="/packs" className="btn btn-secondary">
-            Pack Store
+            {t('pages.home.pack_store')}
           </Link>
         </div>
       </div>
       
       <div className="features-section">
         <div className="feature">
-          <h3>🃏 Sammle Karten</h3>
-          <p>Öffne Packs und sammle die besten Fußballspieler</p>
+          <h3>🃏 {t('pages.home.features.collect_cards.title')}</h3>
+          <p>{t('pages.home.features.collect_cards.description')}</p>
         </div>
         <div className="feature">
-          <h3>⚡ Team-Chemie</h3>
-          <p>Kombiniere Farben für mächtige Boni</p>
+          <h3>⚡ {t('pages.home.features.team_chemistry.title')}</h3>
+          <p>{t('pages.home.features.team_chemistry.description')}</p>
         </div>
         <div className="feature">
-          <h3>🏆 Liga-System</h3>
-          <p>Kämpfe gegen 3 andere Spieler in der Liga</p>
+          <h3>🏆 {t('pages.home.features.league_system.title')}</h3>
+          <p>{t('pages.home.features.league_system.description')}</p>
         </div>
       </div>
     </div>

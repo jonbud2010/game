@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,8 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { t } = useTranslation('common');
+  const { t: errors } = useTranslation('errors');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -29,7 +32,7 @@ const RegisterPage: React.FC = () => {
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwörter stimmen nicht überein');
+      setError(t('pages.register.password_mismatch'));
       setIsLoading(false);
       return;
     }
@@ -42,7 +45,7 @@ const RegisterPage: React.FC = () => {
       });
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registrierung fehlgeschlagen. Bitte versuche es erneut.');
+      setError(err instanceof Error ? err.message : t('pages.register.registration_failed'));
       setIsLoading(false);
     }
   };
@@ -51,15 +54,15 @@ const RegisterPage: React.FC = () => {
     <div className="register-page">
       <div className="register-container">
         <div className="register-header">
-          <h1>⚽ Registrieren</h1>
-          <p>Erstelle dein Konto und beginne zu sammeln!</p>
+          <h1>⚽ {t('pages.register.title')}</h1>
+          <p>{t('pages.register.subtitle')}</p>
         </div>
         
         <form onSubmit={handleSubmit} className="register-form">
           {error && <div className="error-message">{error}</div>}
           
           <div className="form-group">
-            <label htmlFor="username">Benutzername</label>
+            <label htmlFor="username">{t('forms.username')}</label>
             <input
               type="text"
               id="username"
@@ -72,7 +75,7 @@ const RegisterPage: React.FC = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="email">E-Mail</label>
+            <label htmlFor="email">{t('forms.email')}</label>
             <input
               type="email"
               id="email"
@@ -85,7 +88,7 @@ const RegisterPage: React.FC = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="password">Passwort</label>
+            <label htmlFor="password">{t('forms.password')}</label>
             <input
               type="password"
               id="password"
@@ -99,7 +102,7 @@ const RegisterPage: React.FC = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="confirmPassword">Passwort bestätigen</label>
+            <label htmlFor="confirmPassword">{t('forms.confirm_password')}</label>
             <input
               type="password"
               id="confirmPassword"
@@ -116,14 +119,14 @@ const RegisterPage: React.FC = () => {
             className="btn btn-primary" 
             disabled={isLoading}
           >
-            {isLoading ? 'Wird registriert...' : 'Registrieren'}
+            {isLoading ? t('pages.register.registering') : t('buttons.register')}
           </button>
         </form>
         
         <div className="register-footer">
           <p>
-            Bereits ein Konto? 
-            <Link to="/login"> Hier anmelden</Link>
+            {t('pages.register.have_account')} 
+            <Link to="/login"> {t('pages.register.login_here')}</Link>
           </p>
         </div>
       </div>

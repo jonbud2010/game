@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import LoginPage from './LoginPage';
-import { AuthProvider } from '../contexts/AuthContext';
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -17,6 +16,11 @@ vi.mock('react-router-dom', async () => {
 
 // Mock the AuthContext
 const mockLogin = vi.fn();
+const mockUseAuth = vi.fn();
+
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => mockUseAuth()
+}));
 
 const createMockAuthContext = () => ({
   user: null,
@@ -24,16 +28,17 @@ const createMockAuthContext = () => ({
   login: mockLogin,
   logout: vi.fn(),
   register: vi.fn(),
-  loading: false
+  isLoading: false
 });
 
-// Wrapper component to provide context
+// Wrapper component to provide router context
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Set up the mock for this render
+  mockUseAuth.mockReturnValue(createMockAuthContext());
+
   return (
     <MemoryRouter initialEntries={['/login']}>
-      <AuthProvider value={createMockAuthContext()}>
-        {children}
-      </AuthProvider>
+      {children}
     </MemoryRouter>
   );
 };
@@ -65,9 +70,9 @@ describe('LoginPage Component', () => {
     );
 
     expect(screen.getByText('Noch kein Account?')).toBeInTheDocument();
-    expect(screen.getByText('Hier registrieren')).toBeInTheDocument();
+    expect(screen.getByText('Registrieren')).toBeInTheDocument();
     
-    const registerLink = screen.getByText('Hier registrieren').closest('a');
+    const registerLink = screen.getByText('Registrieren').closest('a');
     expect(registerLink).toHaveAttribute('href', '/register');
   });
 
@@ -155,7 +160,7 @@ describe('LoginPage Component', () => {
 
     // Check if button shows loading state
     await waitFor(() => {
-      expect(submitButton).toHaveTextContent('Wird geladen...');
+      expect(submitButton).toHaveTextContent('Lädt...');
       expect(submitButton).toBeDisabled();
     });
 

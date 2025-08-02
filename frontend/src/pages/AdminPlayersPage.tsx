@@ -251,7 +251,7 @@ const AdminPlayersPage: React.FC = () => {
                       onChange={(e) => setFormData({...formData, color: e.target.value})}
                       required
                     >
-                      {colors.map(color => (
+                      {colors.map((color: any) => (
                         <option key={color} value={color}>{translateColor(color)}</option>
                       ))}
                     </select>
@@ -336,11 +336,11 @@ const AdminPlayersPage: React.FC = () => {
                         />
                       </td>
                       <td className="player-name">{player.name}</td>
-                      <td className="player-position">{translatePosition(player.position)}</td>
+                      <td className="player-position">{translatePosition(player.position as any)}</td>
                       <td className="player-points">{player.points}</td>
                       <td>
                         <span className={`color-badge color-${player.color.toLowerCase()}`}>
-                          {translateColor(player.color)}
+                          {translateColor(player.color as any)}
                         </span>
                       </td>
                       <td className="player-price">{player.marketPrice}</td>

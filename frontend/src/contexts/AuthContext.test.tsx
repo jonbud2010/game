@@ -28,11 +28,11 @@ const mockFetch = vi.mocked(fetch);
 
 // Test component to access context
 const TestComponent: React.FC = () => {
-  const { user, isAuthenticated, loading, login, logout, register } = useAuth();
+  const { user, isAuthenticated, isLoading, login, logout, register } = useAuth();
   
   return (
     <div>
-      <div data-testid="loading">{loading ? 'loading' : 'not-loading'}</div>
+      <div data-testid="loading">{isLoading ? 'loading' : 'not-loading'}</div>
       <div data-testid="authenticated">{isAuthenticated ? 'authenticated' : 'not-authenticated'}</div>
       <div data-testid="user">{user ? JSON.stringify(user) : 'no-user'}</div>
       <button onClick={() => login({ email: 'test@example.com', password: 'password' })}>
@@ -67,15 +67,14 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('user')).toHaveTextContent('no-user');
     });
 
-    it('should initialize with loading state when token exists in localStorage', () => {
+    it('should initialize with loading state when token exists in localStorage', async () => {
       mockLocalStorage.getItem.mockReturnValue('existing-token');
       
       // Mock successful user fetch
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          success: true,
-          data: {
+          user: {
             id: 'user-1',
             username: 'testuser',
             email: 'test@example.com',
@@ -85,11 +84,13 @@ describe('AuthContext', () => {
         })
       } as Response);
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       expect(screen.getByTestId('loading')).toHaveTextContent('loading');
     });
@@ -108,11 +109,8 @@ describe('AuthContext', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          success: true,
-          data: {
-            user: mockUser,
-            token: 'mock-jwt-token'
-          }
+          user: mockUser,
+          token: 'mock-jwt-token'
         })
       } as Response);
 
@@ -133,7 +131,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('user')).toHaveTextContent(JSON.stringify(mockUser));
       });
 
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('token', 'mock-jwt-token');
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_token', 'mock-jwt-token');
       expect(mockFetch).toHaveBeenCalledWith('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -198,11 +196,8 @@ describe('AuthContext', () => {
         ok: true,
         status: 201,
         json: async () => ({
-          success: true,
-          data: {
-            user: mockUser,
-            token: 'mock-jwt-token'
-          }
+          user: mockUser,
+          token: 'mock-jwt-token'
         })
       } as Response);
 
@@ -223,7 +218,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('user')).toHaveTextContent(JSON.stringify(mockUser));
       });
 
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('token', 'mock-jwt-token');
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_token', 'mock-jwt-token');
       expect(mockFetch).toHaveBeenCalledWith('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -271,8 +266,7 @@ describe('AuthContext', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          success: true,
-          data: mockUser
+          user: mockUser
         })
       } as Response);
 
@@ -296,7 +290,7 @@ describe('AuthContext', () => {
 
       expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated');
       expect(screen.getByTestId('user')).toHaveTextContent('no-user');
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('token');
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
     });
   });
 
@@ -315,8 +309,7 @@ describe('AuthContext', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          success: true,
-          data: mockUser
+          user: mockUser
         })
       } as Response);
 
@@ -333,7 +326,10 @@ describe('AuthContext', () => {
       });
 
       expect(mockFetch).toHaveBeenCalledWith('/api/auth/me', {
-        headers: { Authorization: 'Bearer valid-token' }
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer valid-token' 
+        }
       });
     });
 
@@ -359,7 +355,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('loading')).toHaveTextContent('not-loading');
       });
 
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('token');
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
     });
   });
 
@@ -379,7 +375,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated');
       });
 
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('token');
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
     });
   });
 });
