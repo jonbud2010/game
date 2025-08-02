@@ -99,7 +99,10 @@
       "Bash(yarn workspace @football-tcg/frontend:*)",
       "Bash(timeout 5 yarn workspace @football-tcg/frontend dev)",
       "Bash(yarn validate-translations:*)",
-      "Bash(timeout 10s yarn workspace @football-tcg/frontend dev)"
+      "Bash(timeout 10s yarn workspace @football-tcg/frontend dev)",
+      "Bash(yarn workspace @football-tcg/backend type-check:*)",
+      "Bash(yarn workspace @football-tcg/backend lint --no-eslintrc --config ../../.eslintrc.js src/controllers/lobbyController.ts src/middleware/validation.ts)",
+      "Bash(yarn workspace @football-tcg/backend lint:*)"
     ],
     "deny": []
   }

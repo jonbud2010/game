@@ -111,6 +111,66 @@ describe('Lobby Integration Tests', () => {
 
       expect(response.body.error).toBe('Validation error');
     });
+
+    it('should reject lobby creation with name too short', async () => {
+      const lobbyData = {
+        name: 'AB' // Too short (less than 3 characters)
+      };
+
+      const response = await request(app)
+        .post('/api/lobbies')
+        .set('Authorization', `Bearer ${playerToken}`)
+        .send(lobbyData)
+        .expect(400);
+
+      expect(response.body.error).toBe('Validation error');
+      expect(response.body.details).toContain('3 characters long');
+    });
+
+    it('should reject lobby creation with invalid characters', async () => {
+      const lobbyData = {
+        name: 'Test@Lobby!' // Invalid special characters
+      };
+
+      const response = await request(app)
+        .post('/api/lobbies')
+        .set('Authorization', `Bearer ${playerToken}`)
+        .send(lobbyData)
+        .expect(400);
+
+      expect(response.body.error).toBe('Validation error');
+      expect(response.body.details).toContain('letters, numbers, spaces, hyphens, and underscores');
+    });
+
+    it('should accept lobby creation with valid special characters', async () => {
+      const lobbyData = {
+        name: 'Test-Lobby_123' // Valid characters
+      };
+
+      const response = await request(app)
+        .post('/api/lobbies')
+        .set('Authorization', `Bearer ${playerToken}`)
+        .send(lobbyData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.name).toBe('Test-Lobby_123');
+    });
+
+    it('should trim whitespace from lobby names', async () => {
+      const lobbyData = {
+        name: '  Test Lobby  ' // Name with leading/trailing whitespace
+      };
+
+      const response = await request(app)
+        .post('/api/lobbies')
+        .set('Authorization', `Bearer ${playerToken}`)
+        .send(lobbyData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.name).toBe('Test Lobby'); // Trimmed
+    });
   });
 
   describe('GET /api/lobbies', () => {
@@ -263,6 +323,41 @@ describe('Lobby Integration Tests', () => {
 
       expect(response.body.error).toBe('Lobby is not accepting new members');
     });
+
+    it('should automatically set lobby to IN_PROGRESS when 4th player joins', async () => {
+      // Use the existing test lobby and fill it up step by step
+      const players = [];
+      
+      // Register 4 new players
+      for (let i = 0; i < 4; i++) {
+        const player = await request(app)
+          .post('/api/auth/register')
+          .send({
+            username: `joinplayer${i}`,
+            email: `joinplayer${i}@test.com`,
+            password: 'password123'
+          });
+        players.push(player.body.token);
+      }
+
+      // Add first 3 players
+      for (let i = 0; i < 3; i++) {
+        await request(app)
+          .post(`/api/lobbies/${testLobby.id}/join`)
+          .set('Authorization', `Bearer ${players[i]}`)
+          .expect(200);
+      }
+
+      // 4th player joins - should trigger IN_PROGRESS
+      const response = await request(app)
+        .post(`/api/lobbies/${testLobby.id}/join`)
+        .set('Authorization', `Bearer ${players[3]}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.status).toBe('IN_PROGRESS');
+      expect(response.body.data.members).toHaveLength(4);
+    });
   });
 
   describe('POST /api/lobbies/:id/leave', () => {
@@ -335,6 +430,73 @@ describe('Lobby Integration Tests', () => {
         .expect(400);
 
       expect(response.body.error).toBe('You are not a member of this lobby');
+    });
+
+    it('should reject leaving lobby when game is IN_PROGRESS', async () => {
+      // Create lobby and add player
+      const inProgressLobby = await testDb.lobby.create({
+        data: {
+          name: 'In Progress Lobby',
+          maxPlayers: 4,
+          status: 'IN_PROGRESS'
+        }
+      });
+
+      const member = await testDb.user.findFirst({
+        where: { username: 'lobbyplayer' }
+      });
+
+      await testDb.lobbyMember.create({
+        data: {
+          lobbyId: inProgressLobby.id,
+          userId: member!.id
+        }
+      });
+
+      const response = await request(app)
+        .post(`/api/lobbies/${inProgressLobby.id}/leave`)
+        .set('Authorization', `Bearer ${playerToken}`)
+        .expect(400);
+
+      expect(response.body.error).toBe('Cannot leave lobby while game is in progress');
+    });
+
+    it('should delete lobby when last member leaves', async () => {
+      // Create lobby with single member
+      const singleMemberLobby = await testDb.lobby.create({
+        data: {
+          name: 'Single Member Lobby',
+          maxPlayers: 4,
+          status: 'WAITING'
+        }
+      });
+
+      const member = await testDb.user.findFirst({
+        where: { username: 'lobbyplayer' }
+      });
+
+      await testDb.lobbyMember.create({
+        data: {
+          lobbyId: singleMemberLobby.id,
+          userId: member!.id
+        }
+      });
+
+      // Leave the lobby
+      const response = await request(app)
+        .post(`/api/lobbies/${singleMemberLobby.id}/leave`)
+        .set('Authorization', `Bearer ${playerToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Left lobby successfully');
+
+      // Verify lobby was deleted
+      const deletedLobby = await testDb.lobby.findUnique({
+        where: { id: singleMemberLobby.id }
+      });
+
+      expect(deletedLobby).toBeNull();
     });
   });
 });

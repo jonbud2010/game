@@ -4,10 +4,12 @@
     "LIGHT_GREEN": "Hellgrün",
     "DARK_BLUE": "Dunkelblau",
     "LIGHT_BLUE": "Hellblau",
+    "BLUE": "Blau",
     "RED": "Rot",
     "YELLOW": "Gelb",
     "PURPLE": "Lila",
-    "ORANGE": "Orange"
+    "ORANGE": "Orange",
+    "INDIGO": "Indigo"
   },
   "positions": {
     "GK": "Torwart",

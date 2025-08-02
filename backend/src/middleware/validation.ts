@@ -141,10 +141,12 @@ const registerSchema = Joi.object({
   password: Joi.string()
     .min(6)
     .max(128)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .required()
     .messages({
       'string.min': 'Password must be at least 6 characters long',
       'string.max': 'Password must not exceed 128 characters',
+      'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, and one number',
       'any.required': 'Password is required'
     })
 });
@@ -249,10 +251,13 @@ const createLobbySchema = Joi.object({
   name: Joi.string()
     .min(1)
     .max(50)
+    .pattern(/^[a-zA-Z0-9\s\-_]+$/)
     .required()
     .messages({
-      'string.min': 'Lobby name cannot be empty',
+      'string.empty': 'Lobby name cannot be empty',
+      'string.min': 'Lobby name must be at least 3 characters long',
       'string.max': 'Lobby name must not exceed 50 characters',
+      'string.pattern.base': 'Lobby name can only contain letters, numbers, spaces, hyphens, and underscores',
       'any.required': 'Lobby name is required'
     })
 });
@@ -321,6 +326,7 @@ const createPackSchema = Joi.object({
     .max(100)
     .required()
     .messages({
+      'string.empty': 'Pack name cannot be empty',
       'string.min': 'Pack name cannot be empty',
       'string.max': 'Pack name must not exceed 100 characters',
       'any.required': 'Pack name is required'
@@ -368,6 +374,7 @@ const packPlayerManagementSchema = Joi.object({
     .messages({
       'array.base': 'Player IDs must be an array',
       'array.min': 'At least one player ID is required',
+      'array.includesRequiredUnknowns': 'At least one player ID is required',
       'string.base': 'Each player ID must be a string',
       'any.required': 'Player IDs are required'
     })

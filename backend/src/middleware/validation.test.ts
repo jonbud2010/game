@@ -609,8 +609,8 @@ describe('Validation Middleware', () => {
   });
 
   describe('FormData validation error handling', () => {
-    it('should handle generic form data errors', () => {
-      // Mock a situation where JSON.parse throws an unexpected error
+    it('should handle JSON parsing errors in playerIds', () => {
+      // Mock a situation where JSON.parse throws an error when parsing playerIds
       mockRequest.body = {
         name: 'Test Player',
         points: '85',
@@ -618,11 +618,12 @@ describe('Validation Middleware', () => {
         color: 'RED',
         marketPrice: '1000',
         theme: 'Premium',
-        percentage: '0.05'
+        percentage: '0.05',
+        playerIds: '["player1"]' // Include playerIds to trigger JSON.parse
       };
 
       // Simulate an error in the validation process
-      const originalConsoleError = console.error;
+      const originalConsoleError = console.error;  
       console.error = vi.fn();
 
       // Override JSON.parse to throw a different kind of error
@@ -637,7 +638,7 @@ describe('Validation Middleware', () => {
         expect(mockStatus).toHaveBeenCalledWith(400);
         expect(mockJson).toHaveBeenCalledWith({
           error: 'Validation error',
-          details: 'Invalid form data'
+          details: 'playerIds must be a valid JSON array'
         });
       } finally {
         // Restore original functions

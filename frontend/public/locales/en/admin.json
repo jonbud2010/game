@@ -115,6 +115,7 @@
     "refresh": "Refresh",
     "search": "Search",
     "filter": "Filter",
-    "sort": "Sort"
+    "sort": "Sort",
+    "actions": "Actions"
   }
 }
