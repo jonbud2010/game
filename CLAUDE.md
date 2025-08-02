@@ -196,3 +196,42 @@ The backend now properly supports both development and production builds:
 - Game rules are complex - refer to PLAN.md for detailed specifications
 - Backend uses `tsx` for runtime execution, `tsc` for building and type checking
 - No malicious code detected - this is a legitimate game development project
+
+## Language Architecture & Translation Guidelines
+
+### Critical Rule: Backend English, Frontend German
+
+**Backend & Shared Packages:**
+- **ALWAYS use English identifiers** in variables, functions, constants, types
+- **NEVER use German words** as identifiers (e.g., use "red" not "rot")
+- Database fields, enum values, API keys must be in English
+- Error messages and validation can be in English
+- Type definitions use English property names
+
+**Frontend Only:**
+- **ALL user-facing text** must be translated via i18next
+- German UI through proper internationalization system
+- Translation files in `/frontend/public/locales/de/` structure
+- Use translation keys like `t('colors.red')` instead of hardcoded German
+- Never hardcode German text in React components
+
+**Translation Workflow:**
+1. Backend/Shared: English identifiers and constants
+2. Frontend: i18next translation system with namespaces
+3. API responses: English keys, frontend translates for display
+4. Color names: Backend uses English ("red", "blue"), frontend translates to German
+5. Game terms: Backend uses English, frontend provides German equivalents
+
+**Examples:**
+```typescript
+// ❌ WRONG - German in backend/shared
+export type PlayerColor = 'rot' | 'gelb' | 'blau';
+
+// ✅ CORRECT - English in backend/shared  
+export type PlayerColor = 'red' | 'yellow' | 'blue';
+
+// ✅ CORRECT - Frontend translation
+const colorName = t('colors.red'); // Returns "Rot" in German
+```
+
+This ensures clean, maintainable code that can be internationalized to other languages while keeping technical code in the standard development language (English).

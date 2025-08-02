@@ -15,7 +15,35 @@ import {
 // Mock dependencies
 vi.mock('fs/promises');
 vi.mock('sharp');
-vi.mock('multer');
+vi.mock('multer', () => {
+  const mockMulterSingle = vi.fn();
+  const mockMulterInstance = {
+    single: mockMulterSingle
+  };
+  const mockStorage = { _handleFile: vi.fn(), _removeFile: vi.fn() };
+  
+  // Mock MulterError constructor
+  class MockMulterError extends Error {
+    code: string;
+    field?: string;
+
+    constructor(code: string, field?: string) {
+      super(`MulterError: ${code}`);
+      this.code = code;
+      this.field = field;
+      this.name = 'MulterError';
+    }
+  }
+
+  const mockedMulter = vi.fn().mockReturnValue(mockMulterInstance);
+  mockedMulter.memoryStorage = vi.fn().mockReturnValue(mockStorage);
+  mockedMulter.MulterError = MockMulterError;
+  
+  return {
+    default: mockedMulter,
+    MulterError: MockMulterError
+  };
+});
 
 const mockedFs = vi.mocked(fs);
 const mockedSharp = vi.mocked(sharp);
@@ -130,16 +158,14 @@ describe('Upload Middleware', () => {
 
   describe('uploadSingleImage middleware', () => {
     let middleware: any;
-    const mockMulterSingle = vi.fn();
-    const mockMulterInstance = {
-      single: mockMulterSingle
-    };
 
     beforeEach(() => {
-      mockedMulter.mockReturnValue(mockMulterInstance as any);
-      mockMulterSingle.mockReturnValue((req: any, res: any, next: any) => next());
+      // Get the mocked multer instance and setup the single mock
+      const mockInstance = mockedMulter();
+      const mockSingle = mockInstance.single as vi.MockedFunction<any>;
+      mockSingle.mockReturnValue((req: any, res: any, next: any) => next());
       
-      // Get the actual middleware function (second element of the array)
+      // Get the actual middleware function (second element of the array)  
       const middlewareArray = uploadSingleImage('players');
       middleware = middlewareArray[1];
     });
@@ -205,7 +231,7 @@ describe('Upload Middleware', () => {
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
         error: 'Image upload failed',
-        details: 'Unknown error'
+        details: 'Failed to process image'
       });
     });
   });
@@ -334,10 +360,10 @@ describe('Upload Middleware', () => {
       vi.clearAllMocks();
     });
 
-    it('should configure multer with correct options', () => {
+    it('should configure multer with correct options', async () => {
       // Re-import to trigger multer configuration
       vi.resetModules();
-      require('./upload');
+      await import('./upload');
 
       expect(mockedMulter).toHaveBeenCalledWith({
         storage: expect.any(Object),

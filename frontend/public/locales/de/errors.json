@@ -1,0 +1,71 @@
+{
+  "general": {
+    "unknown_error": "Ein unbekannter Fehler ist aufgetreten",
+    "network_error": "Netzwerkfehler - Bitte versuchen Sie es erneut",
+    "server_error": "Server-Fehler - Bitte versuchen Sie es später erneut",
+    "timeout": "Zeitüberschreitung - Die Anfrage dauerte zu lange",
+    "unauthorized": "Nicht autorisiert - Bitte melden Sie sich an",
+    "forbidden": "Zugriff verweigert - Keine Berechtigung",
+    "not_found": "Nicht gefunden",
+    "validation_failed": "Validierung fehlgeschlagen",
+    "operation_failed": "Vorgang fehlgeschlagen"
+  },
+  "auth": {
+    "login_failed": "Anmeldung fehlgeschlagen - Überprüfen Sie Ihre Anmeldedaten",
+    "registration_failed": "Registrierung fehlgeschlagen",
+    "logout_failed": "Abmeldung fehlgeschlagen",
+    "token_expired": "Sitzung abgelaufen - Bitte melden Sie sich erneut an",
+    "invalid_credentials": "Ungültige Anmeldedaten",
+    "user_exists": "Benutzer existiert bereits",
+    "weak_password": "Passwort ist zu schwach",
+    "password_mismatch": "Passwörter stimmen nicht überein",
+    "invalid_email": "Ungültige E-Mail-Adresse"
+  },
+  "validation": {
+    "required": "{{field}} ist erforderlich",
+    "min_length": "{{field}} muss mindestens {{min}} Zeichen haben",
+    "max_length": "{{field}} darf maximal {{max}} Zeichen haben",
+    "invalid_format": "Ungültiges Format für {{field}}",
+    "invalid_value": "Ungültiger Wert für {{field}}",
+    "out_of_range": "{{field}} ist außerhalb des gültigen Bereichs",
+    "invalid_file_type": "Ungültiger Dateityp",
+    "file_too_large": "Datei ist zu groß",
+    "invalid_image": "Ungültiges Bild"
+  },
+  "game": {
+    "lobby_full": "Lobby ist voll",
+    "lobby_not_found": "Lobby nicht gefunden",
+    "already_in_lobby": "Bereits in einer Lobby",
+    "not_in_lobby": "Nicht in einer Lobby",
+    "game_already_started": "Spiel bereits gestartet",
+    "insufficient_players": "Nicht genügend Spieler",
+    "insufficient_coins": "Nicht genügend Münzen",
+    "pack_empty": "Pack ist leer",
+    "pack_not_found": "Pack nicht gefunden",
+    "player_not_found": "Spieler nicht gefunden",
+    "team_invalid": "Team ist ungültig",
+    "formation_invalid": "Formation ist ungültig",
+    "position_occupied": "Position ist bereits besetzt",
+    "chemistry_invalid": "Chemie ist ungültig"
+  },
+  "admin": {
+    "access_denied": "Admin-Zugriff verweigert",
+    "operation_not_allowed": "Vorgang nicht erlaubt",
+    "resource_in_use": "Ressource wird verwendet",
+    "delete_failed": "Löschen fehlgeschlagen",
+    "create_failed": "Erstellen fehlgeschlagen",
+    "update_failed": "Aktualisieren fehlgeschlagen",
+    "upload_failed": "Hochladen fehlgeschlagen",
+    "file_processing_failed": "Dateiverarbeitung fehlgeschlagen",
+    "database_error": "Datenbankfehler",
+    "backup_failed": "Backup fehlgeschlagen",
+    "restore_failed": "Wiederherstellung fehlgeschlagen"
+  },
+  "messages": {
+    "try_again": "Bitte versuchen Sie es erneut",
+    "contact_support": "Wenden Sie sich an den Support",
+    "check_connection": "Überprüfen Sie Ihre Internetverbindung",
+    "reload_page": "Laden Sie die Seite neu",
+    "clear_cache": "Leeren Sie den Browser-Cache"
+  }
+}

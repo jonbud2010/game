@@ -1,0 +1,67 @@
+{
+  "navigation": {
+    "home": "Startseite",
+    "lobbies": "Lobbies",
+    "collection": "Sammlung",
+    "packs": "Packs",
+    "team_builder": "Team Builder",
+    "league": "Liga",
+    "admin": "Admin",
+    "profile": "Profil",
+    "settings": "Einstellungen"
+  },
+  "buttons": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "register": "Registrieren",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "submit": "Senden",
+    "back": "Zurück",
+    "next": "Weiter",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "reset": "Zurücksetzen"
+  },
+  "forms": {
+    "required": "Dieses Feld ist erforderlich",
+    "invalid_email": "Ungültige E-Mail-Adresse",
+    "password_too_short": "Passwort muss mindestens {{count}} Zeichen haben",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "email": "E-Mail",
+    "name": "Name",
+    "confirm_password": "Passwort bestätigen",
+    "search": "Suchen"
+  },
+  "labels": {
+    "position": "Position",
+    "color": "Farbe",
+    "points": "Punkte",
+    "price": "Preis",
+    "theme": "Thema",
+    "percentage": "Prozentsatz",
+    "coins": "Münzen",
+    "status": "Status",
+    "created_at": "Erstellt am",
+    "updated_at": "Aktualisiert am"
+  },
+  "status": {
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolgreich",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "pending": "Ausstehend",
+    "completed": "Abgeschlossen",
+    "empty": "Leer",
+    "disabled": "Deaktiviert"
+  },
+  "user": {
+    "welcome": "Willkommen, {{username}}!",
+    "coins_balance": "Münzen"
+  }
+}

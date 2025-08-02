@@ -168,14 +168,14 @@ export type PlayerPosition =
   | 'RF'; // Right Forward
 
 export type PlayerColor = 
-  | 'dunkelgruen'
-  | 'hellgruen'
-  | 'dunkelblau'
-  | 'hellblau'
-  | 'rot'
-  | 'gelb'
-  | 'lila'
-  | 'orange';
+  | 'DARK_GREEN'
+  | 'LIGHT_GREEN'
+  | 'DARK_BLUE'
+  | 'LIGHT_BLUE'
+  | 'RED'
+  | 'YELLOW'
+  | 'PURPLE'
+  | 'ORANGE';
 
 export interface ChemistryBonus {
   color: PlayerColor;

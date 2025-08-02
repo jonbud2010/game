@@ -1,0 +1,71 @@
+{
+  "general": {
+    "unknown_error": "An unknown error occurred",
+    "network_error": "Network error - Please try again",
+    "server_error": "Server error - Please try again later",
+    "timeout": "Timeout - Request took too long",
+    "unauthorized": "Unauthorized - Please log in",
+    "forbidden": "Access denied - No permission",
+    "not_found": "Not found",
+    "validation_failed": "Validation failed",
+    "operation_failed": "Operation failed"
+  },
+  "auth": {
+    "login_failed": "Login failed - Check your credentials",
+    "registration_failed": "Registration failed",
+    "logout_failed": "Logout failed",
+    "token_expired": "Session expired - Please log in again",
+    "invalid_credentials": "Invalid credentials",
+    "user_exists": "User already exists",
+    "weak_password": "Password is too weak",
+    "password_mismatch": "Passwords do not match",
+    "invalid_email": "Invalid email address"
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "min_length": "{{field}} must be at least {{min}} characters",
+    "max_length": "{{field}} must be at most {{max}} characters",
+    "invalid_format": "Invalid format for {{field}}",
+    "invalid_value": "Invalid value for {{field}}",
+    "out_of_range": "{{field}} is out of valid range",
+    "invalid_file_type": "Invalid file type",
+    "file_too_large": "File is too large",
+    "invalid_image": "Invalid image"
+  },
+  "game": {
+    "lobby_full": "Lobby is full",
+    "lobby_not_found": "Lobby not found",
+    "already_in_lobby": "Already in a lobby",
+    "not_in_lobby": "Not in a lobby",
+    "game_already_started": "Game already started",
+    "insufficient_players": "Insufficient players",
+    "insufficient_coins": "Insufficient coins",
+    "pack_empty": "Pack is empty",
+    "pack_not_found": "Pack not found",
+    "player_not_found": "Player not found",
+    "team_invalid": "Team is invalid",
+    "formation_invalid": "Formation is invalid",
+    "position_occupied": "Position is already occupied",
+    "chemistry_invalid": "Chemistry is invalid"
+  },
+  "admin": {
+    "access_denied": "Admin access denied",
+    "operation_not_allowed": "Operation not allowed",
+    "resource_in_use": "Resource is in use",
+    "delete_failed": "Delete failed",
+    "create_failed": "Create failed",
+    "update_failed": "Update failed",
+    "upload_failed": "Upload failed",
+    "file_processing_failed": "File processing failed",
+    "database_error": "Database error",
+    "backup_failed": "Backup failed",
+    "restore_failed": "Restore failed"
+  },
+  "messages": {
+    "try_again": "Please try again",
+    "contact_support": "Contact support",
+    "check_connection": "Check your internet connection",
+    "reload_page": "Reload the page",
+    "clear_cache": "Clear browser cache"
+  }
+}

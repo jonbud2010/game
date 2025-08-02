@@ -1,27 +1,27 @@
-import type { Team, PlayerColor, ChemistryBonus } from '../types/game.js';
-import { CHEMISTRY_POINTS, MATCH_SETTINGS } from '../constants/game.js';
+import type { Team, PlayerColor, ChemistryBonus } from '../types/game';
+import { CHEMISTRY_POINTS, MATCH_SETTINGS } from '../constants/game';
 
 export function calculateTeamChemistry(team: Team, players: { color: PlayerColor }[]): number {
   const colorCounts = new Map<PlayerColor, number>();
   
-  // Zähle Spieler pro Farbe
+  // Count players per color
   for (const player of players) {
     const currentCount = colorCounts.get(player.color) || 0;
     colorCounts.set(player.color, currentCount + 1);
   }
   
-  // Validiere Chemie-Regeln
+  // Validate chemistry rules
   if (colorCounts.size !== MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS) {
-    throw new Error(`Team muss genau ${MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS} verschiedene Farben haben`);
+    throw new Error(`Team must have exactly ${MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS} different colors`);
   }
   
   for (const [color, count] of colorCounts) {
     if (count < MATCH_SETTINGS.MIN_PLAYERS_PER_COLOR) {
-      throw new Error(`Farbe ${color} muss mindestens ${MATCH_SETTINGS.MIN_PLAYERS_PER_COLOR} Spieler haben`);
+      throw new Error(`Color ${color} must have at least ${MATCH_SETTINGS.MIN_PLAYERS_PER_COLOR} players`);
     }
   }
   
-  // Berechne Chemie-Punkte
+  // Calculate chemistry points
   let totalChemistry = 0;
   for (const [, count] of colorCounts) {
     if (count >= 2 && count <= 7) {
@@ -67,12 +67,12 @@ export function validateTeamChemistry(players: { color: PlayerColor }[]): {
   }
   
   if (colorCounts.size !== MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS) {
-    errors.push(`Team muss genau ${MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS} verschiedene Farben haben`);
+    errors.push(`Team must have exactly ${MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS} different colors`);
   }
   
   for (const [color, count] of colorCounts) {
     if (count < MATCH_SETTINGS.MIN_PLAYERS_PER_COLOR) {
-      errors.push(`Farbe ${color} muss mindestens ${MATCH_SETTINGS.MIN_PLAYERS_PER_COLOR} Spieler haben`);
+      errors.push(`Color ${color} must have at least ${MATCH_SETTINGS.MIN_PLAYERS_PER_COLOR} players`);
     }
   }
   

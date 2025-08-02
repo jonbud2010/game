@@ -1,0 +1,67 @@
+{
+  "navigation": {
+    "home": "Home",
+    "lobbies": "Lobbies",
+    "collection": "Collection",
+    "packs": "Packs",
+    "team_builder": "Team Builder",
+    "league": "League",
+    "admin": "Admin",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "buttons": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "confirm": "Confirm",
+    "reset": "Reset"
+  },
+  "forms": {
+    "required": "This field is required",
+    "invalid_email": "Invalid email address",
+    "password_too_short": "Password must be at least {{count}} characters",
+    "username": "Username",
+    "password": "Password",
+    "email": "Email",
+    "name": "Name",
+    "confirm_password": "Confirm Password",
+    "search": "Search"
+  },
+  "labels": {
+    "position": "Position",
+    "color": "Color",
+    "points": "Points",
+    "price": "Price",
+    "theme": "Theme",
+    "percentage": "Percentage",
+    "coins": "Coins",
+    "status": "Status",
+    "created_at": "Created at",
+    "updated_at": "Updated at"
+  },
+  "status": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "completed": "Completed",
+    "empty": "Empty",
+    "disabled": "Disabled"
+  },
+  "user": {
+    "welcome": "Welcome, {{username}}!",
+    "coins_balance": "Coins"
+  }
+}

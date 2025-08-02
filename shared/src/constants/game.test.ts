@@ -38,8 +38,8 @@ describe('Game Constants', () => {
   describe('PLAYER_COLORS', () => {
     it('should have all required colors', () => {
       const expectedColors = [
-        'red', 'blue', 'green', 'yellow', 'purple',
-        'orange', 'pink', 'cyan', 'lime', 'indigo'
+        'DARK_GREEN', 'LIGHT_GREEN', 'DARK_BLUE', 'LIGHT_BLUE',
+        'RED', 'YELLOW', 'PURPLE', 'ORANGE'
       ];
 
       expectedColors.forEach(color => {
@@ -48,8 +48,8 @@ describe('Game Constants', () => {
       });
     });
 
-    it('should have exactly 10 colors', () => {
-      expect(Object.keys(PLAYER_COLORS)).toHaveLength(10);
+    it('should have exactly 8 colors', () => {
+      expect(Object.keys(PLAYER_COLORS)).toHaveLength(8);
     });
 
     it('should have valid hex color codes', () => {
@@ -130,7 +130,7 @@ describe('Game Constants', () => {
     });
 
     it('should have correct chemistry requirements', () => {
-      expect(MATCH_SETTINGS.MIN_CHEMISTRY_COLORS).toBe(3);
+      expect(MATCH_SETTINGS.EXACT_CHEMISTRY_COLORS).toBe(3);
       expect(MATCH_SETTINGS.MIN_PLAYERS_PER_COLOR).toBe(2);
     });
 

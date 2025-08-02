@@ -19,7 +19,7 @@ describe('Match Engine Utils', () => {
     imageUrl: '/test1.jpg',
     points: 10,
     position: 'GK',
-    color: 'red',
+    color: 'RED',
     marketPrice: 100,
     theme: 'basic',
     percentage: 50
@@ -31,7 +31,7 @@ describe('Match Engine Utils', () => {
     imageUrl: '/test2.jpg',
     points: 15,
     position: 'CB',
-    color: 'blue',
+    color: 'DARK_BLUE',
     marketPrice: 150,
     theme: 'basic',
     percentage: 60
@@ -53,12 +53,12 @@ describe('Match Engine Utils', () => {
     userId: 'user-2',
     formationId: 'formation-1',
     players: [
-      { ...mockPlayer1, color: 'red' },
-      { ...mockPlayer1, id: 'player-3', color: 'red' },
-      { ...mockPlayer2, color: 'blue' },
-      { ...mockPlayer2, id: 'player-4', color: 'blue' },
-      { ...mockPlayer1, id: 'player-5', color: 'green' },
-      { ...mockPlayer1, id: 'player-6', color: 'green' }
+      { ...mockPlayer1, color: 'RED' },
+      { ...mockPlayer1, id: 'player-3', color: 'RED' },
+      { ...mockPlayer2, color: 'DARK_BLUE' },
+      { ...mockPlayer2, id: 'player-4', color: 'DARK_BLUE' },
+      { ...mockPlayer1, id: 'player-5', color: 'DARK_GREEN' },
+      { ...mockPlayer1, id: 'player-6', color: 'DARK_GREEN' }
     ],
     totalPoints: 60,
     chemistryPoints: 0
@@ -79,9 +79,9 @@ describe('Match Engine Utils', () => {
       const strength = calculateTeamStrength(mockValidChemistryTeam);
 
       expect(strength.teamId).toBe('team-2');
-      expect(strength.playerPoints).toBe(60);
+      expect(strength.playerPoints).toBe(70);
       expect(strength.chemistryPoints).toBe(12); // 3 colors with 2 players each: 4+4+4
-      expect(strength.totalStrength).toBe(72);
+      expect(strength.totalStrength).toBe(82);
     });
 
     it('should handle empty player array', () => {

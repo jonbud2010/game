@@ -1,32 +1,21 @@
 import type { PlayerColor, PlayerPosition } from '../types/game.js';
 
-export const PLAYER_POSITIONS: Record<PlayerPosition, string> = {
-  GK: 'Torwart',
-  CB: 'Innenverteidiger',
-  LB: 'Linksverteidiger',
-  RB: 'Rechtsverteidiger',
-  CDM: 'Defensives Mittelfeld',
-  CM: 'Zentrales Mittelfeld',
-  CAM: 'Offensives Mittelfeld',
-  LM: 'Linkes Mittelfeld',
-  RM: 'Rechtes Mittelfeld',
-  LW: 'Linker Flügel',
-  RW: 'Rechter Flügel',
-  ST: 'Stürmer',
-  CF: 'Hängende Spitze',
-  LF: 'Linker Angreifer',
-  RF: 'Rechter Angreifer'
-};
+// Position definitions are now handled by frontend i18n system
+// This constant is kept for reference only and should not be used for display
+export const PLAYER_POSITIONS_ENUM: PlayerPosition[] = [
+  'GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 
+  'LM', 'RM', 'LW', 'RW', 'ST', 'CF', 'LF', 'RF'
+];
 
 export const PLAYER_COLORS: Record<PlayerColor, string> = {
-  dunkelgruen: '#166534',
-  hellgruen: '#16A34A',
-  dunkelblau: '#1E40AF',
-  hellblau: '#3B82F6',
-  rot: '#DC2626',
-  gelb: '#FACC15',
-  lila: '#7C3AED',
-  orange: '#EA580C'
+  DARK_GREEN: '#166534',
+  LIGHT_GREEN: '#16A34A',
+  DARK_BLUE: '#1E40AF',
+  LIGHT_BLUE: '#3B82F6',
+  RED: '#DC2626',
+  YELLOW: '#FACC15',
+  PURPLE: '#7C3AED',
+  ORANGE: '#EA580C'
 };
 
 export const CHEMISTRY_POINTS = {

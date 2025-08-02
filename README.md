@@ -72,6 +72,7 @@ cd backend && yarn tsx src/index.ts  # Direkter TypeScript-Start
 - **Vite** für Build & Dev Server
 - **CSS Modules** für Styling
 - **Vitest + Testing Library** für Tests
+- **i18next** für Internationalisierung (geplant)
 
 ### Backend (`/backend`)
 - **Node.js + Express** REST API
@@ -84,6 +85,28 @@ cd backend && yarn tsx src/index.ts  # Direkter TypeScript-Start
 - **TypeScript Types** für API & Game Logic
 - **Business Logic** (Chemie-Berechnung, Validierung)
 - **Konstanten** und Utilities
+
+## 🌐 Sprach-Architektur
+
+### Wichtige Regel: Backend Englisch, Frontend Deutsch
+
+**Backend & Shared Packages:**
+- Verwenden **ausschließlich englische Identifikatoren** (Variablen, Funktionen, Konstanten)
+- Enum-Werte und Datenbank-Felder in Englisch
+- API-Responses mit englischen Schlüsseln
+- Keine deutschen Wörter im Code (z.B. "red" statt "rot")
+
+**Frontend:**
+- **Alle Übersetzungen** über i18next-System
+- Deutsche Benutzeroberfläche
+- JSON-Übersetzungsdateien in `/public/locales/`
+- Dynamisches Laden von Übersetzungen
+
+**Vorteile dieser Architektur:**
+- ✅ Sauberer, wartbarer Backend-Code
+- ✅ Internationale Erweiterbarkeit
+- ✅ Trennung von Technik und Präsentation
+- ✅ Standard-Entwicklungssprache Englisch
 
 ## 📁 Projektstruktur
 

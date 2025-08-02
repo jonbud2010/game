@@ -92,7 +92,11 @@
       "Bash(yarn workspace @football-tcg/frontend test)",
       "Bash(npx vitest run:*)",
       "Bash(yarn workspace @football-tcg/backend prisma migrate:*)",
-      "Bash(DATABASE_URL=\"file:./test.db\" npx prisma migrate deploy)"
+      "Bash(DATABASE_URL=\"file:./test.db\" npx prisma migrate deploy)",
+      "Bash(yarn workspace @football-tcg/shared test:file:*)",
+      "Bash(yarn workspace @football-tcg/frontend add:*)",
+      "Bash(yarn workspace @football-tcg/frontend type-check:*)",
+      "Bash(yarn workspace @football-tcg/frontend:*)"
     ],
     "deny": []
   }

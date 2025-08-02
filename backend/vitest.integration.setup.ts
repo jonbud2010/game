@@ -114,7 +114,7 @@ export async function createTestPlayers() {
       color: 'DUNKELGRÜN',
       marketPrice: 100,
       theme: 'Test Theme',
-      percentage: 0.05
+      percentage: 0.5
     }
   });
   players.push(gk);
@@ -129,7 +129,7 @@ export async function createTestPlayers() {
       color: 'HELLBLAU',
       marketPrice: 80,
       theme: 'Test Theme',
-      percentage: 0.1
+      percentage: 0.3
     }
   });
   players.push(def);
@@ -144,7 +144,7 @@ export async function createTestPlayers() {
       color: 'ROT',
       marketPrice: 150,
       theme: 'Test Theme',
-      percentage: 0.03
+      percentage: 0.2
     }
   });
   players.push(mid);

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import { apiService, Player } from '../services/api';
+import { useTranslation, usePositionTranslation, useColorTranslation } from '../hooks/useTranslation';
+import { PLAYER_POSITIONS_ENUM, PLAYER_COLORS } from '@football-tcg/shared';
 
 const AdminPlayersPage: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -9,6 +11,13 @@ const AdminPlayersPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  
+  // Translation hooks
+  const { t: common } = useTranslation('common');
+  const { t: admin } = useTranslation('admin');
+  const { t: errors } = useTranslation('errors');
+  const translatePosition = usePositionTranslation();
+  const translateColor = useColorTranslation();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -22,8 +31,8 @@ const AdminPlayersPage: React.FC = () => {
     image: null as File | null
   });
 
-  const positions = ['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST', 'CF', 'LF', 'RF'];
-  const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE', 'ORANGE', 'PINK', 'CYAN', 'LIME', 'INDIGO'];
+  const positions = PLAYER_POSITIONS_ENUM;
+  const colors = Object.keys(PLAYER_COLORS);
 
   useEffect(() => {
     fetchPlayers();
@@ -37,7 +46,7 @@ const AdminPlayersPage: React.FC = () => {
       setPlayers(data.data || []);
     } catch (err) {
       console.error('fetchPlayers error:', err);
-      setError(err instanceof Error ? err.message : 'Unbekannter Fehler');
+      setError(err instanceof Error ? err.message : errors('general.unknown_error'));
     } finally {
       setLoading(false);
     }
@@ -85,7 +94,7 @@ const AdminPlayersPage: React.FC = () => {
       await fetchPlayers();
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
+      setError(err instanceof Error ? err.message : errors('admin.create_failed'));
     }
   };
 
@@ -105,7 +114,7 @@ const AdminPlayersPage: React.FC = () => {
   };
 
   const handleDelete = async (playerId: string) => {
-    if (!confirm('Sind Sie sicher, dass Sie diesen Spieler löschen möchten?')) {
+    if (!confirm(admin('players.delete_confirm'))) {
       return;
     }
 
@@ -113,7 +122,7 @@ const AdminPlayersPage: React.FC = () => {
       await apiService.deletePlayer(playerId);
       await fetchPlayers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Löschen');
+      setError(err instanceof Error ? err.message : errors('admin.delete_failed'));
     }
   };
 
@@ -122,7 +131,7 @@ const AdminPlayersPage: React.FC = () => {
       <div className="loading-container">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>Lade Spieler...</p>
+          <p>{common('status.loading')}</p>
         </div>
       </div>
     );
@@ -133,9 +142,9 @@ const AdminPlayersPage: React.FC = () => {
       <div className="container">
         <div className="admin-header">
           <div className="admin-breadcrumb">
-            <Link to={ROUTES.ADMIN}>Admin</Link> &gt; Spieler verwalten
+            <Link to={ROUTES.ADMIN}>{common('navigation.admin')}</Link> &gt; {admin('players.title')}
           </div>
-          <h1>Spieler verwalten</h1>
+          <h1>{admin('players.title')}</h1>
           <div className="admin-actions">
             <button 
               className="btn btn-primary"
@@ -154,7 +163,7 @@ const AdminPlayersPage: React.FC = () => {
                 });
               }}
             >
-              Neuen Spieler erstellen
+              {admin('players.create')}
             </button>
           </div>
         </div>
@@ -169,11 +178,11 @@ const AdminPlayersPage: React.FC = () => {
         {showCreateForm && (
           <div className="form-modal">
             <div className="form-modal-content">
-              <h2>{editingPlayer ? 'Spieler bearbeiten' : 'Neuen Spieler erstellen'}</h2>
+              <h2>{editingPlayer ? admin('players.edit') : admin('players.create')}</h2>
               <form onSubmit={handleSubmit} className="player-form">
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="name">Name *</label>
+                    <label htmlFor="name">{common('forms.name')} *</label>
                     <input
                       id="name"
                       type="text"
@@ -183,7 +192,7 @@ const AdminPlayersPage: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="theme">Thema *</label>
+                    <label htmlFor="theme">{common('labels.theme')} *</label>
                     <input
                       id="theme"
                       type="text"
@@ -196,7 +205,7 @@ const AdminPlayersPage: React.FC = () => {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="points">Punkte *</label>
+                    <label htmlFor="points">{common('labels.points')} *</label>
                     <input
                       id="points"
                       type="number"
@@ -208,7 +217,7 @@ const AdminPlayersPage: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="marketPrice">Marktpreis *</label>
+                    <label htmlFor="marketPrice">{common('labels.price')} *</label>
                     <input
                       id="marketPrice"
                       type="number"
@@ -222,20 +231,20 @@ const AdminPlayersPage: React.FC = () => {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="position">Position *</label>
+                    <label htmlFor="position">{common('labels.position')} *</label>
                     <select
                       id="position"
                       value={formData.position}
                       onChange={(e) => setFormData({...formData, position: e.target.value})}
                       required
                     >
-                      {positions.map(pos => (
-                        <option key={pos} value={pos}>{pos}</option>
+                      {positions.map((pos: any) => (
+                        <option key={pos} value={pos}>{translatePosition(pos)}</option>
                       ))}
                     </select>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="color">Farbe *</label>
+                    <label htmlFor="color">{common('labels.color')} *</label>
                     <select
                       id="color"
                       value={formData.color}
@@ -243,7 +252,7 @@ const AdminPlayersPage: React.FC = () => {
                       required
                     >
                       {colors.map(color => (
-                        <option key={color} value={color}>{color}</option>
+                        <option key={color} value={color}>{translateColor(color)}</option>
                       ))}
                     </select>
                   </div>
@@ -251,7 +260,7 @@ const AdminPlayersPage: React.FC = () => {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="percentage">Pack-Wahrscheinlichkeit *</label>
+                    <label htmlFor="percentage">{common('labels.percentage')} *</label>
                     <input
                       id="percentage"
                       type="number"
@@ -262,10 +271,10 @@ const AdminPlayersPage: React.FC = () => {
                       onChange={(e) => setFormData({...formData, percentage: parseFloat(e.target.value) || 0.05})}
                       required
                     />
-                    <small>Wert zwischen 0.001 (0.1%) und 1 (100%)</small>
+                    <small>0.001 (0.1%) - 1 (100%)</small>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="image">Spielerbild</label>
+                    <label htmlFor="image">{admin('players.image_upload')}</label>
                     <input
                       id="image"
                       type="file"
@@ -277,10 +286,10 @@ const AdminPlayersPage: React.FC = () => {
 
                 <div className="form-actions">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowCreateForm(false)}>
-                    Abbrechen
+                    {common('buttons.cancel')}
                   </button>
                   <button type="submit" className="btn btn-primary">
-                    {editingPlayer ? 'Speichern' : 'Erstellen'}
+                    {editingPlayer ? common('buttons.save') : common('buttons.create')}
                   </button>
                 </div>
               </form>
@@ -290,27 +299,27 @@ const AdminPlayersPage: React.FC = () => {
 
         <div className="players-list">
           <div className="list-header">
-            <h2>Alle Spieler ({players.length})</h2>
+            <h2>{admin('players.total_players', { count: players.length })}</h2>
           </div>
           
           {players.length === 0 ? (
             <div className="empty-state">
-              <p>Noch keine Spieler erstellt.</p>
+              <p>{admin('players.no_players')}</p>
             </div>
           ) : (
             <div className="players-table">
               <table>
                 <thead>
                   <tr>
-                    <th>Bild</th>
-                    <th>Name</th>
-                    <th>Position</th>
-                    <th>Punkte</th>
-                    <th>Farbe</th>
-                    <th>Preis</th>
-                    <th>Thema</th>
+                    <th>{admin('players.image_upload')}</th>
+                    <th>{common('forms.name')}</th>
+                    <th>{common('labels.position')}</th>
+                    <th>{common('labels.points')}</th>
+                    <th>{common('labels.color')}</th>
+                    <th>{common('labels.price')}</th>
+                    <th>{common('labels.theme')}</th>
                     <th>%</th>
-                    <th>Aktionen</th>
+                    <th>{admin('actions.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -327,11 +336,11 @@ const AdminPlayersPage: React.FC = () => {
                         />
                       </td>
                       <td className="player-name">{player.name}</td>
-                      <td className="player-position">{player.position}</td>
+                      <td className="player-position">{translatePosition(player.position)}</td>
                       <td className="player-points">{player.points}</td>
                       <td>
                         <span className={`color-badge color-${player.color.toLowerCase()}`}>
-                          {player.color}
+                          {translateColor(player.color)}
                         </span>
                       </td>
                       <td className="player-price">{player.marketPrice}</td>
@@ -342,13 +351,13 @@ const AdminPlayersPage: React.FC = () => {
                           className="btn btn-small btn-secondary"
                           onClick={() => handleEdit(player)}
                         >
-                          Bearbeiten
+                          {common('buttons.edit')}
                         </button>
                         <button 
                           className="btn btn-small btn-danger"
                           onClick={() => handleDelete(player.id)}
                         >
-                          Löschen
+                          {common('buttons.delete')}
                         </button>
                       </td>
                     </tr>
