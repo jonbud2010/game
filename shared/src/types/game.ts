@@ -83,13 +83,14 @@ export interface MatchEvent {
 export interface League {
   id: string;
   lobbyId: string;
+  matchDay: number;
   standings: LeagueStanding[];
-  currentMatchDay: number;
   status: 'active' | 'completed';
 }
 
 export interface LeagueStanding {
   userId: string;
+  matchDay: number;
   points: number;
   goalsFor: number;
   goalsAgainst: number;
@@ -117,6 +118,14 @@ export interface Lobby {
   maxPlayers: number;
   currentPlayers: number;
   status: 'waiting' | 'active' | 'completed';
+  adminId: string;
+  admin: {
+    id: string;
+    username: string;
+  };
+  isActive: boolean;
+  currentMatchDay: number;
+  nextMatchDay?: Date;
   createdAt: Date;
   members: LobbyMember[];
 }
@@ -141,6 +150,24 @@ export interface GameState {
   currentLobby: Lobby | null;
   isLoading: boolean;
   error: string | null;
+}
+
+export interface ScheduledMatchDay {
+  id: string;
+  lobbyId: string;
+  matchDay: number;
+  scheduledAt: Date;
+  executed: boolean;
+  executedAt?: Date;
+  createdAt: Date;
+}
+
+export interface LobbyAdminPermissions {
+  canCreatePlayers: boolean;
+  canCreatePacks: boolean;
+  canCreateFormations: boolean;
+  canScheduleMatchDays: boolean;
+  canManageMembers: boolean;
 }
 
 export interface MenuItem {
@@ -168,14 +195,14 @@ export type PlayerPosition =
   | 'RF'; // Right Forward
 
 export type PlayerColor = 
-  | 'DARK_GREEN'
-  | 'LIGHT_GREEN'
-  | 'DARK_BLUE'
-  | 'LIGHT_BLUE'
   | 'RED'
+  | 'BLUE'
+  | 'GREEN'
   | 'YELLOW'
   | 'PURPLE'
-  | 'ORANGE';
+  | 'ORANGE'
+  | 'PINK'
+  | 'CYAN';
 
 export interface ChemistryBonus {
   color: PlayerColor;

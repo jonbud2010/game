@@ -6,9 +6,16 @@ export const getAllLobbies = async (req: Request, res: Response): Promise<Respon
   try {
     const lobbies = await prisma.lobby.findMany({
       where: {
-        status: 'WAITING'
+        status: 'WAITING',
+        isActive: true
       },
       include: {
+        admin: {
+          select: {
+            id: true,
+            username: true
+          }
+        },
         members: {
           include: {
             user: {
@@ -31,6 +38,13 @@ export const getAllLobbies = async (req: Request, res: Response): Promise<Respon
       maxPlayers: lobby.maxPlayers,
       currentPlayers: lobby.members.length,
       status: lobby.status,
+      adminId: lobby.adminId,
+      admin: {
+        id: lobby.admin.id,
+        username: lobby.admin.username
+      },
+      isActive: lobby.isActive,
+      currentMatchDay: lobby.currentMatchDay,
       createdAt: lobby.createdAt,
       members: lobby.members.map(member => ({
         userId: member.userId,
@@ -60,6 +74,12 @@ export const getLobbyById = async (req: Request, res: Response): Promise<Respons
     const lobby = await prisma.lobby.findUnique({
       where: { id },
       include: {
+        admin: {
+          select: {
+            id: true,
+            username: true
+          }
+        },
         members: {
           include: {
             user: {
@@ -86,6 +106,13 @@ export const getLobbyById = async (req: Request, res: Response): Promise<Respons
       maxPlayers: lobby.maxPlayers,
       currentPlayers: lobby.members.length,
       status: lobby.status,
+      adminId: lobby.adminId,
+      admin: {
+        id: lobby.admin.id,
+        username: lobby.admin.username
+      },
+      isActive: lobby.isActive,
+      currentMatchDay: lobby.currentMatchDay,
       createdAt: lobby.createdAt,
       members: lobby.members.map(member => ({
         userId: member.userId,
@@ -148,7 +175,10 @@ export const createLobby = async (req: AuthenticatedRequest, res: Response): Pro
         data: {
           name: trimmedName,
           maxPlayers: 4,
-          status: 'WAITING'
+          status: 'WAITING',
+          adminId: userId,
+          isActive: true,
+          currentMatchDay: 1
         }
       });
 
@@ -166,6 +196,12 @@ export const createLobby = async (req: AuthenticatedRequest, res: Response): Pro
     const createdLobby = await prisma.lobby.findUnique({
       where: { id: result.id },
       include: {
+        admin: {
+          select: {
+            id: true,
+            username: true
+          }
+        },
         members: {
           include: {
             user: {
@@ -185,6 +221,13 @@ export const createLobby = async (req: AuthenticatedRequest, res: Response): Pro
       maxPlayers: createdLobby!.maxPlayers,
       currentPlayers: createdLobby!.members.length,
       status: createdLobby!.status,
+      adminId: createdLobby!.adminId,
+      admin: {
+        id: createdLobby!.admin.id,
+        username: createdLobby!.admin.username
+      },
+      isActive: createdLobby!.isActive,
+      currentMatchDay: createdLobby!.currentMatchDay,
       createdAt: createdLobby!.createdAt,
       members: createdLobby!.members.map(member => ({
         userId: member.userId,
@@ -303,19 +346,20 @@ export const joinLobby = async (req: AuthenticatedRequest, res: Response): Promi
         }
       });
 
-      // If this makes the 4th member, update lobby status to IN_PROGRESS
-      if (currentLobby.members.length + 1 >= currentLobby.maxPlayers) {
-        await tx.lobby.update({
-          where: { id },
-          data: { status: 'IN_PROGRESS' }
-        });
-      }
+      // Keep lobby in WAITING status for continuous operation
+      // Admin will manage when to start matchdays manually or via scheduling
     });
 
     // Fetch updated lobby data
     const updatedLobby = await prisma.lobby.findUnique({
       where: { id },
       include: {
+        admin: {
+          select: {
+            id: true,
+            username: true
+          }
+        },
         members: {
           include: {
             user: {
@@ -335,6 +379,13 @@ export const joinLobby = async (req: AuthenticatedRequest, res: Response): Promi
       maxPlayers: updatedLobby!.maxPlayers,
       currentPlayers: updatedLobby!.members.length,
       status: updatedLobby!.status,
+      adminId: updatedLobby!.adminId,
+      admin: {
+        id: updatedLobby!.admin.id,
+        username: updatedLobby!.admin.username
+      },
+      isActive: updatedLobby!.isActive,
+      currentMatchDay: updatedLobby!.currentMatchDay,
       createdAt: updatedLobby!.createdAt,
       members: updatedLobby!.members.map(member => ({
         userId: member.userId,
@@ -452,6 +503,94 @@ export const leaveLobby = async (req: AuthenticatedRequest, res: Response): Prom
     return res.status(500).json({
       success: false,
       error: 'Failed to leave lobby',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Schedule the next matchday for a lobby (admin only)
+ */
+export const scheduleNextMatchDay = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+  try {
+    const id = req.params.id!;
+    const userId = req.user!.userId;
+    const { scheduledAt } = req.body;
+
+    // Check if user is lobby admin
+    const lobby = await prisma.lobby.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        adminId: true,
+        currentMatchDay: true,
+        isActive: true
+      }
+    });
+
+    if (!lobby) {
+      return res.status(404).json({
+        success: false,
+        error: 'Lobby not found'
+      });
+    }
+
+    if (lobby.adminId !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only the lobby admin can schedule matchdays'
+      });
+    }
+
+    if (!lobby.isActive) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot schedule matchdays for inactive lobby'
+      });
+    }
+
+    const nextMatchDay = lobby.currentMatchDay + 1;
+    const scheduledDate = new Date(scheduledAt);
+
+    // Validate scheduled date
+    if (scheduledDate <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Scheduled time must be in the future'
+      });
+    }
+
+    // Create scheduled matchday
+    const scheduledMatchDay = await prisma.scheduledMatchDay.create({
+      data: {
+        lobbyId: id,
+        matchDay: nextMatchDay,
+        scheduledAt: scheduledDate
+      }
+    });
+
+    // Update lobby's next matchday time
+    await prisma.lobby.update({
+      where: { id },
+      data: {
+        nextMatchDay: scheduledDate
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: `Matchday ${nextMatchDay} scheduled successfully`,
+      data: {
+        matchDay: nextMatchDay,
+        scheduledAt: scheduledDate,
+        scheduledMatchDayId: scheduledMatchDay.id
+      }
+    });
+  } catch (error) {
+    console.error('Error scheduling matchday:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to schedule matchday',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }

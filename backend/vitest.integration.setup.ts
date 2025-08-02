@@ -111,7 +111,7 @@ export async function createTestPlayers() {
       imageUrl: '/test/gk.jpg',
       points: 85,
       position: 'GK',
-      color: 'DUNKELGRÜN',
+      color: 'GREEN',
       marketPrice: 100,
       theme: 'Test Theme',
       percentage: 0.5
@@ -126,7 +126,7 @@ export async function createTestPlayers() {
       imageUrl: '/test/def.jpg', 
       points: 80,
       position: 'CB',
-      color: 'HELLBLAU',
+      color: 'BLUE',
       marketPrice: 80,
       theme: 'Test Theme',
       percentage: 0.3
@@ -141,7 +141,7 @@ export async function createTestPlayers() {
       imageUrl: '/test/mid.jpg',
       points: 90,
       position: 'CM', 
-      color: 'ROT',
+      color: 'RED',
       marketPrice: 150,
       theme: 'Test Theme',
       percentage: 0.2

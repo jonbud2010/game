@@ -18,7 +18,6 @@
 }
 
 .header-container {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 1rem 2rem;
   display: flex;
@@ -90,7 +89,6 @@
 }
 
 .footer-container {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 3rem 2rem 2rem;
   display: grid;
@@ -144,7 +142,6 @@
 
 /* Team Builder Styles */
 .team-builder-container {
-  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
 }

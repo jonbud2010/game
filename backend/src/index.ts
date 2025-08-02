@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { connectDatabase, disconnectDatabase } from './db/connection';
 import apiRoutes from './routes/index';
+import { initializeScheduler, autoScheduleAllLobbies } from './services/schedulerService';
 
 dotenv.config();
 
@@ -43,6 +44,19 @@ app.listen(PORT, async () => {
   // Connect to database
   try {
     await connectDatabase();
+    
+    // Initialize the matchday scheduler
+    initializeScheduler();
+    
+    // Auto-schedule matchdays for existing lobbies
+    setTimeout(async () => {
+      try {
+        await autoScheduleAllLobbies();
+      } catch (error) {
+        console.error('⚠️ Error during auto-scheduling setup:', error);
+      }
+    }, 5000); // Wait 5 seconds after startup to ensure everything is ready
+    
   } catch (error) {
     console.error('Failed to connect to database on startup');
     process.exit(1);

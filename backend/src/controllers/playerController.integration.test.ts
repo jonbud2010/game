@@ -7,8 +7,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { testDb, createTestUsers, createTestPlayers } from '../../vitest.integration.setup';
-import { playerRoutes } from '../routes/playerRoutes';
-import { authRoutes } from '../routes/authRoutes';
+import playerRoutes from '../routes/playerRoutes';
+import authRoutes from '../routes/authRoutes';
 
 // Express App für Integration Tests
 const app = express();
@@ -28,7 +28,7 @@ describe('Player Integration Tests', () => {
       .send({
         username: 'playeruser',
         email: 'playeruser@test.com',
-        password: 'password123'
+        password: 'Password123'
       });
     playerToken = playerRegister.body.token;
 
@@ -37,7 +37,7 @@ describe('Player Integration Tests', () => {
       .send({
         username: 'playeradmin',
         email: 'playeradmin@test.com',
-        password: 'password123'
+        password: 'Password123'
       });
     
     // Update admin role
@@ -68,19 +68,19 @@ describe('Player Integration Tests', () => {
           expect.objectContaining({
             name: 'Test Goalkeeper',
             position: 'GK',
-            color: 'DUNKELGRÜN',
+            color: 'GREEN',
             points: 85
           }),
           expect.objectContaining({
             name: 'Test Defender',
             position: 'CB',
-            color: 'HELLBLAU',
+            color: 'BLUE',
             points: 80
           }),
           expect.objectContaining({
             name: 'Test Midfielder',
             position: 'CM',
-            color: 'ROT',
+            color: 'RED',
             points: 90
           })
         ])
@@ -152,7 +152,7 @@ describe('Player Integration Tests', () => {
         .send({
           username: 'newcollectionuser',
           email: 'newcollectionuser@test.com',
-          password: 'password123'
+          password: 'Password123'
         });
 
       const response = await request(app)
@@ -170,7 +170,7 @@ describe('Player Integration Tests', () => {
         .get('/api/players/collection/my')
         .expect(401);
 
-      expect(response.body.error).toBe('User not authenticated');
+      expect(response.body.error).toBe('Access denied. No token provided.');
     });
   });
 
@@ -181,7 +181,7 @@ describe('Player Integration Tests', () => {
           name: 'Integration Test Player',
           points: 88,
           position: 'LW',
-          color: 'GELB',
+          color: 'YELLOW',
           marketPrice: 120,
           theme: 'Integration Test',
           percentage: 0.08
@@ -198,7 +198,7 @@ describe('Player Integration Tests', () => {
           name: 'Integration Test Player',
           points: 88,  
           position: 'LW',
-          color: 'GELB',
+          color: 'YELLOW',
           marketPrice: 120,
           theme: 'Integration Test',
           percentage: 0.08,
@@ -211,7 +211,7 @@ describe('Player Integration Tests', () => {
         });
 
         expect(createdPlayer).toBeTruthy();
-        expect(createdPlayer!.color).toBe('GELB');
+        expect(createdPlayer!.color).toBe('YELLOW');
       });
 
       it('should reject player creation by non-admin', async () => {
@@ -219,7 +219,7 @@ describe('Player Integration Tests', () => {
           name: 'Unauthorized Player',
           points: 85,
           position: 'ST',
-          color: 'ROT',
+          color: 'RED',
           marketPrice: 100,
           theme: 'Test'
         };

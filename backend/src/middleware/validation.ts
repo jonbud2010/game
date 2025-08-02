@@ -201,10 +201,10 @@ const createPlayerSchema = Joi.object({
     }),
   
   color: Joi.string()
-    .valid('RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE', 'ORANGE', 'PINK', 'CYAN', 'LIME', 'INDIGO')
+    .valid('RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE', 'ORANGE', 'PINK', 'CYAN')
     .required()
     .messages({
-      'any.only': 'Color must be one of: RED, BLUE, GREEN, YELLOW, PURPLE, ORANGE, PINK, CYAN, LIME, INDIGO',
+      'any.only': 'Color must be one of: RED, BLUE, GREEN, YELLOW, PURPLE, ORANGE, PINK, CYAN',
       'any.required': 'Color is required'
     }),
   

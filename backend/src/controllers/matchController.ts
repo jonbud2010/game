@@ -216,7 +216,10 @@ export const generateMatchdayMatches = async (req: Request, res: Response): Prom
       name: team.name,
       userId: team.userId,
       formationId: team.formationId,
-      players: team.teamPlayers.map(tp => tp.player),
+      players: team.teamPlayers.map(tp => ({
+        ...tp.player,
+        position: tp.player.position as any // Type assertion for position compatibility
+      })),
       totalPoints: 0,
       chemistryPoints: 0
     }));
@@ -229,7 +232,7 @@ export const generateMatchdayMatches = async (req: Request, res: Response): Prom
       matchPairings.map(pairing =>
         prisma.match.create({
           data: {
-            lobbyId,
+            lobbyId: lobbyId!,
             homeTeamId: pairing.homeTeam.id,
             awayTeamId: pairing.awayTeam.id,
             matchDay,
@@ -373,7 +376,7 @@ export const simulateMatch = async (req: Request, res: Response): Promise<void> 
     });
 
     // Update league table
-    await updateLeagueTable(match.lobbyId, simulationResult.result);
+    await updateLeagueTable(match.lobbyId, match.matchDay, simulationResult.result);
 
     res.json({
       success: true,
@@ -503,7 +506,7 @@ export const simulateMatchday = async (req: Request, res: Response): Promise<voi
       });
 
       // Update league table
-      await updateLeagueTable(lobbyId, simulationResult.result);
+      await updateLeagueTable(lobbyId, match.matchDay, simulationResult.result);
 
       results.push({
         matchId: match.id,
@@ -528,13 +531,20 @@ export const simulateMatchday = async (req: Request, res: Response): Promise<voi
   }
 };
 
-// Get league table for a lobby
+// Get league table for a lobby (optionally filtered by matchDay)
 export const getLeagueTable = async (req: Request, res: Response): Promise<void> => {
   try {
     const { lobbyId } = req.params;
+    const { matchDay } = req.query;
+
+    // Build where clause
+    const whereClause: any = { lobbyId };
+    if (matchDay && !isNaN(Number(matchDay))) {
+      whereClause.matchDay = Number(matchDay);
+    }
 
     const leagueTable = await prisma.leagueTable.findMany({
-      where: { lobbyId },
+      where: whereClause,
       include: {
         user: {
           select: {
@@ -544,24 +554,64 @@ export const getLeagueTable = async (req: Request, res: Response): Promise<void>
         }
       },
       orderBy: [
+        { matchDay: 'desc' },
         { points: 'desc' },
         { goalsFor: 'desc' },
         { goalsAgainst: 'asc' }
       ]
     });
 
-    // Update positions
-    const updatedTable = leagueTable.map((entry, index) => ({
-      ...entry,
-      position: index + 1,
-      goalDifference: entry.goalsFor - entry.goalsAgainst,
-      matches: entry.wins + entry.draws + entry.losses
-    }));
+    // Group by matchDay if no specific matchDay requested
+    if (!matchDay) {
+      const tablesByMatchDay = leagueTable.reduce((acc, entry) => {
+        if (!acc[entry.matchDay]) {
+          acc[entry.matchDay] = [];
+        }
+        acc[entry.matchDay].push(entry);
+        return acc;
+      }, {} as Record<number, typeof leagueTable>);
 
-    res.json({
-      success: true,
-      data: updatedTable
-    });
+      // Sort each matchday's table and assign positions
+      Object.keys(tablesByMatchDay).forEach(md => {
+        tablesByMatchDay[Number(md)] = tablesByMatchDay[Number(md)]
+          .sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+            return a.goalsAgainst - b.goalsAgainst;
+          })
+          .map((entry, index) => ({
+            ...entry,
+            position: index + 1,
+            goalDifference: entry.goalsFor - entry.goalsAgainst,
+            matches: entry.wins + entry.draws + entry.losses
+          }));
+      });
+
+      res.json({
+        success: true,
+        data: tablesByMatchDay
+      });
+    } else {
+      // Return table for specific matchDay
+      const updatedTable = leagueTable
+        .sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+          return a.goalsAgainst - b.goalsAgainst;
+        })
+        .map((entry, index) => ({
+          ...entry,
+          position: index + 1,
+          goalDifference: entry.goalsFor - entry.goalsAgainst,
+          matches: entry.wins + entry.draws + entry.losses
+        }));
+
+      res.json({
+        success: true,
+        data: updatedTable,
+        matchDay: Number(matchDay)
+      });
+    }
   } catch (error) {
     console.error('Error fetching league table:', error);
     res.status(500).json({
@@ -571,16 +621,17 @@ export const getLeagueTable = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Helper function to update league table
-async function updateLeagueTable(lobbyId: string, result: any): Promise<void> {
+// Helper function to update league table for specific matchday
+async function updateLeagueTable(lobbyId: string, matchDay: number, result: any): Promise<void> {
   const { homeTeam, awayTeam, homeScore, awayScore, homePoints, awayPoints } = result;
 
-  // Update home team stats
+  // Update home team stats for this matchday
   await prisma.leagueTable.upsert({
     where: {
-      lobbyId_userId: {
+      lobbyId_userId_matchDay: {
         lobbyId,
-        userId: homeTeam.userId
+        userId: homeTeam.userId,
+        matchDay
       }
     },
     update: {
@@ -594,6 +645,7 @@ async function updateLeagueTable(lobbyId: string, result: any): Promise<void> {
     create: {
       lobbyId,
       userId: homeTeam.userId,
+      matchDay,
       points: homePoints,
       goalsFor: homeScore,
       goalsAgainst: awayScore,
@@ -604,12 +656,13 @@ async function updateLeagueTable(lobbyId: string, result: any): Promise<void> {
     }
   });
 
-  // Update away team stats
+  // Update away team stats for this matchday
   await prisma.leagueTable.upsert({
     where: {
-      lobbyId_userId: {
+      lobbyId_userId_matchDay: {
         lobbyId,
-        userId: awayTeam.userId
+        userId: awayTeam.userId,
+        matchDay
       }
     },
     update: {
@@ -623,6 +676,7 @@ async function updateLeagueTable(lobbyId: string, result: any): Promise<void> {
     create: {
       lobbyId,
       userId: awayTeam.userId,
+      matchDay,
       points: awayPoints,
       goalsFor: awayScore,
       goalsAgainst: homeScore,
@@ -709,7 +763,10 @@ export const createLeague = async (req: Request, res: Response): Promise<void> =
           name: team.name,
           userId: team.userId,
           formationId: team.formationId,
-          players: team.teamPlayers.map(tp => tp.player),
+          players: team.teamPlayers.map(tp => ({
+        ...tp.player,
+        position: tp.player.position as any
+      })),
           totalPoints: 0,
           chemistryPoints: 0
         }));
@@ -882,7 +939,7 @@ export const simulateEntireLeague = async (req: Request, res: Response): Promise
       });
 
       // Update league table
-      await updateLeagueTable(lobbyId, simulationResult.result);
+      await updateLeagueTable(lobbyId, match.matchDay, simulationResult.result);
 
       results.push({
         matchId: match.id,
@@ -893,24 +950,14 @@ export const simulateEntireLeague = async (req: Request, res: Response): Promise
       });
     }
 
-    // Check if league is complete and distribute rewards
-    const remainingMatches = await prisma.match.count({
-      where: {
-        lobbyId,
-        played: false
-      }
-    });
-
-    if (remainingMatches === 0) {
-      await finishLeague(lobbyId);
-    }
+    // Note: In continuous leagues, we don't finish the league
+    // Each matchday is independent with its own rewards
 
     res.json({
       success: true,
       message: `Simulated ${results.length} matches across ${Math.max(...results.map(r => r.matchDay))} matchdays`,
       data: {
-        results,
-        leagueComplete: remainingMatches === 0
+        results
       }
     });
   } catch (error) {
@@ -922,16 +969,54 @@ export const simulateEntireLeague = async (req: Request, res: Response): Promise
   }
 };
 
-// Get league status and progress
+// Get league status and progress for continuous leagues
 export const getLeagueStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { lobbyId } = req.params;
+    const { matchDay } = req.query;
 
-    const [totalMatches, playedMatches, leagueTable] = await Promise.all([
-      prisma.match.count({ where: { lobbyId } }),
-      prisma.match.count({ where: { lobbyId, played: true } }),
+    const lobby = await prisma.lobby.findUnique({
+      where: { id: lobbyId },
+      select: { 
+        currentMatchDay: true,
+        nextMatchDay: true,
+        isActive: true,
+        admin: {
+          select: {
+            id: true,
+            username: true
+          }
+        }
+      }
+    });
+
+    if (!lobby) {
+      res.status(404).json({ error: 'Lobby not found' });
+      return;
+    }
+
+    // Get specific matchday or current matchday
+    const requestedMatchDay = matchDay ? Number(matchDay) : lobby.currentMatchDay;
+
+    const [totalMatches, playedMatches, leagueTable, scheduledMatchDay] = await Promise.all([
+      prisma.match.count({ 
+        where: { 
+          lobbyId, 
+          matchDay: requestedMatchDay 
+        } 
+      }),
+      prisma.match.count({ 
+        where: { 
+          lobbyId, 
+          matchDay: requestedMatchDay, 
+          played: true 
+        } 
+      }),
       prisma.leagueTable.findMany({
-        where: { lobbyId },
+        where: { 
+          lobbyId, 
+          matchDay: requestedMatchDay 
+        },
         include: {
           user: {
             select: {
@@ -945,47 +1030,51 @@ export const getLeagueStatus = async (req: Request, res: Response): Promise<void
           { goalsFor: 'desc' },
           { goalsAgainst: 'asc' }
         ]
+      }),
+      prisma.scheduledMatchDay.findFirst({
+        where: {
+          lobbyId,
+          executed: false
+        },
+        orderBy: {
+          scheduledAt: 'asc'
+        }
       })
     ]);
 
-    const matchdayProgress = [];
-    for (let matchDay = 1; matchDay <= 3; matchDay++) {
-      const matchdayTotal = await prisma.match.count({ where: { lobbyId, matchDay } });
-      const matchdayPlayed = await prisma.match.count({ where: { lobbyId, matchDay, played: true } });
-      
-      matchdayProgress.push({
-        matchDay,
-        total: matchdayTotal,
-        played: matchdayPlayed,
-        remaining: matchdayTotal - matchdayPlayed,
-        completed: matchdayTotal > 0 && matchdayPlayed === matchdayTotal
-      });
-    }
-
-    const lobby = await prisma.lobby.findUnique({
-      where: { id: lobbyId },
-      select: { status: true }
+    // Get all matchdays with data
+    const allMatchDays = await prisma.leagueTable.findMany({
+      where: { lobbyId },
+      select: { matchDay: true },
+      distinct: ['matchDay'],
+      orderBy: { matchDay: 'asc' }
     });
 
-    const leagueComplete = totalMatches > 0 && playedMatches === totalMatches;
-    const currentMatchDay = Math.max(1, matchdayProgress.findIndex(md => !md.completed) + 1);
+    const availableMatchDays = allMatchDays.map(md => md.matchDay);
+
+    const matchdayComplete = totalMatches > 0 && playedMatches === totalMatches;
 
     res.json({
       success: true,
       data: {
+        lobbyId,
+        currentMatchDay: lobby.currentMatchDay,
+        requestedMatchDay,
+        nextMatchDay: lobby.nextMatchDay,
+        nextScheduledMatchDay: scheduledMatchDay,
+        isActive: lobby.isActive,
+        admin: lobby.admin,
         totalMatches,
         playedMatches,
         remainingMatches: totalMatches - playedMatches,
-        leagueComplete,
-        currentMatchDay: leagueComplete ? 3 : currentMatchDay,
-        matchdayProgress,
+        matchdayComplete,
+        availableMatchDays,
         leagueTable: leagueTable.map((entry, index) => ({
           ...entry,
           position: index + 1,
           goalDifference: entry.goalsFor - entry.goalsAgainst,
           matches: entry.wins + entry.draws + entry.losses
-        })),
-        lobbyStatus: lobby?.status || 'WAITING'
+        }))
       }
     });
   } catch (error) {
@@ -997,51 +1086,3 @@ export const getLeagueStatus = async (req: Request, res: Response): Promise<void
   }
 };
 
-// Helper function to finish league and distribute rewards
-async function finishLeague(lobbyId: string): Promise<void> {
-  try {
-    // Get final league table
-    const leagueTable = await prisma.leagueTable.findMany({
-      where: { lobbyId },
-      orderBy: [
-        { points: 'desc' },
-        { goalsFor: 'desc' },
-        { goalsAgainst: 'asc' }
-      ]
-    });
-
-    // Distribute rewards
-    for (let i = 0; i < leagueTable.length && i < 4; i++) {
-      const position = i + 1;
-      const reward = LEAGUE_REWARDS[position as keyof typeof LEAGUE_REWARDS] || 0;
-      
-      if (reward > 0) {
-        await prisma.user.update({
-          where: { id: leagueTable[i].userId },
-          data: {
-            coins: {
-              increment: reward
-            }
-          }
-        });
-
-        // Update position in league table
-        await prisma.leagueTable.update({
-          where: { id: leagueTable[i].id },
-          data: { position }
-        });
-      }
-    }
-
-    // Update lobby status to FINISHED
-    await prisma.lobby.update({
-      where: { id: lobbyId },
-      data: { status: 'FINISHED' }
-    });
-
-    console.log(`League ${lobbyId} finished. Rewards distributed.`);
-  } catch (error) {
-    console.error('Error finishing league:', error);
-    throw error;
-  }
-}

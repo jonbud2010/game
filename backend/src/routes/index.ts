@@ -7,6 +7,7 @@ import packRoutes from './packRoutes';
 import teamRoutes from './teamRoutes';
 import matchRoutes from './matchRoutes';
 import uploadRoutes from './uploadRoutes';
+import adminRoutes from './adminRoutes';
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.use('/packs', packRoutes);
 router.use('/teams', teamRoutes);
 router.use('/matches', matchRoutes);
 router.use('/uploads', uploadRoutes);
+router.use('/admin', adminRoutes);
 
 // Health check route (already defined in index.ts, but can be organized here too)
 router.get('/health', (req, res) => {
@@ -43,6 +45,7 @@ router.get('/', (req, res) => {
       packs: '/api/packs',
       teams: '/api/teams',
       matches: '/api/matches',
+      admin: '/api/admin',
       league: '/api/league (coming soon)'
     }
   });

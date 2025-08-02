@@ -22,10 +22,11 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  lobbyMembers LobbyMember[]
-  userPlayers  UserPlayer[]
-  teams        Team[]
-  leagueTable  LeagueTable[]
+  lobbyMembers    LobbyMember[]
+  userPlayers     UserPlayer[]
+  teams           Team[]
+  leagueTable     LeagueTable[]
+  administeredLobbies Lobby[]   @relation("LobbyAdmin")
 
   @@map("users")
 }
@@ -37,14 +38,23 @@ model Lobby {
   name       String
   maxPlayers Int         @default(4) @map("max_players")
   status     String      @default("WAITING")
+  adminId    String      @map("admin_id")
+  isActive   Boolean     @default(true) @map("is_active")
+  currentMatchDay Int    @default(1) @map("current_match_day")
+  nextMatchDay   DateTime? @map("next_match_day")
   createdAt  DateTime    @default(now()) @map("created_at")
   updatedAt  DateTime    @updatedAt @map("updated_at")
 
   // Relations
+  admin       User          @relation("LobbyAdmin", fields: [adminId], references: [id], onDelete: Cascade)
   members     LobbyMember[]
   teams       Team[]
   matches     Match[]
   leagueTable LeagueTable[]
+  players     LobbyPlayer[]
+  packs       LobbyPack[]
+  formations  LobbyFormation[]
+  scheduledMatchDays ScheduledMatchDay[]
 
   @@map("lobbies")
 }
@@ -79,9 +89,10 @@ model Player {
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
   // Relations
-  userPlayers UserPlayer[]
-  teamPlayers TeamPlayer[]
-  packPlayers PackPlayer[]
+  userPlayers   UserPlayer[]
+  teamPlayers   TeamPlayer[]
+  packPlayers   PackPlayer[]
+  lobbyPlayers  LobbyPlayer[]
 
   @@map("players")
 }
@@ -97,7 +108,8 @@ model Formation {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  teams Team[]
+  teams           Team[]
+  lobbyFormations LobbyFormation[]
 
   @@map("formations")
 }
@@ -113,6 +125,7 @@ model Pack {
 
   // Relations
   packPlayers PackPlayer[]
+  lobbyPacks  LobbyPack[]
 
   @@map("packs")
 }
@@ -210,6 +223,7 @@ model LeagueTable {
   id           String @id @default(cuid())
   lobbyId      String @map("lobby_id")
   userId       String @map("user_id")
+  matchDay     Int    @map("match_day")
   points       Int    @default(0)
   goalsFor     Int    @default(0) @map("goals_for")
   goalsAgainst Int    @default(0) @map("goals_against")
@@ -222,6 +236,66 @@ model LeagueTable {
   lobby Lobby @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([lobbyId, userId])
+  @@unique([lobbyId, userId, matchDay])
   @@map("league_table")
+}
+
+// Lobby-specific content models for admin management
+model LobbyPlayer {
+  id       String @id @default(cuid())
+  lobbyId  String @map("lobby_id")
+  playerId String @map("player_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  lobby  Lobby  @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([lobbyId, playerId])
+  @@map("lobby_players")
+}
+
+model LobbyPack {
+  id      String @id @default(cuid())
+  lobbyId String @map("lobby_id")
+  packId  String @map("pack_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  lobby Lobby @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  pack  Pack  @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@unique([lobbyId, packId])
+  @@map("lobby_packs")
+}
+
+model LobbyFormation {
+  id          String @id @default(cuid())
+  lobbyId     String @map("lobby_id")
+  formationId String @map("formation_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  lobby     Lobby     @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  formation Formation @relation(fields: [formationId], references: [id], onDelete: Cascade)
+
+  @@unique([lobbyId, formationId])
+  @@map("lobby_formations")
+}
+
+// Scheduled matchday system
+model ScheduledMatchDay {
+  id          String   @id @default(cuid())
+  lobbyId     String   @map("lobby_id")
+  matchDay    Int      @map("match_day")
+  scheduledAt DateTime @map("scheduled_at")
+  executed    Boolean  @default(false)
+  executedAt  DateTime? @map("executed_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  lobby Lobby @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+
+  @@unique([lobbyId, matchDay])
+  @@map("scheduled_match_days")
 }

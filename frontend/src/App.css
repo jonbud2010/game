@@ -46,7 +46,6 @@ a:hover {
 
 /* Home Page */
 .home-page {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
@@ -141,7 +140,6 @@ a:hover {
 .lobby-page,
 .collection-page,
 .pack-store-page {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }

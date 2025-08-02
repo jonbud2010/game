@@ -32,7 +32,7 @@ describe('Pack Integration Tests', () => {
       .send({
         username: `packplayer${testId}`,
         email: `packplayer${testId}@test.com`,
-        password: 'password123'
+        password: 'Password123'
       });
     
     if (playerRegister.status !== 201) {
@@ -45,7 +45,7 @@ describe('Pack Integration Tests', () => {
       .send({
         username: `packadmin${testId}`,
         email: `packadmin${testId}@test.com`,
-        password: 'password123'
+        password: 'Password123'
       });
     
     if (adminRegister.status !== 201) {
@@ -343,7 +343,7 @@ describe('Pack Integration Tests', () => {
           imageUrl: '/test/common.jpg',
           points: 70,
           position: 'ST',
-          color: 'GELB',
+          color: 'YELLOW',
           marketPrice: 50,
           theme: 'Common',
           percentage: 0.7 // 70% chance
@@ -358,7 +358,7 @@ describe('Pack Integration Tests', () => {
           imageUrl: '/test/rare.jpg',
           points: 95,
           position: 'ST',
-          color: 'LILA',
+          color: 'PURPLE',
           marketPrice: 200,
           theme: 'Rare',
           percentage: 0.3 // 30% chance

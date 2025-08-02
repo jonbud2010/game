@@ -6,17 +6,8 @@ import { prisma } from '../db/connection';
  * Handles CRUD operations for football players
  */
 
-// Color mapping for English to German color names
-const englishToGerman: { [key: string]: string } = {
-  'green': 'hellgruen',
-  'darkgreen': 'dunkelgruen',
-  'blue': 'hellblau',
-  'darkblue': 'dunkelblau',
-  'red': 'rot',
-  'yellow': 'gelb',
-  'purple': 'lila',
-  'orange': 'orange'
-};
+// Valid color names (English only - frontend handles translation)
+const validColors = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE', 'ORANGE', 'PINK', 'CYAN'];
 
 // Get all players
 export const getAllPlayers = async (req: Request, res: Response): Promise<void> => {
@@ -129,10 +120,8 @@ export const createPlayer = async (req: Request, res: Response): Promise<void> =
       validationErrors.push(`Position must be one of: ${validPositions.join(', ')}`);
     }
     
-    const validColors = ['dunkelgruen', 'hellgruen', 'dunkelblau', 'hellblau', 'rot', 'gelb', 'lila', 'orange'];
-    
-    if (!color || (!validColors.includes(color.toLowerCase()) && !englishToGerman[color.toLowerCase()])) {
-      validationErrors.push(`Color must be one of: ${validColors.join(', ')} or English equivalents`);
+    if (!color || !validColors.includes(color.toUpperCase())) {
+      validationErrors.push(`Color must be one of: ${validColors.join(', ')}`);
     }
     
     if (marketPrice !== undefined && (typeof marketPrice !== 'number' || marketPrice < 0)) {
@@ -151,11 +140,8 @@ export const createPlayer = async (req: Request, res: Response): Promise<void> =
     // Default imageUrl if not provided (will be updated via file upload)
     const imageUrl = req.body.imageUrl || '/images/players/default.jpg';
     
-    // Convert English color names to German if needed
-    let finalColor = color ? color.toLowerCase() : 'hellgruen';
-    if (englishToGerman[finalColor]) {
-      finalColor = englishToGerman[finalColor];
-    }
+    // Ensure color is uppercase for database storage
+    const finalColor = color ? color.toUpperCase() : 'GREEN';
 
     const player = await prisma.player.create({
       data: {
@@ -163,7 +149,7 @@ export const createPlayer = async (req: Request, res: Response): Promise<void> =
         imageUrl,
         points,
         position,
-        color: finalColor.toUpperCase(),
+        color: finalColor,
         marketPrice: marketPrice || 0,
         theme: theme || 'basic',
         percentage: percentage || 0.05

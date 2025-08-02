@@ -127,3 +127,53 @@ export interface MatchSimulationResponse {
     position: number;
   }[];
 }
+
+// Admin API Types
+export interface CreateLobbyPlayerRequest {
+  name: string;
+  imageUrl?: string;
+  points?: number;
+  position: string;
+  color: string;
+  marketPrice?: number;
+  theme?: string;
+  percentage?: number;
+}
+
+export interface CreateLobbyPackRequest {
+  name: string;
+  imageUrl?: string;
+  price: number;
+  playerIds?: string[];
+}
+
+export interface CreateLobbyFormationRequest {
+  name: string;
+  imageUrl?: string;
+  positions: {
+    x: number;
+    y: number;
+    position: string;
+  }[];
+}
+
+export interface ScheduleMatchDayRequest {
+  scheduledAt: string; // ISO date string
+}
+
+export interface ScheduleMatchDayResponse {
+  matchDay: number;
+  scheduledAt: Date;
+  scheduledMatchDayId: string;
+}
+
+export interface LobbyAdminResponse {
+  isAdmin: boolean;
+  permissions: {
+    canCreatePlayers: boolean;
+    canCreatePacks: boolean;
+    canCreateFormations: boolean;
+    canScheduleMatchDays: boolean;
+    canManageMembers: boolean;
+  };
+}
