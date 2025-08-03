@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
-import { uploadSingleImage, handleUploadError, deleteImageFile } from '../middleware/upload';
+import { handleUploadError, deleteImageFile } from '../middleware/upload';
+import { uploadFormationImage, uploadPackImage, uploadPlayerImage } from '../middleware/uploadFormations';
 import { Request, Response } from 'express';
 
 const router = Router();
@@ -9,7 +10,7 @@ const router = Router();
 router.post('/players', 
   authenticateToken, 
   requireAdmin,
-  ...uploadSingleImage('players'),
+  ...uploadPlayerImage,
   handleUploadError,
   (req: Request, res: Response) => {
     if (!req.body.imageUrl) {
@@ -19,7 +20,7 @@ router.post('/players',
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Player image uploaded successfully',
       data: {
@@ -34,7 +35,7 @@ router.post('/players',
 router.post('/formations', 
   authenticateToken, 
   requireAdmin,
-  ...uploadSingleImage('formations'),
+  ...uploadFormationImage,
   handleUploadError,
   (req: Request, res: Response) => {
     if (!req.body.imageUrl) {
@@ -44,7 +45,7 @@ router.post('/formations',
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Formation image uploaded successfully',
       data: {
@@ -59,7 +60,7 @@ router.post('/formations',
 router.post('/packs', 
   authenticateToken, 
   requireAdmin,
-  ...uploadSingleImage('packs'),
+  ...uploadPackImage,
   handleUploadError,
   (req: Request, res: Response) => {
     if (!req.body.imageUrl) {
@@ -69,7 +70,7 @@ router.post('/packs',
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Pack image uploaded successfully',
       data: {
@@ -88,7 +89,14 @@ router.delete('/:category/:filename',
     try {
       const { category, filename } = req.params;
       
-      // Validate category
+      // Validate category and filename
+      if (!category || !filename) {
+        return res.status(400).json({
+          error: 'Missing parameters',
+          message: 'Category and filename are required'
+        });
+      }
+
       const validCategories = ['players', 'formations', 'packs'];
       if (!validCategories.includes(category)) {
         return res.status(400).json({
@@ -103,7 +111,7 @@ router.delete('/:category/:filename',
       // Delete the file
       await deleteImageFile(imageUrl);
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Image deleted successfully',
         data: {
@@ -114,7 +122,7 @@ router.delete('/:category/:filename',
       });
     } catch (error) {
       console.error('Error deleting image:', error);
-      res.status(500).json({
+      return res.status(500).json({
         error: 'Failed to delete image',
         details: error instanceof Error ? error.message : 'Unknown error'
       });

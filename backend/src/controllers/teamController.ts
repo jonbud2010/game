@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db/client';
-import { calculateTeamChemistry, validateTeamChemistry } from '@football-tcg/shared';
+import { calculateTeamChemistry, validateTeamChemistry, validateTeamPositions, PlayerPosition } from '@football-tcg/shared';
 import { MATCH_SETTINGS } from '@football-tcg/shared';
+import { validateUniquePlayersInMatchday, checkPlayerUsageInMatchday, getUsedPlayersInMatchday } from '../utils/teamValidation';
+import { createDummyTeamPlayers } from '../utils/dummyPlayers';
 
 /**
  * Team Controller
@@ -181,7 +183,7 @@ export const createTeam = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Validate players array
+    // Validate players array if provided
     if (players && players.length > 0) {
       if (players.length !== MATCH_SETTINGS.PLAYERS_PER_TEAM) {
         res.status(400).json({ 
@@ -190,18 +192,73 @@ export const createTeam = async (req: Request, res: Response): Promise<void> => 
         return;
       }
 
-      // Validate all players belong to user
+      // Validate all players belong to user (with test mode for dummy/lobby players)
       const playerIds = players.map((p: any) => p.playerId).filter(Boolean);
       if (playerIds.length > 0) {
-        const userPlayers = await prisma.userPlayer.findMany({
-          where: {
-            userId,
-            playerId: { in: playerIds }
-          }
+        // Get all requested players to check their themes
+        const requestedPlayers = await prisma.player.findMany({
+          where: { id: { in: playerIds } },
+          select: { id: true, theme: true }
         });
 
-        if (userPlayers.length !== playerIds.length) {
-          res.status(403).json({ error: 'Some players do not belong to user' });
+        // Separate dummy/lobby players (available to everyone) from regular players
+        const testPlayers = requestedPlayers.filter(p => 
+          p.theme === 'DUMMY' || p.theme === 'LOBBY'
+        ).map(p => p.id);
+        
+        const regularPlayerIds = playerIds.filter((id: string) => !testPlayers.includes(id));
+
+        // Only check ownership for regular players
+        if (regularPlayerIds.length > 0) {
+          const userPlayers = await prisma.userPlayer.findMany({
+            where: {
+              userId,
+              playerId: { in: regularPlayerIds }
+            }
+          });
+
+          if (userPlayers.length !== regularPlayerIds.length) {
+            res.status(403).json({ error: 'Some players do not belong to user' });
+            return;
+          }
+        }
+
+        // Validate unique players in matchday
+        const uniqueValidation = await validateUniquePlayersInMatchday(
+          userId,
+          lobbyId,
+          matchDay,
+          playerIds
+        );
+
+        if (!uniqueValidation.isValid) {
+          res.status(409).json({ 
+            error: 'Player uniqueness violation',
+            details: uniqueValidation.errors
+          });
+          return;
+        }
+
+        // Validate player positions match formation
+        const actualPlayers = await prisma.player.findMany({
+          where: { id: { in: playerIds } }
+        });
+
+        const formationPositions: PlayerPosition[] = JSON.parse(formation.positions);
+        const playersWithPositions = players.map((p: any, index: number) => {
+          const player = actualPlayers.find(ap => ap.id === p.playerId);
+          return {
+            position: player?.position as PlayerPosition,
+            name: player?.name
+          };
+        }).filter((p: any) => p.position); // Only validate non-dummy players
+
+        const positionValidation = validateTeamPositions(playersWithPositions, formationPositions);
+        if (!positionValidation.isValid) {
+          res.status(400).json({
+            error: 'Player position validation failed',
+            details: positionValidation.errors
+          });
           return;
         }
       }
@@ -221,20 +278,27 @@ export const createTeam = async (req: Request, res: Response): Promise<void> => 
       }
     });
 
-    // Add players if provided
+    // Add players (either provided or dummy players)
+    let teamPlayersData;
+    
     if (players && players.length > 0) {
-      const teamPlayersData = players.map((player: any, index: number) => ({
+      // Use provided players
+      teamPlayersData = players.map((player: any, index: number) => ({
         teamId: team.id,
         playerId: player.playerId,
         position: index,
         points: player.points || 0,
         color: player.color || ''
       }));
-
-      await prisma.teamPlayer.createMany({
-        data: teamPlayersData
-      });
+    } else {
+      // Auto-populate with dummy players based on formation
+      const formationPositions = JSON.parse(formation.positions);
+      teamPlayersData = createDummyTeamPlayers(team.id, formationPositions);
     }
+
+    await prisma.teamPlayer.createMany({
+      data: teamPlayersData
+    });
 
     // Fetch complete team data
     const completeTeam = await prisma.team.findUnique({
@@ -302,18 +366,74 @@ export const updateTeam = async (req: Request, res: Response): Promise<void> => 
         return;
       }
 
-      // Validate all players belong to user
+      // Validate all players belong to user (with test mode for dummy/lobby players)
       const playerIds = players.map((p: any) => p.playerId).filter(Boolean);
       if (playerIds.length > 0) {
-        const userPlayers = await prisma.userPlayer.findMany({
-          where: {
-            userId,
-            playerId: { in: playerIds }
-          }
+        // Get all requested players to check their themes
+        const requestedPlayers = await prisma.player.findMany({
+          where: { id: { in: playerIds } },
+          select: { id: true, theme: true }
         });
 
-        if (userPlayers.length !== playerIds.length) {
-          res.status(403).json({ error: 'Some players do not belong to user' });
+        // Separate dummy/lobby players (available to everyone) from regular players
+        const testPlayers = requestedPlayers.filter(p => 
+          p.theme === 'DUMMY' || p.theme === 'LOBBY'
+        ).map(p => p.id);
+        
+        const regularPlayerIds = playerIds.filter((id: string) => !testPlayers.includes(id));
+
+        // Only check ownership for regular players
+        if (regularPlayerIds.length > 0) {
+          const userPlayers = await prisma.userPlayer.findMany({
+            where: {
+              userId,
+              playerId: { in: regularPlayerIds }
+            }
+          });
+
+          if (userPlayers.length !== regularPlayerIds.length) {
+            res.status(403).json({ error: 'Some players do not belong to user' });
+            return;
+          }
+        }
+
+        // Validate unique players in matchday (excluding current team)
+        const uniqueValidation = await validateUniquePlayersInMatchday(
+          userId,
+          existingTeam.lobbyId,
+          existingTeam.matchDay,
+          playerIds,
+          id // Exclude current team from validation
+        );
+
+        if (!uniqueValidation.isValid) {
+          res.status(409).json({ 
+            error: 'Player uniqueness violation',
+            details: uniqueValidation.errors
+          });
+          return;
+        }
+
+        // Validate player positions match formation
+        const actualPlayers = await prisma.player.findMany({
+          where: { id: { in: playerIds } }
+        });
+
+        const formationPositions: PlayerPosition[] = JSON.parse(existingTeam.formation.positions);
+        const playersWithPositions = players.map((p: any, index: number) => {
+          const player = actualPlayers.find(ap => ap.id === p.playerId);
+          return {
+            position: player?.position as PlayerPosition,
+            name: player?.name
+          };
+        }).filter((p: any) => p.position); // Only validate non-dummy players
+
+        const positionValidation = validateTeamPositions(playersWithPositions, formationPositions);
+        if (!positionValidation.isValid) {
+          res.status(400).json({
+            error: 'Player position validation failed',
+            details: positionValidation.errors
+          });
           return;
         }
       }
@@ -494,6 +614,85 @@ export const validateTeam = async (req: Request, res: Response): Promise<void> =
     console.error('Error validating team:', error);
     res.status(500).json({
       error: 'Failed to validate team',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Check player availability in matchday
+export const checkPlayerAvailability = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { lobbyId, matchDay } = req.params;
+    const { playerIds } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    if (!lobbyId || !matchDay) {
+      res.status(400).json({ error: 'Lobby ID and match day are required' });
+      return;
+    }
+
+    if (!playerIds || !Array.isArray(playerIds)) {
+      res.status(400).json({ error: 'Player IDs array is required' });
+      return;
+    }
+
+    const usageChecks = await checkPlayerUsageInMatchday(
+      userId,
+      lobbyId,
+      parseInt(matchDay),
+      playerIds
+    );
+
+    res.json({
+      success: true,
+      data: usageChecks
+    });
+  } catch (error) {
+    console.error('Error checking player availability:', error);
+    res.status(500).json({
+      error: 'Failed to check player availability',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Get all used players in a matchday
+export const getUsedPlayersInMatchdayEndpoint = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { lobbyId, matchDay } = req.params;
+    const { excludeTeamId } = req.query;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    if (!lobbyId || !matchDay) {
+      res.status(400).json({ error: 'Lobby ID and match day are required' });
+      return;
+    }
+
+    const usedPlayerIds = await getUsedPlayersInMatchday(
+      userId,
+      lobbyId,
+      parseInt(matchDay),
+      excludeTeamId as string
+    );
+
+    res.json({
+      success: true,
+      data: usedPlayerIds
+    });
+  } catch (error) {
+    console.error('Error fetching used players:', error);
+    res.status(500).json({
+      error: 'Failed to fetch used players',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }

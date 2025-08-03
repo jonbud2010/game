@@ -49,6 +49,15 @@
     "created_at": "Erstellt am",
     "updated_at": "Aktualisiert am"
   },
+  "themes": {
+    "TEN_D": "10D",
+    "EIGHT_E": "8E", 
+    "ROWING": "Rudern",
+    "HP": "HP",
+    "FOOTBALL": "Fußball",
+    "MARVEL": "Marvel",
+    "all_themes": "Alle Themen"
+  },
   "status": {
     "loading": "Lädt...",
     "error": "Fehler",

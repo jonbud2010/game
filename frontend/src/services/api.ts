@@ -504,6 +504,81 @@ class ApiService {
   async getUserCollection(): Promise<ApiResponse<UserPlayer[]>> {
     return this.makeRequest<ApiResponse<UserPlayer[]>>('/players/collection/my');
   }
+
+  // Theme Reward methods
+  async getThemeRewardsHistory(lobbyId: string, page: number = 1, limit: number = 10): Promise<ApiResponse<{
+    themeRewards: Array<{
+      id: string;
+      theme: string;
+      week: number;
+      year: number;
+      executedAt: Date;
+      winners: Array<{
+        id: string;
+        userId: string;
+        username: string;
+        rank: number;
+        points: number;
+        coinsAwarded: number;
+      }>;
+    }>;
+    totalPages: number;
+    currentPage: number;
+  }>> {
+    return this.makeRequest<ApiResponse<any>>(`/lobbies/${lobbyId}/theme-rewards/history?page=${page}&limit=${limit}`);
+  }
+
+  async getCurrentThemeStandings(lobbyId: string): Promise<ApiResponse<{
+    standings: Array<{
+      theme: string;
+      users: Array<{
+        userId: string;
+        username: string;
+        highestPlayerPoints: number;
+        highestPlayerName: string;
+        rank: number;
+        potentialReward: number;
+      }>;
+    }>;
+    nextExecution: Date;
+  }>> {
+    return this.makeRequest<ApiResponse<any>>(`/lobbies/${lobbyId}/theme-rewards/standings`);
+  }
+
+  async getUserThemeRewardSummary(lobbyId: string): Promise<ApiResponse<{
+    totalEarnings: number;
+    totalWins: number;
+    recentWins: Array<{
+      theme: string;
+      rank: number;
+      points: number;
+      coinsAwarded: number;
+      week: number;
+      year: number;
+    }>;
+    currentStandings: Array<{
+      theme: string;
+      rank: number;
+      points: number;
+      playerName: string;
+      potentialReward: number;
+    }>;
+    nextExecution: Date;
+  }>> {
+    return this.makeRequest<ApiResponse<any>>(`/lobbies/${lobbyId}/theme-rewards/user-summary`);
+  }
+
+  async executeThemeRewards(lobbyId: string, week?: number, year?: number): Promise<ApiResponse<{
+    success: boolean;
+    executedThemes: string[];
+    totalCoinsAwarded: number;
+    message: string;
+  }>> {
+    return this.makeRequest<ApiResponse<any>>(`/lobbies/${lobbyId}/theme-rewards/execute`, {
+      method: 'POST',
+      body: JSON.stringify({ week, year }),
+    });
+  }
 }
 
 export const apiService = new ApiService();

@@ -14,7 +14,7 @@ import type { LobbyAdminRequest } from '../middleware/adminAuth';
 /**
  * Create a new player within the lobby
  */
-export const createLobbyPlayer = async (req: LobbyAdminRequest, res: Response): Promise<void> => {
+export const createLobbyPlayer = async (req: Request, res: Response): Promise<void> => {
   try {
     const lobbyId = req.params.lobbyId!;
     const { name, imageUrl, points, position, color, marketPrice, theme, percentage } = req.body;
@@ -74,7 +74,7 @@ export const createLobbyPlayer = async (req: LobbyAdminRequest, res: Response): 
 /**
  * Get all players within the lobby
  */
-export const getLobbyPlayers = async (req: LobbyAdminRequest, res: Response): Promise<void> => {
+export const getLobbyPlayers = async (req: Request, res: Response): Promise<void> => {
   try {
     const lobbyId = req.params.lobbyId!;
 
@@ -108,7 +108,7 @@ export const getLobbyPlayers = async (req: LobbyAdminRequest, res: Response): Pr
 /**
  * Update a player within the lobby
  */
-export const updateLobbyPlayer = async (req: LobbyAdminRequest, res: Response): Promise<void> => {
+export const updateLobbyPlayer = async (req: Request, res: Response): Promise<void> => {
   try {
     const lobbyId = req.params.lobbyId!;
     const playerId = req.params.playerId!;
@@ -156,7 +156,7 @@ export const updateLobbyPlayer = async (req: LobbyAdminRequest, res: Response): 
 /**
  * Delete a player from the lobby
  */
-export const deleteLobbyPlayer = async (req: LobbyAdminRequest, res: Response): Promise<void> => {
+export const deleteLobbyPlayer = async (req: Request, res: Response): Promise<void> => {
   try {
     const lobbyId = req.params.lobbyId!;
     const playerId = req.params.playerId!;
@@ -216,7 +216,7 @@ export const deleteLobbyPlayer = async (req: LobbyAdminRequest, res: Response): 
 /**
  * Create a new pack within the lobby
  */
-export const createLobbyPack = async (req: LobbyAdminRequest, res: Response): Promise<void> => {
+export const createLobbyPack = async (req: Request, res: Response): Promise<void> => {
   try {
     const lobbyId = req.params.lobbyId!;
     const { name, imageUrl, price, playerIds } = req.body;
@@ -314,7 +314,7 @@ export const createLobbyPack = async (req: LobbyAdminRequest, res: Response): Pr
 /**
  * Get all packs within the lobby
  */
-export const getLobbyPacks = async (req: LobbyAdminRequest, res: Response): Promise<void> => {
+export const getLobbyPacks = async (req: Request, res: Response): Promise<void> => {
   try {
     const lobbyId = req.params.lobbyId!;
 
@@ -364,7 +364,7 @@ export const getLobbyPacks = async (req: LobbyAdminRequest, res: Response): Prom
 /**
  * Create a new formation within the lobby
  */
-export const createLobbyFormation = async (req: LobbyAdminRequest, res: Response): Promise<void> => {
+export const createLobbyFormation = async (req: Request, res: Response): Promise<void> => {
   try {
     const lobbyId = req.params.lobbyId!;
     const { name, imageUrl, positions } = req.body;
@@ -434,7 +434,7 @@ export const createLobbyFormation = async (req: LobbyAdminRequest, res: Response
 /**
  * Get all formations within the lobby
  */
-export const getLobbyFormations = async (req: LobbyAdminRequest, res: Response): Promise<void> => {
+export const getLobbyFormations = async (req: Request, res: Response): Promise<void> => {
   try {
     const lobbyId = req.params.lobbyId!;
 

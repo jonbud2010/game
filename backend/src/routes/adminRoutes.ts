@@ -100,7 +100,7 @@ router.post('/lobbies/:lobbyId/schedule-matchday', authenticateToken, requireLob
  */
 router.get('/lobbies/:lobbyId/permissions', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const { lobbyId } = req.params;
 
     if (!userId) {

@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../db/connection';
-import type { AuthenticatedRequest } from './auth';
 
-export interface LobbyAdminRequest extends AuthenticatedRequest {
+export interface LobbyAdminRequest extends Request {
   lobby?: {
     id: string;
     name: string;
@@ -17,12 +16,12 @@ export interface LobbyAdminRequest extends AuthenticatedRequest {
  * Requires the lobbyId to be present in req.params.lobbyId
  */
 export const requireLobbyAdmin = async (
-  req: LobbyAdminRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const lobbyId = req.params.lobbyId;
 
     if (!userId) {
@@ -97,12 +96,12 @@ export const requireLobbyAdmin = async (
  * Less restrictive than admin check - any lobby member can access
  */
 export const requireLobbyMember = async (
-  req: LobbyAdminRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const lobbyId = req.params.lobbyId;
 
     if (!userId) {
@@ -126,17 +125,8 @@ export const requireLobbyMember = async (
       where: { id: lobbyId },
       include: {
         members: {
-          where: { userId },
-          select: { userId: true }
+          where: { userId }
         }
-      },
-      select: {
-        id: true,
-        name: true,
-        adminId: true,
-        isActive: true,
-        currentMatchDay: true,
-        members: true
       }
     });
 
@@ -191,12 +181,12 @@ export const requireLobbyMember = async (
  * Useful for operations that should be allowed by both lobby admins and system admins
  */
 export const requireLobbyAdminOrGlobalAdmin = async (
-  req: LobbyAdminRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const userRole = req.user?.role;
     const lobbyId = req.params.lobbyId;
 

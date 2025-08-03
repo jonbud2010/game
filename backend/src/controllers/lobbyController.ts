@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db/connection';
-import type { AuthenticatedRequest } from '../middleware/auth';
 
 export const getAllLobbies = async (req: Request, res: Response): Promise<Response> => {
   try {
@@ -135,10 +134,10 @@ export const getLobbyById = async (req: Request, res: Response): Promise<Respons
   }
 };
 
-export const createLobby = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+export const createLobby = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { name } = req.body;
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     // Additional validation (Joi validation happens in middleware, but double-check for safety)
     const trimmedName = name?.trim();
@@ -251,10 +250,10 @@ export const createLobby = async (req: AuthenticatedRequest, res: Response): Pro
   }
 };
 
-export const joinLobby = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+export const joinLobby = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { id } = req.params;
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     // Check if user is already in a lobby
     const existingMembership = await prisma.lobbyMember.findFirst({
@@ -409,10 +408,10 @@ export const joinLobby = async (req: AuthenticatedRequest, res: Response): Promi
   }
 };
 
-export const leaveLobby = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+export const leaveLobby = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { id } = req.params;
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
 
     // Check if user is in this lobby
     const membership = await prisma.lobbyMember.findFirst({
@@ -511,10 +510,10 @@ export const leaveLobby = async (req: AuthenticatedRequest, res: Response): Prom
 /**
  * Schedule the next matchday for a lobby (admin only)
  */
-export const scheduleNextMatchDay = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+export const scheduleNextMatchDay = async (req: Request, res: Response): Promise<Response> => {
   try {
     const id = req.params.id!;
-    const userId = req.user!.userId;
+    const userId = req.user!.id;
     const { scheduledAt } = req.body;
 
     // Check if user is lobby admin

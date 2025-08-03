@@ -8,6 +8,12 @@ import {
   joinLobby,
   leaveLobby
 } from '../controllers/lobbyController';
+import {
+  getThemeRewardsHistory,
+  getCurrentThemeStandings,
+  executeThemeRewardsManually,
+  getUserThemeRewardSummary
+} from '../controllers/themeRewardController';
 
 const router = Router();
 
@@ -28,5 +34,18 @@ router.post('/:id/join', validateId, joinLobby);
 
 // Leave lobby
 router.post('/:id/leave', validateId, leaveLobby);
+
+// Theme Reward Routes
+// Get theme reward history for a lobby
+router.get('/:id/theme-rewards/history', validateId, getThemeRewardsHistory);
+
+// Get current theme standings for a lobby
+router.get('/:id/theme-rewards/standings', validateId, getCurrentThemeStandings);
+
+// Get user's theme reward summary for a lobby
+router.get('/:id/theme-rewards/user-summary', validateId, getUserThemeRewardSummary);
+
+// Manually execute theme rewards (admin only)
+router.post('/:id/theme-rewards/execute', validateId, executeThemeRewardsManually);
 
 export default router;

@@ -118,22 +118,23 @@ defineFeature(feature, (test) => {
       expect(updatedLobby?.status).toBe(LobbyStatus.IN_PROGRESS);
     });
 
-    and('18 Matches sollten generiert werden (6 pro Spieltag)', async () => {
+    and('6 Matches sollten generiert werden (2 pro Spieltag)', async () => {
       const matches = await testDb.getPrisma().match.findMany({
         where: { leagueId: response.body.league.id }
       });
-      expect(matches).toHaveLength(18);
+      expect(matches).toHaveLength(6);
       
-      // Check 6 matches per matchday
+      // Check 2 matches per matchday
       for (let matchday = 1; matchday <= 3; matchday++) {
         const matchdayMatches = matches.filter(m => m.matchday === matchday);
-        expect(matchdayMatches).toHaveLength(6);
+        expect(matchdayMatches).toHaveLength(2);
       }
     });
 
-    and('jeder Spieler sollte gegen jeden anderen 3 Mal antreten', () => {
-      // With 4 players, each plays 3 matches per matchday (3 matchdays = 9 total matches each)
-      // 4 players × 9 matches each ÷ 2 (since each match involves 2 players) = 18 matches
+    and('jeder Spieler sollte gegen jeden anderen 1 Mal antreten', () => {
+      // With 4 players, round-robin = C(4,2) = 6 matches total
+      // Distributed across 3 matchdays = 2 matches per matchday
+      // Each player plays against every other player exactly once
       expect(testUsers).toHaveLength(4);
     });
 

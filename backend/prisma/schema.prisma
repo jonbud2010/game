@@ -27,6 +27,7 @@ model User {
   teams           Team[]
   leagueTable     LeagueTable[]
   administeredLobbies Lobby[]   @relation("LobbyAdmin")
+  themeRewardWinners ThemeRewardWinner[]
 
   @@map("users")
 }
@@ -55,6 +56,7 @@ model Lobby {
   packs       LobbyPack[]
   formations  LobbyFormation[]
   scheduledMatchDays ScheduledMatchDay[]
+  themeRewards ThemeReward[]
 
   @@map("lobbies")
 }
@@ -298,4 +300,42 @@ model ScheduledMatchDay {
 
   @@unique([lobbyId, matchDay])
   @@map("scheduled_match_days")
+}
+
+// Theme Reward System
+model ThemeReward {
+  id        String   @id @default(cuid())
+  lobbyId   String   @map("lobby_id")
+  theme     String
+  week      Int
+  year      Int
+  executedAt DateTime @map("executed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  lobby   Lobby              @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  winners ThemeRewardWinner[]
+
+  @@unique([lobbyId, theme, week, year])
+  @@map("theme_rewards")
+}
+
+model ThemeRewardWinner {
+  id            String @id @default(cuid())
+  themeRewardId String @map("theme_reward_id")
+  userId        String @map("user_id")
+  theme         String
+  rank          Int
+  points        Int // Player points that earned this ranking
+  coinsAwarded  Int    @map("coins_awarded")
+  week          Int
+  year          Int
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  themeReward ThemeReward @relation(fields: [themeRewardId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([themeRewardId, rank])
+  @@map("theme_reward_winners")
 }

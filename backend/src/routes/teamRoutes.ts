@@ -7,7 +7,9 @@ import {
   createTeam,
   updateTeam,
   deleteTeam,
-  validateTeam
+  validateTeam,
+  checkPlayerAvailability,
+  getUsedPlayersInMatchdayEndpoint
 } from '../controllers/teamController';
 
 const router = Router();
@@ -22,5 +24,9 @@ router.post('/', createTeam); // Create new team
 router.put('/:id', validateId, updateTeam); // Update team
 router.delete('/:id', validateId, deleteTeam); // Delete team
 router.get('/:id/validate', validateId, validateTeam); // Validate team chemistry and composition
+
+// Player availability routes
+router.post('/lobby/:lobbyId/matchday/:matchDay/check-availability', checkPlayerAvailability); // Check if players are available
+router.get('/lobby/:lobbyId/matchday/:matchDay/used-players', getUsedPlayersInMatchdayEndpoint); // Get used players in matchday
 
 export default router;

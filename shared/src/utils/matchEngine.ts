@@ -288,8 +288,68 @@ export function simulateCompleteMatch(homeTeam: TeamWithPlayers, awayTeam: TeamW
 }
 
 /**
+ * Generate matches for a specific matchday in a 4-player league (round-robin distribution)
+ * Each matchday has exactly 2 matches
+ * Matchday 1: (1,2), (3,4)
+ * Matchday 2: (1,3), (2,4) 
+ * Matchday 3: (1,4), (2,3)
+ */
+export function generateMatchdayMatches(teams: TeamWithPlayers[], matchDay: number): Array<{
+  homeTeam: TeamWithPlayers;
+  awayTeam: TeamWithPlayers;
+  matchNumber: number;
+}> {
+  if (teams.length !== 4) {
+    throw new Error('Matchday generation requires exactly 4 teams');
+  }
+  
+  if (matchDay < 1 || matchDay > 3) {
+    throw new Error('Matchday must be between 1 and 3');
+  }
+  
+  // Round-robin schedule for 4 teams distributed across 3 matchdays
+  const roundRobinSchedule = [
+    [[0, 1], [2, 3]], // Matchday 1
+    [[0, 2], [1, 3]], // Matchday 2
+    [[0, 3], [1, 2]]  // Matchday 3
+  ];
+
+  const currentMatchDayIndex = matchDay - 1;
+  const matchPairs = roundRobinSchedule[currentMatchDayIndex];
+  
+  if (!matchPairs) {
+    throw new Error(`Invalid matchday: ${matchDay}. Must be between 1 and 3.`);
+  }
+  
+  const matches: Array<{
+    homeTeam: TeamWithPlayers;
+    awayTeam: TeamWithPlayers;
+    matchNumber: number;
+  }> = [];
+  
+  matchPairs.forEach((pair, index) => {
+    const [homeIndex, awayIndex] = pair;
+    if (homeIndex != null && awayIndex != null && 
+        homeIndex < teams.length && awayIndex < teams.length) {
+      const homeTeam = teams[homeIndex];
+      const awayTeam = teams[awayIndex];
+      if (homeTeam && awayTeam) {
+        matches.push({
+          homeTeam,
+          awayTeam,
+          matchNumber: index + 1
+        });
+      }
+    }
+  });
+  
+  return matches;
+}
+
+/**
  * Generate all matches for a 4-player league (round-robin)
  * Returns 6 matches: each player plays against every other player once
+ * This function generates all matches across all matchdays for league simulation
  */
 export function generateLeagueMatches(teams: TeamWithPlayers[]): Array<{
   homeTeam: TeamWithPlayers;
@@ -308,19 +368,16 @@ export function generateLeagueMatches(teams: TeamWithPlayers[]): Array<{
   
   let matchNumber = 1;
   
-  // Generate all unique pairings
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      const homeTeam = teams[i];
-      const awayTeam = teams[j];
-      if (homeTeam && awayTeam) {
-        matches.push({
-          homeTeam,
-          awayTeam,
-          matchNumber: matchNumber++
-        });
-      }
-    }
+  // Generate all unique pairings across all matchdays
+  for (let matchDay = 1; matchDay <= 3; matchDay++) {
+    const matchdayMatches = generateMatchdayMatches(teams, matchDay);
+    matchdayMatches.forEach(match => {
+      matches.push({
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        matchNumber: matchNumber++
+      });
+    });
   }
   
   return matches;

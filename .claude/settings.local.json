@@ -104,7 +104,9 @@
       "Bash(yarn workspace @football-tcg/backend lint --no-eslintrc --config ../../.eslintrc.js src/controllers/lobbyController.ts src/middleware/validation.ts)",
       "Bash(yarn workspace @football-tcg/backend lint:*)",
       "Bash(yarn workspace:*)",
-      "Bash(timeout 10s yarn workspace @football-tcg/backend tsx src/index.ts)"
+      "Bash(timeout 10s yarn workspace @football-tcg/backend tsx src/index.ts)",
+      "Bash(timeout 10s yarn tsx:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": []
   }

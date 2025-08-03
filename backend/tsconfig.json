@@ -25,12 +25,14 @@
     }
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "src/step-definitions/**/*.ts"
   ],
   "references": [
     { "path": "../shared" }

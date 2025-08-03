@@ -233,5 +233,222 @@ describe('Player Integration Tests', () => {
         expect(response.body.error).toBe('Admin access required');
       });
     });
+
+    describe('PUT /api/players/:id', () => {
+      it('should allow admin to update existing player', async () => {
+        const updateData = {
+          name: 'Updated Test Player',
+          points: 92,
+          position: 'ST',
+          color: 'RED',
+          marketPrice: 150,
+          theme: 'Updated Theme',
+          percentage: 0.1
+        };
+
+        const response = await request(app)
+          .put(`/api/players/${testPlayers[0].id}`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send(updateData)
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data).toMatchObject({
+          id: testPlayers[0].id,
+          name: 'Updated Test Player',
+          points: 92,
+          position: 'ST',
+          color: 'RED',
+          marketPrice: 150,
+          theme: 'Updated Theme',
+          percentage: 0.1
+        });
+
+        // Verify player was updated in database
+        const updatedPlayer = await testDb.player.findUnique({
+          where: { id: testPlayers[0].id }
+        });
+
+        expect(updatedPlayer).toBeTruthy();
+        expect(updatedPlayer!.name).toBe('Updated Test Player');
+        expect(updatedPlayer!.points).toBe(92);
+      });
+
+      it('should reject player update by non-admin', async () => {
+        const updateData = {
+          name: 'Unauthorized Update',
+          points: 85,
+          position: 'ST',
+          color: 'RED',
+          marketPrice: 100,
+          theme: 'Test'
+        };
+
+        const response = await request(app)
+          .put(`/api/players/${testPlayers[0].id}`)
+          .set('Authorization', `Bearer ${playerToken}`)
+          .send(updateData)
+          .expect(403);
+
+        expect(response.body.error).toBe('Admin access required');
+      });
+
+      it('should return 404 when updating non-existent player', async () => {
+        const updateData = {
+          name: 'Non-existent Player',
+          points: 85,
+          position: 'ST',
+          color: 'RED',
+          marketPrice: 100,
+          theme: 'Test'
+        };
+
+        const response = await request(app)
+          .put('/api/players/non-existent-id')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send(updateData)
+          .expect(404);
+
+        expect(response.body.success).toBe(false);
+        expect(response.body.error).toBe('Player not found');
+      });
+    });
+
+    describe('DELETE /api/players/:id', () => {
+      it('should allow admin to delete player with no references', async () => {
+        // Create a player that won't have any references
+        const newPlayer = await testDb.player.create({
+          data: {
+            name: 'Player to Delete',
+            imageUrl: '/images/players/default.jpg',
+            points: 75,
+            position: 'CB',
+            color: 'BLUE',
+            marketPrice: 90,
+            theme: 'Test',
+            percentage: 0.05
+          }
+        });
+
+        const response = await request(app)
+          .delete(`/api/players/${newPlayer.id}`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.message).toBe('Player deleted successfully');
+        expect(response.body.data.id).toBe(newPlayer.id);
+
+        // Verify player was deleted from database
+        const deletedPlayer = await testDb.player.findUnique({
+          where: { id: newPlayer.id }
+        });
+
+        expect(deletedPlayer).toBeNull();
+      });
+
+      it('should require force=true to delete player with references', async () => {
+        // Create a player and add it to a user's collection first
+        const playerWithReferences = await testDb.player.create({
+          data: {
+            name: 'Player with References for Delete Test',
+            imageUrl: '/images/players/default.jpg',
+            points: 85,
+            position: 'RW',
+            color: 'PURPLE',
+            marketPrice: 110,
+            theme: 'Test',
+            percentage: 0.06
+          }
+        });
+
+        const user = await testDb.user.findFirst({
+          where: { username: 'playeruser' }
+        });
+
+        await testDb.userPlayer.create({
+          data: {
+            userId: user!.id,
+            playerId: playerWithReferences.id
+          }
+        });
+
+        const response = await request(app)
+          .delete(`/api/players/${playerWithReferences.id}`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(400);
+
+        expect(response.body.success).toBe(false);
+        expect(response.body.error).toBe('Cannot delete player');
+        expect(response.body.message).toContain('Use ?force=true to force delete');
+        expect(response.body.forceDeleteUrl).toBe(`/players/${playerWithReferences.id}?force=true`);
+      });
+
+      it('should allow admin to force delete player with references', async () => {
+        // Create a player and add it to a user's collection
+        const playerWithReferences = await testDb.player.create({
+          data: {
+            name: 'Player with References',
+            imageUrl: '/images/players/default.jpg',
+            points: 80,
+            position: 'CM',
+            color: 'GREEN',
+            marketPrice: 100,
+            theme: 'Test',
+            percentage: 0.05
+          }
+        });
+
+        const user = await testDb.user.findFirst({
+          where: { username: 'playeruser' }
+        });
+
+        await testDb.userPlayer.create({
+          data: {
+            userId: user!.id,
+            playerId: playerWithReferences.id
+          }
+        });
+
+        const response = await request(app)
+          .delete(`/api/players/${playerWithReferences.id}?force=true`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(200);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.message).toBe('Player deleted successfully');
+
+        // Verify player and references were deleted from database
+        const deletedPlayer = await testDb.player.findUnique({
+          where: { id: playerWithReferences.id }
+        });
+
+        const userPlayerReferences = await testDb.userPlayer.findMany({
+          where: { playerId: playerWithReferences.id }
+        });
+
+        expect(deletedPlayer).toBeNull();
+        expect(userPlayerReferences).toHaveLength(0);
+      });
+
+      it('should reject player deletion by non-admin', async () => {
+        const response = await request(app)
+          .delete(`/api/players/${testPlayers[0].id}`)
+          .set('Authorization', `Bearer ${playerToken}`)
+          .expect(403);
+
+        expect(response.body.error).toBe('Admin access required');
+      });
+
+      it('should return 404 when deleting non-existent player', async () => {
+        const response = await request(app)
+          .delete('/api/players/non-existent-id')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(404);
+
+        expect(response.body.success).toBe(false);
+        expect(response.body.error).toBe('Player not found');
+      });
+    });
   });
 });

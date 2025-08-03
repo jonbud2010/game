@@ -2,26 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db/client';
 
-export interface AuthenticatedRequest extends Request {
-  userId?: string;
-  user?: {
-    userId: string;
-    id: string;
-    username: string;
-    email: string;
-    role: string;
-  };
-}
-
-interface AuthRequest extends Request {
-  userId?: string;
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-    role: string;
-  };
-}
+// Use global Request type extension from types/express.d.ts
 
 interface JwtPayload {
   userId: string;
@@ -30,7 +11,7 @@ interface JwtPayload {
 }
 
 // Authenticate JWT token
-export async function authenticateToken(req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> {
+export async function authenticateToken(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -80,7 +61,7 @@ export async function authenticateToken(req: AuthRequest, res: Response, next: N
 }
 
 // Require admin role
-export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): Response | void {
+export function requireAdmin(req: Request, res: Response, next: NextFunction): Response | void {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -93,7 +74,7 @@ export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction
 }
 
 // Optional authentication (doesn't fail if no token)
-export async function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
+export async function optionalAuth(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];

@@ -1,5 +1,6 @@
 // TODO: Replace with Vitest-compatible BDD library
 // import { defineFeature, loadFeature } from 'jest-cucumber';
+import { expect } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { 
@@ -62,7 +63,7 @@ defineFeature(feature, (test) => {
     given('ich habe keine Teams für die aktuelle Lobby', async () => {
       testUser = await factories.createUser();
       testLobby = await factories.createLobby({
-        createdById: testUser.id
+        adminId: testUser.id
       });
       userToken = factories.generateJwtToken(testUser.id, testUser.role);
     });
@@ -123,7 +124,7 @@ defineFeature(feature, (test) => {
     given('ich habe ein Team "Chemistry Team"', async () => {
       testUser = await factories.createUser();
       testLobby = await factories.createLobby({
-        createdById: testUser.id
+        adminId: testUser.id
       });
       testTeam = await factories.createTeam({
         name: 'Chemistry Team',
@@ -194,11 +195,11 @@ defineFeature(feature, (test) => {
     given('ich habe bereits ein Team für Spieltag 1', async () => {
       testUser = await factories.createUser(); 
       testLobby = await factories.createLobby({
-        createdById: testUser.id
+        adminId: testUser.id
       });
       
       await factories.createTeam({
-        matchday: 1,
+        matchDay: 1,
         userId: testUser.id,
         lobbyId: testLobby.id
       });
@@ -215,7 +216,7 @@ defineFeature(feature, (test) => {
         .send({
           name: 'Second Team',
           formationId: formation?.id,
-          matchday: 1,
+          matchDay: 1,
           lobbyId: testLobby.id
         });
     });
@@ -233,7 +234,7 @@ defineFeature(feature, (test) => {
         where: {
           userId: testUser.id,
           lobbyId: testLobby.id,
-          matchday: 1
+          matchDay: 1
         }
       });
       expect(teams).toHaveLength(1);

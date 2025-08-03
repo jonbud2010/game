@@ -72,9 +72,9 @@ export class TestDatabase {
       await this.prisma.packPlayer.deleteMany();
       await this.prisma.teamPlayer.deleteMany();
       await this.prisma.match.deleteMany();
-      await this.prisma.league.deleteMany();
+      await this.prisma.leagueTable.deleteMany();
       await this.prisma.team.deleteMany();
-      await this.prisma.lobbyMembership.deleteMany();
+      await this.prisma.lobbyMember.deleteMany();
       await this.prisma.lobby.deleteMany();
       await this.prisma.pack.deleteMany();
       await this.prisma.player.deleteMany();
@@ -104,27 +104,30 @@ export class TestDatabase {
         data: [
           {
             name: '4-3-3',
-            positions: [
+            imageUrl: 'https://example.com/433.png',
+            positions: JSON.stringify([
               'GK', 'CB', 'CB', 'LB', 'RB',  // Defense (5)
               'CM', 'CM', 'CAM',              // Midfield (3)
               'LW', 'RW', 'ST'               // Attack (3)
-            ]
+            ])
           },
           {
             name: '4-4-2',
-            positions: [
+            imageUrl: 'https://example.com/442.png',
+            positions: JSON.stringify([
               'GK', 'CB', 'CB', 'LB', 'RB',  // Defense (5)
               'LM', 'CM', 'CM', 'RM',        // Midfield (4)
               'ST', 'ST'                     // Attack (2)
-            ]
+            ])
           },
           {
             name: '3-5-2',
-            positions: [
+            imageUrl: 'https://example.com/352.png',
+            positions: JSON.stringify([
               'GK', 'CB', 'CB', 'CB',        // Defense (4)
               'LM', 'CDM', 'CM', 'CAM', 'RM', // Midfield (5)
               'ST', 'ST'                     // Attack (2)
-            ]
+            ])
           }
         ]
       });
@@ -164,7 +167,7 @@ export class TestDatabase {
     callback: (prisma: PrismaClient) => Promise<T>
   ): Promise<T> {
     return await this.prisma.$transaction(async (tx) => {
-      const result = await callback(tx);
+      const result = await callback(tx as PrismaClient);
       // Transaction will be rolled back after this block
       throw new Error('Transaction rollback'); // This forces rollback
     }).catch((error) => {

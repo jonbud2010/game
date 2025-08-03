@@ -4,10 +4,12 @@ import {
   simulateCompleteMatch, 
   simulateLeague, 
   generateLeagueMatches,
+  generateMatchdayMatches as generateMatchPairings,
   calculateTeamStrength,
   type TeamWithPlayers 
 } from '@football-tcg/shared';
 import { LEAGUE_REWARDS } from '@football-tcg/shared';
+import { mapPrismaTeamToTeamWithPlayers, mapPrismaPlayerToSharedPlayer } from '../utils/typeMappers';
 
 /**
  * Match Controller
@@ -211,21 +213,10 @@ export const generateMatchdayMatches = async (req: Request, res: Response): Prom
     }
 
     // Transform teams to match engine format
-    const teamsWithPlayers: TeamWithPlayers[] = teams.map(team => ({
-      id: team.id,
-      name: team.name,
-      userId: team.userId,
-      formationId: team.formationId,
-      players: team.teamPlayers.map(tp => ({
-        ...tp.player,
-        position: tp.player.position as any // Type assertion for position compatibility
-      })),
-      totalPoints: 0,
-      chemistryPoints: 0
-    }));
+    const teamsWithPlayers: TeamWithPlayers[] = teams.map(mapPrismaTeamToTeamWithPlayers);
 
-    // Generate match pairings
-    const matchPairings = generateLeagueMatches(teamsWithPlayers);
+    // Generate match pairings for this specific matchday
+    const matchPairings = generateMatchPairings(teamsWithPlayers, matchDay);
 
     // Create matches in database
     const createdMatches = await Promise.all(
@@ -334,7 +325,7 @@ export const simulateMatch = async (req: Request, res: Response): Promise<void> 
       name: match.homeTeam.name,
       userId: match.homeTeam.userId,
       formationId: match.homeTeam.formationId,
-      players: match.homeTeam.teamPlayers.map(tp => tp.player),
+      players: match.homeTeam.teamPlayers.map(tp => mapPrismaPlayerToSharedPlayer(tp.player)),
       totalPoints: 0,
       chemistryPoints: 0
     };
@@ -344,7 +335,7 @@ export const simulateMatch = async (req: Request, res: Response): Promise<void> 
       name: match.awayTeam.name,
       userId: match.awayTeam.userId,
       formationId: match.awayTeam.formationId,
-      players: match.awayTeam.teamPlayers.map(tp => tp.player),
+      players: match.awayTeam.teamPlayers.map(tp => mapPrismaPlayerToSharedPlayer(tp.player)),
       totalPoints: 0,
       chemistryPoints: 0
     };
@@ -477,7 +468,7 @@ export const simulateMatchday = async (req: Request, res: Response): Promise<voi
         name: match.homeTeam.name,
         userId: match.homeTeam.userId,
         formationId: match.homeTeam.formationId,
-        players: match.homeTeam.teamPlayers.map(tp => tp.player),
+        players: match.homeTeam.teamPlayers.map(tp => mapPrismaPlayerToSharedPlayer(tp.player)),
         totalPoints: 0,
         chemistryPoints: 0
       };
@@ -487,7 +478,7 @@ export const simulateMatchday = async (req: Request, res: Response): Promise<voi
         name: match.awayTeam.name,
         userId: match.awayTeam.userId,
         formationId: match.awayTeam.formationId,
-        players: match.awayTeam.teamPlayers.map(tp => tp.player),
+        players: match.awayTeam.teamPlayers.map(tp => mapPrismaPlayerToSharedPlayer(tp.player)),
         totalPoints: 0,
         chemistryPoints: 0
       };
@@ -506,7 +497,7 @@ export const simulateMatchday = async (req: Request, res: Response): Promise<voi
       });
 
       // Update league table
-      await updateLeagueTable(lobbyId, match.matchDay, simulationResult.result);
+      await updateLeagueTable(match.lobbyId, match.matchDay, simulationResult.result);
 
       results.push({
         matchId: match.id,
@@ -567,13 +558,15 @@ export const getLeagueTable = async (req: Request, res: Response): Promise<void>
         if (!acc[entry.matchDay]) {
           acc[entry.matchDay] = [];
         }
-        acc[entry.matchDay].push(entry);
+        acc[entry.matchDay]?.push(entry);
         return acc;
       }, {} as Record<number, typeof leagueTable>);
 
       // Sort each matchday's table and assign positions
       Object.keys(tablesByMatchDay).forEach(md => {
-        tablesByMatchDay[Number(md)] = tablesByMatchDay[Number(md)]
+        const matchDayData = tablesByMatchDay[Number(md)];
+        if (matchDayData) {
+          tablesByMatchDay[Number(md)] = matchDayData
           .sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
             if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
@@ -585,6 +578,7 @@ export const getLeagueTable = async (req: Request, res: Response): Promise<void>
             goalDifference: entry.goalsFor - entry.goalsAgainst,
             matches: entry.wins + entry.draws + entry.losses
           }));
+        }
       });
 
       res.json({
@@ -694,6 +688,11 @@ export const createLeague = async (req: Request, res: Response): Promise<void> =
     const { lobbyId } = req.params;
     const userId = req.user?.id;
 
+    if (!lobbyId) {
+      res.status(400).json({ error: 'Lobby ID is required' });
+      return;
+    }
+
     // Check if user is member of the lobby
     const lobby = await prisma.lobby.findUnique({
       where: { id: lobbyId },
@@ -758,18 +757,7 @@ export const createLeague = async (req: Request, res: Response): Promise<void> =
         }
 
         // Transform teams to match engine format
-        const teamsWithPlayers: TeamWithPlayers[] = teams.map(team => ({
-          id: team.id,
-          name: team.name,
-          userId: team.userId,
-          formationId: team.formationId,
-          players: team.teamPlayers.map(tp => ({
-        ...tp.player,
-        position: tp.player.position as any
-      })),
-          totalPoints: 0,
-          chemistryPoints: 0
-        }));
+        const teamsWithPlayers: TeamWithPlayers[] = teams.map(mapPrismaTeamToTeamWithPlayers);
 
         // Generate match pairings
         const matchPairings = generateLeagueMatches(teamsWithPlayers);
@@ -838,6 +826,11 @@ export const simulateEntireLeague = async (req: Request, res: Response): Promise
   try {
     const { lobbyId } = req.params;
     const userId = req.user?.id;
+
+    if (!lobbyId) {
+      res.status(400).json({ error: 'Lobby ID is required' });
+      return;
+    }
 
     // Check if user is member of the lobby
     const lobby = await prisma.lobby.findUnique({
@@ -910,7 +903,7 @@ export const simulateEntireLeague = async (req: Request, res: Response): Promise
         name: match.homeTeam.name,
         userId: match.homeTeam.userId,
         formationId: match.homeTeam.formationId,
-        players: match.homeTeam.teamPlayers.map(tp => tp.player),
+        players: match.homeTeam.teamPlayers.map(tp => mapPrismaPlayerToSharedPlayer(tp.player)),
         totalPoints: 0,
         chemistryPoints: 0
       };
@@ -920,7 +913,7 @@ export const simulateEntireLeague = async (req: Request, res: Response): Promise
         name: match.awayTeam.name,
         userId: match.awayTeam.userId,
         formationId: match.awayTeam.formationId,
-        players: match.awayTeam.teamPlayers.map(tp => tp.player),
+        players: match.awayTeam.teamPlayers.map(tp => mapPrismaPlayerToSharedPlayer(tp.player)),
         totalPoints: 0,
         chemistryPoints: 0
       };
@@ -939,7 +932,7 @@ export const simulateEntireLeague = async (req: Request, res: Response): Promise
       });
 
       // Update league table
-      await updateLeagueTable(lobbyId, match.matchDay, simulationResult.result);
+      await updateLeagueTable(match.lobbyId, match.matchDay, simulationResult.result);
 
       results.push({
         matchId: match.id,

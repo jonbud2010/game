@@ -12,11 +12,11 @@ interface AdminRouteProps {
  * Redirects non-admin users to home page
  */
 export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   // Show loading spinner while checking authentication
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="loading-container">
         <div className="loading-spinner">

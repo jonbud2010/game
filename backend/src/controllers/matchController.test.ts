@@ -18,6 +18,7 @@ vi.mock('@football-tcg/shared', () => ({
   simulateCompleteMatch: vi.fn(),
   simulateLeague: vi.fn(),
   generateLeagueMatches: vi.fn(),
+  generateMatchdayMatches: vi.fn(),
   calculateTeamStrength: vi.fn(),
   LEAGUE_REWARDS: {
     1: 250,
@@ -323,7 +324,7 @@ describe('Match Controller', () => {
     });
 
     it('should generate matches for a matchday successfully', async () => {
-      const { generateLeagueMatches } = await import('@football-tcg/shared');
+      const { generateMatchdayMatches: generateMatchdayMatchesShared } = await import('@football-tcg/shared');
       const mockLobby = {
         id: 'lobby1',
         members: [
@@ -340,14 +341,16 @@ describe('Match Controller', () => {
         { id: 'team4', name: 'Team 4', userId: 'user4', matchDay: 1, teamPlayers: [] }
       ];
       const mockMatches = [
-        { id: 'match1', homeTeamId: 'team1', awayTeamId: 'team2' }
+        { id: 'match1', homeTeamId: 'team1', awayTeamId: 'team2' },
+        { id: 'match2', homeTeamId: 'team3', awayTeamId: 'team4' }
       ];
 
       mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
       mockedPrisma.match.findMany.mockResolvedValue([]);
       mockedPrisma.team.findMany.mockResolvedValue(mockTeams);
-      vi.mocked(generateLeagueMatches).mockReturnValue([
-        { homeTeam: mockTeams[0], awayTeam: mockTeams[1], matchNumber: 1 }
+      vi.mocked(generateMatchdayMatchesShared).mockReturnValue([
+        { homeTeam: mockTeams[0], awayTeam: mockTeams[1], matchNumber: 1 },
+        { homeTeam: mockTeams[2], awayTeam: mockTeams[3], matchNumber: 2 }
       ]);
       mockedPrisma.match.create.mockResolvedValue(mockMatches[0]);
 

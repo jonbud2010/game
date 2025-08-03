@@ -42,7 +42,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
 };
 
 // Multer upload instance
-const upload = multer({
+export const upload = multer({
   storage,
   fileFilter,
   limits: {
@@ -97,6 +97,15 @@ export const processAndSaveImage = async (
         })
         .webp({ quality: 85 })
         .toBuffer();
+    } else {
+      // Default processing
+      processedBuffer = await sharp(buffer)
+        .resize(800, null, { 
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .webp({ quality: 90 })
+        .toBuffer();
     }
 
     // Save processed image
@@ -112,8 +121,10 @@ export const processAndSaveImage = async (
 
 // Middleware for single image upload
 export const uploadSingleImage = (category: 'players' | 'formations' | 'packs') => {
+  const multerMiddleware = upload.single('image') as any;
+  
   return [
-    upload.single('image'),
+    multerMiddleware,
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         console.log('=== UPLOAD MIDDLEWARE ===');
@@ -154,30 +165,31 @@ export const uploadSingleImage = (category: 'players' | 'formations' | 'packs') 
 };
 
 // Middleware for handling upload errors
-export const handleUploadError = (error: any, req: Request, res: Response, next: NextFunction) => {
+export const handleUploadError = (error: any, req: Request, res: Response, next: NextFunction): void => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'File too large',
-        message: 'Image must be smaller than 5MB'
+        message: 'File size exceeds the 5MB limit'
       });
+      return;
     }
-    if (error.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({
-        error: 'Too many files',
-        message: 'Only one image can be uploaded at a time'
-      });
-    }
-  }
-
-  if (error.message.includes('Invalid file type')) {
-    return res.status(400).json({
-      error: 'Invalid file type',
-      message: 'Only JPEG, PNG, and WebP images are allowed'
+    res.status(400).json({
+      error: 'Upload error',
+      message: error.message
     });
+    return;
   }
 
-  next(error);
+  if (error) {
+    res.status(500).json({
+      error: 'Upload failed',
+      message: error.message || 'Unknown upload error'
+    });
+    return;
+  }
+
+  next();
 };
 
 // Utility function to delete old image file

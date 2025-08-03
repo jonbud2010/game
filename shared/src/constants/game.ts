@@ -8,14 +8,14 @@ export const PLAYER_POSITIONS_ENUM: PlayerPosition[] = [
 ];
 
 export const PLAYER_COLORS: Record<PlayerColor, string> = {
-  DARK_GREEN: '#166534',
-  LIGHT_GREEN: '#16A34A',
-  DARK_BLUE: '#1E40AF',
-  LIGHT_BLUE: '#3B82F6',
   RED: '#DC2626',
+  BLUE: '#1E40AF',
+  GREEN: '#16A34A',
   YELLOW: '#FACC15',
   PURPLE: '#7C3AED',
-  ORANGE: '#EA580C'
+  ORANGE: '#EA580C',
+  PINK: '#EC4899',
+  CYAN: '#06B6D4'
 };
 
 export const CHEMISTRY_POINTS = {
@@ -54,7 +54,37 @@ export const MATCH_SETTINGS = {
 
 export const LOBBY_SETTINGS = {
   MAX_PLAYERS: 4,
-  MATCHES_PER_MATCHDAY: 6
+  MATCHES_PER_MATCHDAY: 2
+} as const;
+
+export const DUMMY_PLAYER_SETTINGS = {
+  THEME: 'FOOTBALL' as const,
+  POINTS: 50,
+  MARKET_PRICE: 0,
+  PERCENTAGE: 0,
+  COLOR: 'CYAN' as PlayerColor,
+  IMAGE_URL: '/images/players/dummy.png'
+} as const;
+
+export const PLAYER_THEMES = [
+  'TEN_D',
+  'EIGHT_E', 
+  'ROWING',
+  'HP',
+  'FOOTBALL',
+  'MARVEL'
+] as const;
+
+export const THEME_REWARD_SETTINGS = {
+  EXECUTION_TIME: '20:00', // 8 PM Berlin time
+  EXECUTION_DAY: 0, // Sunday (0 = Sunday, 1 = Monday, etc.)
+  REWARDS: {
+    1: 100, // 1st place
+    2: 50,  // 2nd place
+    3: 30,  // 3rd place
+    4: 0    // 4th place
+  },
+  MAX_WEEKLY_EARNINGS: 600 // 6 themes * 100 coins
 } as const;
 
 export const VALIDATION_RULES = {

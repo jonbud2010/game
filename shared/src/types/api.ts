@@ -177,3 +177,51 @@ export interface LobbyAdminResponse {
     canManageMembers: boolean;
   };
 }
+
+// Theme Reward API Types
+export interface ThemeRewardsHistoryResponse {
+  themeRewards: {
+    id: string;
+    theme: string;
+    week: number;
+    year: number;
+    executedAt: Date;
+    winners: {
+      id: string;
+      userId: string;
+      username: string;
+      rank: number;
+      points: number;
+      coinsAwarded: number;
+    }[];
+  }[];
+  totalPages: number;
+  currentPage: number;
+}
+
+export interface CurrentThemeStandingsResponse {
+  standings: {
+    theme: string;
+    users: {
+      userId: string;
+      username: string;
+      highestPlayerPoints: number;
+      highestPlayerName: string;
+      rank: number;
+      potentialReward: number;
+    }[];
+  }[];
+  nextExecution: Date;
+}
+
+export interface ExecuteThemeRewardsRequest {
+  week?: number;
+  year?: number;
+}
+
+export interface ExecuteThemeRewardsResponse {
+  success: boolean;
+  executedThemes: string[];
+  totalCoinsAwarded: number;
+  message: string;
+}

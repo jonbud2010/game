@@ -154,9 +154,9 @@ const AdminFormationsPage: React.FC = () => {
   const updatePosition = (index: number, field: 'position' | 'x' | 'y', value: string | number) => {
     const updatedPositions = [...formData.positions];
     if (field === 'position') {
-      updatedPositions[index].position = value as string;
+      updatedPositions[index]!.position = value as string;
     } else {
-      updatedPositions[index][field] = Number(value);
+      updatedPositions[index]![field] = Number(value);
     }
     setFormData({...formData, positions: updatedPositions});
   };
@@ -328,12 +328,12 @@ const AdminFormationsPage: React.FC = () => {
                   </div>
                   <div className="formation-info">
                     <h3>{formation.name}</h3>
-                    <p>{formation.positions?.length || 0} Positionen</p>
+                    <p>{Array.isArray(formation.positions) ? formation.positions.length : 0} Positionen</p>
                     <div className="formation-positions">
-                      {formation.positions?.slice(0, 5).map((pos, idx) => (
+                      {Array.isArray(formation.positions) && formation.positions.slice(0, 5).map((pos, idx) => (
                         <span key={idx} className="position-tag">{pos.position}</span>
                       ))}
-                      {formation.positions?.length > 5 && (
+                      {Array.isArray(formation.positions) && formation.positions.length > 5 && (
                         <span className="position-more">+{formation.positions.length - 5}</span>
                       )}
                     </div>

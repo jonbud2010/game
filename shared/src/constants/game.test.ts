@@ -149,13 +149,16 @@ describe('Game Constants', () => {
   describe('LOBBY_SETTINGS', () => {
     it('should have correct lobby settings', () => {
       expect(LOBBY_SETTINGS.MAX_PLAYERS).toBe(4);
-      expect(LOBBY_SETTINGS.MATCHES_PER_MATCHDAY).toBe(6);
+      expect(LOBBY_SETTINGS.MATCHES_PER_MATCHDAY).toBe(2);
     });
 
-    it('should have logical match count for 4 players', () => {
-      // For 4 players, round-robin = C(4,2) = 6 matches
-      const expectedMatches = (4 * (4 - 1)) / 2;
-      expect(LOBBY_SETTINGS.MATCHES_PER_MATCHDAY).toBe(expectedMatches);
+    it('should have logical match count for 4 players distributed across matchdays', () => {
+      // For 4 players, round-robin = C(4,2) = 6 matches total
+      // Distributed across 3 matchdays = 2 matches per matchday
+      const totalMatches = (4 * (4 - 1)) / 2; // 6 total matches
+      const matchdays = 3;
+      const expectedMatchesPerMatchday = totalMatches / matchdays; // 2 matches per matchday
+      expect(LOBBY_SETTINGS.MATCHES_PER_MATCHDAY).toBe(expectedMatchesPerMatchday);
     });
   });
 

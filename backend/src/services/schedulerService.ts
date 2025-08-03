@@ -1,6 +1,7 @@
 import * as cron from 'node-cron';
 import moment from 'moment-timezone';
 import { prisma } from '../db/connection';
+import { executeThemeRewardsForAllLobbies } from './themeRewardService';
 
 /**
  * Scheduler Service for Automated Matchday Management
@@ -15,9 +16,9 @@ const MATCHDAY_INTERVAL_DAYS = 5;
  * Initialize the scheduler system
  */
 export const initializeScheduler = (): void => {
-  console.log('🕒 Initializing matchday scheduler...');
+  console.log('🕒 Initializing scheduler system...');
 
-  // Schedule daily check at 18:00 Berlin time
+  // Schedule daily check at 18:00 Berlin time for matchdays
   cron.schedule('0 18 * * *', async () => {
     const berlinTime = moment().tz(BERLIN_TIMEZONE);
     console.log(`⏰ Daily scheduler check at ${berlinTime.format('YYYY-MM-DD HH:mm:ss')} Berlin time`);
@@ -27,12 +28,22 @@ export const initializeScheduler = (): void => {
     timezone: BERLIN_TIMEZONE
   });
 
+  // Schedule weekly theme rewards at 20:00 Berlin time every Sunday
+  cron.schedule('0 20 * * 0', async () => {
+    const berlinTime = moment().tz(BERLIN_TIMEZONE);
+    console.log(`🏆 Weekly theme rewards execution at ${berlinTime.format('YYYY-MM-DD HH:mm:ss')} Berlin time`);
+    
+    await executeThemeRewardsForAllLobbies();
+  }, {
+    timezone: BERLIN_TIMEZONE
+  });
+
   // Also run a check every hour for any missed executions
   cron.schedule('0 * * * *', async () => {
     await checkMissedMatchDays();
   });
 
-  console.log('✅ Matchday scheduler initialized successfully');
+  console.log('✅ Scheduler system initialized successfully (matchdays + theme rewards)');
 };
 
 /**
@@ -150,7 +161,7 @@ const executeMatchDay = async (scheduledMatchDay: any): Promise<void> => {
       });
 
       // Initialize league table for this matchday
-      const leagueTableData = lobby.members.map(member => ({
+      const leagueTableData = lobby.members.map((member: any) => ({
         lobbyId,
         userId: member.userId,
         matchDay,
@@ -167,12 +178,12 @@ const executeMatchDay = async (scheduledMatchDay: any): Promise<void> => {
         data: leagueTableData
       });
 
-      // Generate matches for this matchday (6 matches for 4 players round-robin)
+      // Generate matches for this matchday (2 matches for 4 players round-robin distribution)
       const matches = generateRoundRobinMatches(lobby.members, lobbyId, matchDay);
       
       // Note: We're creating match placeholders. Actual teams need to be created by users
       // The match creation will be handled separately when users create their teams
-      console.log(`📅 Matchday ${matchDay} initialized for lobby ${lobbyId} with ${matches.length} potential matches`);
+      console.log(`📅 Matchday ${matchDay} initialized for lobby ${lobbyId} with ${matches.length} matches`);
 
       // Mark scheduled matchday as executed
       await tx.scheduledMatchDay.update({
@@ -216,25 +227,54 @@ const executeMatchDay = async (scheduledMatchDay: any): Promise<void> => {
 };
 
 /**
- * Generate round-robin match combinations for 4 players
+ * Generate round-robin match combinations for 4 players distributed across 3 matchdays
+ * Each matchday has exactly 2 matches
  */
 const generateRoundRobinMatches = (members: any[], lobbyId: string, matchDay: number) => {
+  if (members.length !== 4) {
+    throw new Error('Round-robin scheduling requires exactly 4 players');
+  }
+
   const matches = [];
   
-  // Round-robin for 4 players: 6 matches total
-  // Player combinations: (1,2), (1,3), (1,4), (2,3), (2,4), (3,4)
-  for (let i = 0; i < members.length; i++) {
-    for (let j = i + 1; j < members.length; j++) {
-      matches.push({
-        lobbyId,
-        homeUserId: members[i].userId,
-        awayUserId: members[j].userId,
-        matchDay,
-        homeScore: 0,
-        awayScore: 0,
-        played: false
-      });
+  // Round-robin for 4 players: 6 matches total distributed across 3 matchdays (2 per matchday)
+  // Matchday 1: (1,2), (3,4)
+  // Matchday 2: (1,3), (2,4) 
+  // Matchday 3: (1,4), (2,3)
+  
+  const roundRobinSchedule = [
+    [[0, 1], [2, 3]], // Matchday 1
+    [[0, 2], [1, 3]], // Matchday 2
+    [[0, 3], [1, 2]]  // Matchday 3
+  ];
+
+  const currentMatchDayIndex = (matchDay - 1) % 3;
+  const matchPairs = roundRobinSchedule[currentMatchDayIndex];
+
+  if (!matchPairs) {
+    throw new Error(`No match pairs found for matchday ${matchDay}`);
+  }
+
+  for (const [homeIndex, awayIndex] of matchPairs) {
+    if (typeof homeIndex !== 'number' || typeof awayIndex !== 'number') {
+      throw new Error(`Invalid index types for matchday ${matchDay}`);
     }
+    const homeMember = members[homeIndex];
+    const awayMember = members[awayIndex];
+    
+    if (!homeMember || !awayMember) {
+      throw new Error(`Invalid member index for matchday ${matchDay}`);
+    }
+
+    matches.push({
+      lobbyId,
+      homeUserId: homeMember.userId,
+      awayUserId: awayMember.userId,
+      matchDay,
+      homeScore: 0,
+      awayScore: 0,
+      played: false
+    });
   }
   
   return matches;

@@ -19,7 +19,7 @@ router.get('/:id', validateId, getFormationById);
 
 // Admin-only routes
 router.post('/', authenticateToken, requireAdmin, validateCreateFormation, createFormation);
-router.put('/:id', authenticateToken, requireAdmin, validateId, updateFormation);
+router.put('/:id', authenticateToken, requireAdmin, validateId, validateCreateFormation, updateFormation);
 router.delete('/:id', authenticateToken, requireAdmin, validateId, deleteFormation);
 
 export default router;

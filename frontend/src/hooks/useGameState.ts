@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import type { GameState, Player } from '../types/game';
+import type { LocalGameState, Player } from '../types/game';
 
 const initialPlayer: Player = {
   id: uuidv4(),
@@ -9,20 +9,20 @@ const initialPlayer: Player = {
   level: 1,
 };
 
-const initialGameState: GameState = {
+const initialGameState: LocalGameState = {
   player: initialPlayer,
   isGameActive: false,
   currentScreen: 'menu',
 };
 
 export const useGameState = () => {
-  const [gameState, setGameState] = useState<GameState>(initialGameState);
+  const [gameState, setGameState] = useState<LocalGameState>(initialGameState);
 
   const startGame = () => {
     setGameState(prev => ({
       ...prev,
       isGameActive: true,
-      currentScreen: 'game',
+      currentScreen: 'match',
     }));
   };
 
@@ -30,7 +30,7 @@ export const useGameState = () => {
     setGameState(prev => ({
       ...prev,
       isGameActive: false,
-      currentScreen: 'gameOver',
+      currentScreen: 'league',
     }));
   };
 
@@ -41,20 +41,20 @@ export const useGameState = () => {
     }));
   };
 
-  const goToSettings = () => {
+  const goToLobby = () => {
     setGameState(prev => ({
       ...prev,
-      currentScreen: 'settings',
+      currentScreen: 'lobby',
     }));
   };
 
   const updateScore = (points: number) => {
     setGameState(prev => ({
       ...prev,
-      player: {
+      player: prev.player ? {
         ...prev.player,
         score: prev.player.score + points,
-      },
+      } : null,
     }));
   };
 
@@ -73,7 +73,7 @@ export const useGameState = () => {
     startGame,
     endGame,
     goToMenu,
-    goToSettings,
+    goToLobby,
     updateScore,
     resetGame,
   };

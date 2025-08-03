@@ -325,6 +325,11 @@ export const addPlayersTopack = async (req: Request, res: Response): Promise<voi
     const { id } = req.params;
     const { playerIds } = req.body;
 
+    if (!id) {
+      res.status(400).json({ error: 'Pack ID is required' });
+      return;
+    }
+
     if (!Array.isArray(playerIds) || playerIds.length === 0) {
       res.status(400).json({
         error: 'Invalid player IDs',
@@ -620,7 +625,15 @@ export const openPack = async (req: Request, res: Response): Promise<void> => {
 
     if (!drawnPlayer) {
       // Fallback to first player if something goes wrong
-      drawnPlayer = pack.packPlayers[0].player;
+      drawnPlayer = pack.packPlayers[0]?.player;
+    }
+
+    if (!drawnPlayer) {
+      res.status(500).json({ 
+        error: 'No players available in pack',
+        message: 'Pack appears to be empty or corrupted'
+      });
+      return;
     }
 
     // Use transaction to ensure consistency
@@ -647,7 +660,7 @@ export const openPack = async (req: Request, res: Response): Promise<void> => {
       await tx.packPlayer.delete({
         where: {
           packId_playerId: {
-            packId: id,
+            packId: id!,
             playerId: drawnPlayer.id
           }
         }
@@ -655,12 +668,12 @@ export const openPack = async (req: Request, res: Response): Promise<void> => {
 
       // Check if pack is now empty and update status
       const remainingPlayers = await tx.packPlayer.count({
-        where: { packId: id }
+        where: { packId: id! }
       });
 
       if (remainingPlayers === 0) {
         await tx.pack.update({
-          where: { id },
+          where: { id: id! },
           data: { status: 'EMPTY' }
         });
       }

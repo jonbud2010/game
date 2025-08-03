@@ -40,6 +40,19 @@ function validateFormData(schema: Joi.ObjectSchema) {
         }
       }
       
+      // Parse positions if it's a JSON string (from FormData for formations)
+      if (processedBody.positions && typeof processedBody.positions === 'string') {
+        try {
+          processedBody.positions = JSON.parse(processedBody.positions);
+          console.log('Parsed positions from string:', processedBody.positions);
+        } catch (error) {
+          return res.status(400).json({
+            error: 'Validation error',
+            details: 'positions must be a valid JSON array'
+          });
+        }
+      }
+      
       // Convert numeric fields safely
       if (processedBody.points) {
         const pointsValue = parseInt(processedBody.points);
@@ -385,7 +398,7 @@ export const validateRegistration = validate(registerSchema);
 export const validateLogin = validate(loginSchema);
 export const validateCreatePlayer = validateFormData(createPlayerSchema);
 export const validateCreateLobby = validate(createLobbySchema);
-export const validateCreateFormation = validate(createFormationSchema);
+export const validateCreateFormation = validateFormData(createFormationSchema);
 export const validateCreatePack = validateFormData(createPackSchema);
 export const validatePackPlayerManagement = validate(packPlayerManagementSchema);
 

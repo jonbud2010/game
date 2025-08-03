@@ -7,7 +7,7 @@ Ein browserbasiertes Fußball-Sammelkartenspiel für genau 4 Spieler mit komplex
 ### 🎯 Kernkonzept
 - **4-Spieler Multiplayer**: Genau 4 Spieler pro Lobby
 - **Sammelkarten-Mechanik**: Spieler sammeln Fußballspieler durch Pack-Öffnungen
-- **Liga-System**: Jeder gegen jeden, 6 Spiele pro Spieltag
+- **Liga-System**: Jeder gegen jeden, 2 Spiele pro Spieltag
 - **Komplexe Team-Chemie**: Farbbasiertes Bonussystem
 - **Admin-gesteuert**: Admins verwalten Spieler, Formationen und Packs
 

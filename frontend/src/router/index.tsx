@@ -13,6 +13,7 @@ import PackStorePage from '../pages/PackStorePage';
 import TeamBuilderPage from '../pages/TeamBuilderPage';
 import LeaguePage from '../pages/LeaguePage';
 import MatchDetailsPage from '../pages/MatchDetailsPage';
+import ThemeRewardsPage from '../pages/ThemeRewardsPage';
 
 // Lazy load admin pages for better performance
 const AdminDashboardPage = lazy(() => import('../pages/AdminDashboardPage'));
@@ -85,6 +86,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <MatchDetailsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'theme-rewards/:lobbyId',
+        element: (
+          <ProtectedRoute>
+            <ThemeRewardsPage />
           </ProtectedRoute>
         ),
       },

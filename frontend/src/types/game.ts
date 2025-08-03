@@ -41,7 +41,7 @@ export interface AppState {
 export interface LocalGameState {
   player: Player | null;
   isGameActive: boolean;
-  currentScreen: 'menu' | 'game' | 'settings' | 'gameOver';
+  currentScreen: 'menu' | 'lobby' | 'team-builder' | 'pack-store' | 'league' | 'match' | 'admin';
 }
 
 export interface Player {

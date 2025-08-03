@@ -382,7 +382,7 @@ export const getPlayersByFilter = async (req: Request, res: Response): Promise<v
     // Filter out players not available in any active pack if requested
     const filteredPlayers = available === 'true' 
       ? players.filter(player => 
-          player.packPlayers?.some(pp => pp.pack.status === 'ACTIVE')
+          (player as any).packPlayers?.some((pp: any) => pp.pack.status === 'ACTIVE')
         )
       : players;
 

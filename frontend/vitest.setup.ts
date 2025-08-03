@@ -1,4 +1,5 @@
-import '@testing-library/jest-dom/vitest';
+import './src/test-setup/jest-dom';
+import './src/test-setup/vitest.d.ts';
 import { vi } from 'vitest';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';

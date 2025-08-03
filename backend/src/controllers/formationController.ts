@@ -15,9 +15,25 @@ export const getAllFormations = async (req: Request, res: Response): Promise<voi
       }
     });
 
+    // Parse positions JSON string for each formation
+    const formationsWithParsedPositions = formations.map(formation => {
+      let positions;
+      try {
+        positions = JSON.parse(formation.positions);
+      } catch (parseError) {
+        console.error('Error parsing formation positions:', parseError);
+        positions = [];
+      }
+      
+      return {
+        ...formation,
+        positions
+      };
+    });
+
     res.json({
       success: true,
-      data: formations,
+      data: formationsWithParsedPositions,
       count: formations.length
     });
   } catch (error) {

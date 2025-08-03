@@ -43,6 +43,9 @@ vi.mock('../db/client', () => ({
     formation: {
       findUnique: vi.fn()
     },
+    player: {
+      findMany: vi.fn()
+    },
     userPlayer: {
       findMany: vi.fn()
     },

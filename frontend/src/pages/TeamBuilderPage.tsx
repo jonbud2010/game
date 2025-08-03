@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiService, type Team, type Formation, type Player, type UserPlayer } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { canPlayerBePlacedAtPosition, type PlayerPosition } from '@football-tcg/shared';
 // Note: Chemistry utilities need to be properly exported from shared package
 
 interface TeamPlayer {
@@ -40,7 +41,7 @@ const TeamBuilderPage: React.FC = () => {
           );
           setLobbies(userLobbies);
           if (userLobbies.length > 0 && !selectedLobbyId) {
-            setSelectedLobbyId(userLobbies[0].id);
+            setSelectedLobbyId(userLobbies[0]?.id || '');
           }
         }
 
@@ -49,7 +50,7 @@ const TeamBuilderPage: React.FC = () => {
         if (formationsResponse.success && formationsResponse.data) {
           setFormations(formationsResponse.data);
           if (formationsResponse.data.length > 0 && !selectedFormationId) {
-            setSelectedFormationId(formationsResponse.data[0].id);
+            setSelectedFormationId(formationsResponse.data[0]?.id || '');
           }
         }
 
@@ -178,9 +179,23 @@ const TeamBuilderPage: React.FC = () => {
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, positionIndex?: number) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    
+    // Check if this is a valid drop zone for the dragged player
+    if (draggedPlayer && positionIndex !== undefined) {
+      const formationPositions = getFormationPositions();
+      const targetFormationPosition = formationPositions[positionIndex]?.position as PlayerPosition;
+      const playerPosition = draggedPlayer.position as PlayerPosition;
+      
+      if (canPlayerBePlacedAtPosition(playerPosition, targetFormationPosition)) {
+        e.dataTransfer.dropEffect = 'move';
+      } else {
+        e.dataTransfer.dropEffect = 'none';
+      }
+    } else {
+      e.dataTransfer.dropEffect = 'move';
+    }
   };
 
   // Get list of player names already in the team
@@ -196,6 +211,17 @@ const TeamBuilderPage: React.FC = () => {
     return !unavailableNames.includes(player.name);
   };
 
+  // Check if a formation position is valid for the currently dragged player
+  const isValidDropZone = (positionIndex: number): boolean => {
+    if (!draggedPlayer) return true;
+    
+    const formationPositions = getFormationPositions();
+    const targetFormationPosition = formationPositions[positionIndex]?.position as PlayerPosition;
+    const playerPosition = draggedPlayer.position as PlayerPosition;
+    
+    return canPlayerBePlacedAtPosition(playerPosition, targetFormationPosition);
+  };
+
   const handleDrop = (e: React.DragEvent, positionIndex: number) => {
     e.preventDefault();
     if (!draggedPlayer) return;
@@ -206,6 +232,17 @@ const TeamBuilderPage: React.FC = () => {
     
     if (!isMovingExistingPlayer && !isPlayerAvailable(draggedPlayer)) {
       setError(`Spieler "${draggedPlayer.name}" ist bereits im Team. Jeder Spieler kann nur einmal verwendet werden.`);
+      setDraggedPlayer(null);
+      return;
+    }
+
+    // Check position compatibility
+    const formationPositions = getFormationPositions();
+    const targetFormationPosition = formationPositions[positionIndex]?.position as PlayerPosition;
+    const playerPosition = draggedPlayer.position as PlayerPosition;
+    
+    if (!canPlayerBePlacedAtPosition(playerPosition, targetFormationPosition)) {
+      setError(`Spieler "${draggedPlayer.name}" (${playerPosition}) kann nicht auf Position ${targetFormationPosition} eingesetzt werden.`);
       setDraggedPlayer(null);
       return;
     }
@@ -440,12 +477,15 @@ const TeamBuilderPage: React.FC = () => {
             <div className="field-background">
               {formationPositions.map((pos, index) => {
                 const teamPlayer = teamPlayers[index];
+                const isValidDrop = isValidDropZone(index);
                 return (
                   <div
                     key={pos.id}
-                    className={`position-slot ${teamPlayer?.player ? 'filled' : 'empty'}`}
+                    className={`position-slot ${teamPlayer?.player ? 'filled' : 'empty'} ${
+                      draggedPlayer ? (isValidDrop ? 'valid-drop' : 'invalid-drop') : ''
+                    }`}
                     style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                    onDragOver={handleDragOver}
+                    onDragOver={(e) => handleDragOver(e, index)}
                     onDrop={(e) => handleDrop(e, index)}
                   >
                     {teamPlayer?.player ? (

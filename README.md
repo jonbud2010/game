@@ -8,7 +8,7 @@ Sammle Fußballspieler durch Pack-Öffnungen, baue starke Teams mit cleverer Che
 
 ### ✨ Key Features
 
-- 🏆 **4-Spieler Liga**: Jeder gegen jeden, 6 Spiele pro Spieltag
+- 🏆 **4-Spieler Liga**: Jeder gegen jeden, 2 Spiele pro Spieltag
 - 📦 **Pack-System**: Prozentsatz-basierte Spieler-Ziehungen  
 - ⚗️ **Team-Chemie**: Farbbasiertes Bonussystem (genau 3 aus 8 Farben, min. 2 Spieler)
 - 🎪 **Formation-Building**: Positionsgetreue Team-Aufstellung
@@ -55,7 +55,7 @@ cd backend && yarn tsx src/index.ts  # Direkter TypeScript-Start
 - **Optimale Verteilung**: 5-3-3 (43 Punkte) oder 4-4-3 (41 Punkte)
 
 ### Liga-System
-- **Jeder gegen jeden**: 6 Spiele pro Spieltag
+- **Jeder gegen jeden**: 2 Spiele pro Spieltag
 - **Punkte**: 3 (Sieg) / 1 (Unentschieden) / 0 (Niederlage)
 - **Tiebreaker**: Torverhältnis entscheidet
 - **Belohnungen**: 250/200/150/100 Münzen für Plätze 1-4

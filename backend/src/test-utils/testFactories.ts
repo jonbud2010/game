@@ -1,4 +1,4 @@
-import { PrismaClient, Role, LobbyStatus, MatchStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -15,14 +15,14 @@ export class TestFactories {
     username: string;
     email: string;
     password: string;
-    role: Role;
+    role: string;
     coins: number;
   }> = {}) {
     const defaultData = {
       username: `testuser_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       email: `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}@example.com`,
       password: 'TestPassword123!',
-      role: Role.USER,
+      role: 'PLAYER',
       coins: 1000
     };
 
@@ -33,7 +33,7 @@ export class TestFactories {
       data: {
         username: data.username,
         email: data.email,
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         role: data.role,
         coins: data.coins
       }
@@ -51,7 +51,7 @@ export class TestFactories {
   }> = {}) {
     return await this.createUser({
       ...overrides,
-      role: Role.ADMIN
+      role: 'ADMIN'
     });
   }
 
@@ -59,7 +59,7 @@ export class TestFactories {
    * Create multiple test users
    */
   async createUsers(count: number, overrides: Partial<{
-    role: Role;
+    role: string;
     coins: number;
   }> = {}) {
     const users = [];
@@ -98,12 +98,12 @@ export class TestFactories {
       data: {
         name: data.name,
         points: data.points,
-        position: data.position,
-        color: data.color,
+        position: data.position || 'ST',
+        color: data.color || 'RED',
         marketPrice: data.marketPrice,
-        theme: data.theme,
+        theme: data.theme || 'STANDARD',
         percentage: data.percentage,
-        imageUrl: data.imageUrl || null
+        imageUrl: data.imageUrl || 'https://example.com/default.png'
       }
     });
   }
@@ -127,22 +127,22 @@ export class TestFactories {
   async createLobby(overrides: Partial<{
     name: string;
     maxPlayers: number;
-    status: LobbyStatus;
-    createdById: string;
+    status: string;
+    adminId: string;
   }> = {}) {
     const defaultData = {
       name: `Test Lobby ${Date.now()}`,
       maxPlayers: 4,
-      status: LobbyStatus.WAITING
+      status: 'WAITING'
     };
 
     const data = { ...defaultData, ...overrides };
 
-    // Create a user if createdById not provided
-    let createdById = data.createdById;
-    if (!createdById) {
+    // Create a user if adminId not provided
+    let adminId = data.adminId;
+    if (!adminId) {
       const creator = await this.createUser();
-      createdById = creator.id;
+      adminId = creator.id;
     }
 
     return await this.prisma.lobby.create({
@@ -150,7 +150,7 @@ export class TestFactories {
         name: data.name,
         maxPlayers: data.maxPlayers,
         status: data.status,
-        createdById: createdById
+        adminId: adminId
       }
     });
   }
@@ -160,17 +160,17 @@ export class TestFactories {
    */
   async createLobbyWithMembers(memberCount: number = 4, overrides: Partial<{
     name: string;
-    status: LobbyStatus;
+    status: string;
   }> = {}) {
     const lobby = await this.createLobby(overrides);
     const members = [];
 
     // First member is the creator
     const creator = await this.prisma.user.findUnique({ 
-      where: { id: lobby.createdById } 
+      where: { id: lobby.adminId } 
     });
     if (creator) {
-      await this.prisma.lobbyMembership.create({
+      await this.prisma.lobbyMember.create({
         data: {
           lobbyId: lobby.id,
           userId: creator.id
@@ -182,7 +182,7 @@ export class TestFactories {
     // Add additional members
     for (let i = 1; i < memberCount; i++) {
       const user = await this.createUser();
-      await this.prisma.lobbyMembership.create({
+      await this.prisma.lobbyMember.create({
         data: {
           lobbyId: lobby.id,
           userId: user.id
@@ -216,7 +216,7 @@ export class TestFactories {
         name: data.name,
         price: data.price,
         status: data.status,
-        imageUrl: data.imageUrl || null
+        imageUrl: data.imageUrl || 'https://example.com/pack.png'
       }
     });
   }
@@ -250,14 +250,14 @@ export class TestFactories {
    */
   async createTeam(overrides: Partial<{
     name: string;
-    matchday: number;
+    matchDay: number;
     userId: string;
     lobbyId: string;
     formationId: string;
   }> = {}) {
     const defaultData = {
       name: `Test Team ${Date.now()}`,
-      matchday: 1
+      matchDay: 1
     };
 
     const data = { ...defaultData, ...overrides };
@@ -287,7 +287,7 @@ export class TestFactories {
     return await this.prisma.team.create({
       data: {
         name: data.name,
-        matchday: data.matchday,
+        matchDay: data.matchDay,
         userId: userId,
         lobbyId: lobbyId,
         formationId: formationId
@@ -319,7 +319,7 @@ export class TestFactories {
       await this.prisma.teamPlayer.create({
         data: {
           teamId: team.id,
-          playerId: players[i].id,
+          playerId: players[i]?.id || '',
           position: i
         }
       });
@@ -331,7 +331,7 @@ export class TestFactories {
   /**
    * Generate a JWT token for a user
    */
-  generateJwtToken(userId: string, role: Role = Role.USER): string {
+  generateJwtToken(userId: string, role: string = 'PLAYER'): string {
     return jwt.sign(
       { userId, role },
       process.env.JWT_SECRET || 'test-jwt-secret',

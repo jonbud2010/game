@@ -6,7 +6,7 @@ export interface Player {
   position: PlayerPosition;
   color: PlayerColor;
   marketPrice: number;
-  theme: string;
+  theme: PlayerTheme;
   percentage: number;
 }
 
@@ -204,6 +204,14 @@ export type PlayerColor =
   | 'PINK'
   | 'CYAN';
 
+export type PlayerTheme = 
+  | 'TEN_D'
+  | 'EIGHT_E'
+  | 'ROWING'
+  | 'HP'
+  | 'FOOTBALL'
+  | 'MARVEL';
+
 export interface ChemistryBonus {
   color: PlayerColor;
   playerCount: number;
@@ -217,4 +225,39 @@ export interface MatchResult {
   awayScore: number;
   homePoints: number;
   awayPoints: number;
+}
+
+export interface ThemeReward {
+  id: string;
+  lobbyId: string;
+  theme: PlayerTheme;
+  week: number;
+  year: number;
+  executedAt: Date;
+  createdAt: Date;
+  winners: ThemeRewardWinner[];
+}
+
+export interface ThemeRewardWinner {
+  id: string;
+  themeRewardId: string;
+  userId: string;
+  username: string;
+  theme: PlayerTheme;
+  rank: number;
+  points: number;
+  coinsAwarded: number;
+  week: number;
+  year: number;
+  createdAt: Date;
+}
+
+export interface ThemeStanding {
+  userId: string;
+  username: string;
+  theme: PlayerTheme;
+  highestPlayerPoints: number;
+  highestPlayerName: string;
+  rank: number;
+  potentialReward: number;
 }

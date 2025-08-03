@@ -92,7 +92,7 @@ yarn workspace @football-tcg/backend db:seed
 - **4-Player Lobbies**: Exactly 4 players per game session
 - **Pack System**: Percentage-based player drawing with shrinking pools
 - **Team Chemistry**: Color-based bonus system requiring exactly 3 colors, 2+ players per color
-- **League Format**: Round-robin tournament (6 matches per matchday)
+- **League Format**: Round-robin tournament (2 matches per matchday)
 - **Formation System**: 11-player teams with position validation
 
 ### Key Constants (shared/src/constants/game.ts)

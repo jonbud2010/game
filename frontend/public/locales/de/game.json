@@ -144,5 +144,60 @@
       "cancel": "Abbrechen",
       "create": "Erstellen"
     }
+  },
+  "theme_rewards": {
+    "title": "Thema Belohnungen",
+    "subtitle": "Wöchentliche Belohnungen basierend auf deinen besten Spielern pro Thema",
+    "next_execution": "Nächste Ausführung",
+    "execution_time": "Jeden Sonntag um 20:00 Berliner Zeit",
+    "description": "Belohnungen basieren auf dem höchstbewerteten Spieler pro Thema in deiner Sammlung",
+    "tabs": {
+      "standings": "Aktuelle Rangliste",
+      "summary": "Meine Bilanz",
+      "history": "Verlauf"
+    },
+    "rewards_structure": {
+      "title": "Belohnungsstruktur",
+      "max_weekly": "Maximal {{amount}} 💰 pro Woche möglich (6 Themen × 100 💰)"
+    },
+    "positions": {
+      "first": "1. Platz",
+      "second": "2. Platz", 
+      "third": "3. Platz",
+      "fourth": "4. Platz"
+    },
+    "themes": {
+      "TEN_D": "10D",
+      "EIGHT_E": "8E", 
+      "ROWING": "Rudern",
+      "HP": "Harry Potter",
+      "FOOTBALL": "Fußball",
+      "MARVEL": "Marvel"
+    },
+    "summary": {
+      "total_earned": "Gesamt verdient",
+      "total_wins": "Gesamte Siege",
+      "potential_weekly": "Potenzielle Wochenbelohnung",
+      "current_positions": "Aktuelle Positionen",
+      "recent_wins": "Letzte Siege"
+    },
+    "history": {
+      "no_rewards_title": "Noch keine Belohnungen",
+      "no_rewards_description": "Die ersten Thema-Belohnungen werden am nächsten Sonntag vergeben.",
+      "week": "KW",
+      "pagination": {
+        "previous": "Vorherige",
+        "next": "Nächste",
+        "page_of": "Seite {{current}} von {{total}}"
+      }
+    },
+    "coins": "💰",
+    "points": "Punkte",
+    "rank": "Rang",
+    "player": "Spieler",
+    "none": "Keine",
+    "back": "Zurück",
+    "error": "Fehler",
+    "loading": "Lade..."
   }
 }
