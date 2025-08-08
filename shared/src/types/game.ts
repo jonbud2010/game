@@ -15,6 +15,7 @@ export interface Formation {
   name: string;
   imageUrl: string;
   positions: FormationPosition[];
+  percentage: number;
 }
 
 export interface FormationPosition {
@@ -30,11 +31,17 @@ export interface Pack {
   imageUrl: string;
   price: number;
   playerPool: PackPlayer[];
+  formationPool: PackFormation[];
   status: 'active' | 'empty' | 'disabled';
 }
 
 export interface PackPlayer {
   playerId: string;
+  percentage: number;
+}
+
+export interface PackFormation {
+  formationId: string;
   percentage: number;
 }
 
@@ -144,6 +151,13 @@ export interface UserPlayer {
   acquiredAt: Date;
 }
 
+export interface UserFormation {
+  id: string;
+  userId: string;
+  formationId: string;
+  acquiredAt: Date;
+}
+
 export interface GameState {
   currentScreen: 'menu' | 'lobby' | 'team-builder' | 'pack-store' | 'league' | 'match' | 'admin';
   user: User | null;
@@ -195,14 +209,14 @@ export type PlayerPosition =
   | 'RF'; // Right Forward
 
 export type PlayerColor = 
+  | 'DARK_GREEN'
+  | 'LIGHT_GREEN'
+  | 'DARK_BLUE'
+  | 'LIGHT_BLUE'
   | 'RED'
-  | 'BLUE'
-  | 'GREEN'
   | 'YELLOW'
   | 'PURPLE'
-  | 'ORANGE'
-  | 'PINK'
-  | 'CYAN';
+  | 'ORANGE';
 
 export type PlayerTheme = 
   | 'TEN_D'

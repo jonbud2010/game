@@ -245,7 +245,7 @@ describe('Upload Middleware', () => {
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
         error: 'File too large',
-        message: 'Image must be smaller than 5MB'
+        message: 'File size exceeds the 5MB limit'
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -257,8 +257,8 @@ describe('Upload Middleware', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
-        error: 'Too many files',
-        message: 'Only one image can be uploaded at a time'
+        error: 'Upload error',
+        message: 'MulterError: LIMIT_FILE_COUNT'
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -268,10 +268,10 @@ describe('Upload Middleware', () => {
 
       handleUploadError(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockStatus).toHaveBeenCalledWith(400);
+      expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({
-        error: 'Invalid file type',
-        message: 'Only JPEG, PNG, and WebP images are allowed'
+        error: 'Upload failed',
+        message: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.'
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -281,8 +281,12 @@ describe('Upload Middleware', () => {
 
       handleUploadError(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(error);
-      expect(mockStatus).not.toHaveBeenCalled();
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({
+        error: 'Upload failed',
+        message: 'Some other error'
+      });
+      expect(mockNext).not.toHaveBeenCalled();
     });
 
     it('should handle non-multer errors', () => {
@@ -290,7 +294,12 @@ describe('Upload Middleware', () => {
 
       handleUploadError(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockStatus).toHaveBeenCalledWith(500);
+      expect(mockJson).toHaveBeenCalledWith({
+        error: 'Upload failed',
+        message: 'Generic error'
+      });
+      expect(mockNext).not.toHaveBeenCalled();
     });
   });
 

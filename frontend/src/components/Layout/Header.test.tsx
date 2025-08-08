@@ -1,8 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import Header from './Header';
+import { 
+  mockUser,
+  mockAdminUser,
+  createMockAuthContext
+} from '../../test-utils';
 
 // Mock the useAuth hook
 const mockLogout = vi.fn();
@@ -12,37 +17,26 @@ vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => mockUseAuth()
 }));
 
-const createMockAuthContext = (isAuthenticated: boolean = false, user: any = null) => ({
-  user,
-  isAuthenticated,
-  login: vi.fn(),
-  logout: mockLogout,
-  register: vi.fn(),
-  isLoading: false
-});
-
-// Wrapper component to provide router context
+// Test wrapper component
 const TestWrapper: React.FC<{ 
   children: React.ReactNode; 
-  isAuthenticated?: boolean; 
-  user?: any;
   initialEntries?: string[];
+  authContext?: any;
 }> = ({ 
   children, 
-  isAuthenticated = false, 
-  user = null,
-  initialEntries = ['/']
+  initialEntries = ['/'],
+  authContext = createMockAuthContext()
 }) => {
-  const Router = initialEntries ? MemoryRouter : BrowserRouter;
-  const routerProps = initialEntries ? { initialEntries } : {};
-
-  // Set up the mock for this render
-  mockUseAuth.mockReturnValue(createMockAuthContext(isAuthenticated, user));
+  // Set up the auth mock for this render
+  mockUseAuth.mockReturnValue({
+    ...authContext,
+    logout: mockLogout
+  });
 
   return (
-    <Router {...routerProps}>
+    <MemoryRouter initialEntries={initialEntries}>
       {children}
-    </Router>
+    </MemoryRouter>
   );
 };
 
@@ -63,107 +57,106 @@ describe('Header Component', () => {
       expect(screen.getByText('⚽')).toBeInTheDocument();
       expect(screen.getByText('Football TCG')).toBeInTheDocument();
 
-      // Check navigation links
-      expect(screen.getByText('Home')).toBeInTheDocument();
-      expect(screen.getByText('Lobbies')).toBeInTheDocument();
-      expect(screen.getByText('Sammlung')).toBeInTheDocument();
-      expect(screen.getByText('Packs')).toBeInTheDocument();
+      // Check that navigation links are rendered with translation keys as content
+      // The global mock returns the key as the translated text
+      expect(screen.getByText('navigation.home')).toBeInTheDocument();
+      expect(screen.getByText('navigation.lobbies')).toBeInTheDocument();
+      expect(screen.getByText('navigation.collection')).toBeInTheDocument();
+      expect(screen.getByText('navigation.packs')).toBeInTheDocument();
     });
 
     it('should show login and register links when not authenticated', () => {
       render(
-        <TestWrapper isAuthenticated={false}>
+        <TestWrapper>
           <Header />
         </TestWrapper>
       );
 
-      expect(screen.getByText('Anmelden')).toBeInTheDocument();
-      expect(screen.getByText('Registrieren')).toBeInTheDocument();
+      // Check elements exist with translation key content
+      expect(screen.getByText('buttons.login')).toBeInTheDocument();
+      expect(screen.getByText('buttons.register')).toBeInTheDocument();
     });
 
     it('should not show user-specific elements when not authenticated', () => {
       render(
-        <TestWrapper isAuthenticated={false}>
+        <TestWrapper>
           <Header />
         </TestWrapper>
       );
 
-      expect(screen.queryByText('Abmelden')).not.toBeInTheDocument();
+      expect(screen.queryByText('buttons.logout')).not.toBeInTheDocument();
       expect(screen.queryByText('1500')).not.toBeInTheDocument();
+      expect(screen.queryByText(/👤/)).not.toBeInTheDocument();
     });
   });
 
   describe('when user is authenticated', () => {
-    const mockUser = {
-      id: 'user-1',
-      username: 'testuser',
-      email: 'test@example.com',
-      coins: 1500,
-      role: 'USER'
-    };
-
     it('should show user information when authenticated', () => {
       render(
-        <TestWrapper isAuthenticated={true} user={mockUser}>
+        <TestWrapper authContext={createMockAuthContext(true, mockUser)}>
           <Header />
         </TestWrapper>
       );
 
-      expect(screen.getByText('testuser')).toBeInTheDocument();
-      expect(screen.getByText('1500')).toBeInTheDocument();
+      expect(screen.getByText(/👤.*testuser/)).toBeInTheDocument();
+      expect(screen.getByText(/💰.*1500/)).toBeInTheDocument();
     });
 
     it('should show logout button when authenticated', () => {
       render(
-        <TestWrapper isAuthenticated={true} user={mockUser}>
+        <TestWrapper authContext={createMockAuthContext(true, mockUser)}>
           <Header />
         </TestWrapper>
       );
 
-      expect(screen.getByText('Abmelden')).toBeInTheDocument();
+      expect(screen.getByText('buttons.logout')).toBeInTheDocument();
     });
 
     it('should not show login/register links when authenticated', () => {
       render(
-        <TestWrapper isAuthenticated={true} user={mockUser}>
+        <TestWrapper authContext={createMockAuthContext(true, mockUser)}>
           <Header />
         </TestWrapper>
       );
 
-      expect(screen.queryByText('Anmelden')).not.toBeInTheDocument();
-      expect(screen.queryByText('Registrieren')).not.toBeInTheDocument();
+      expect(screen.queryByText('buttons.login')).not.toBeInTheDocument();
+      expect(screen.queryByText('buttons.register')).not.toBeInTheDocument();
     });
 
     it('should show admin link for admin users', () => {
-      const adminUser = { ...mockUser, role: 'ADMIN' };
-      
       render(
-        <TestWrapper isAuthenticated={true} user={adminUser}>
+        <TestWrapper authContext={createMockAuthContext(true, mockAdminUser)}>
           <Header />
         </TestWrapper>
       );
-
-      expect(screen.getByText('Admin')).toBeInTheDocument();
+      
+      // The admin link contains both emoji and translation key
+      expect(screen.getByText(/🔧.*navigation\.admin/)).toBeInTheDocument();
+      
+      // Verify the admin link has correct CSS class
+      const adminLink = screen.getByText(/🔧.*navigation\.admin/).closest('a');
+      expect(adminLink).toHaveClass('admin-link');
     });
 
     it('should not show admin link for regular users', () => {
       render(
-        <TestWrapper isAuthenticated={true} user={mockUser}>
+        <TestWrapper authContext={createMockAuthContext(true, mockUser)}>
           <Header />
         </TestWrapper>
       );
 
-      expect(screen.queryByText('Admin')).not.toBeInTheDocument();
+      expect(screen.queryByText(/🔧.*navigation\.admin/)).not.toBeInTheDocument();
+      expect(screen.queryByText('navigation.admin')).not.toBeInTheDocument();
     });
 
     it('should call logout when logout button is clicked', () => {
       render(
-        <TestWrapper isAuthenticated={true} user={mockUser}>
+        <TestWrapper authContext={createMockAuthContext(true, mockUser)}>
           <Header />
         </TestWrapper>
       );
 
-      const logoutButton = screen.getByText('Abmelden');
+      const logoutButton = screen.getByText('buttons.logout');
       fireEvent.click(logoutButton);
 
       expect(mockLogout).toHaveBeenCalledTimes(1);
@@ -178,8 +171,8 @@ describe('Header Component', () => {
         </TestWrapper>
       );
 
-      const homeLink = screen.getByText('Home').closest('a');
-      const lobbyLink = screen.getByText('Lobbies').closest('a');
+      const homeLink = screen.getByText('navigation.home').closest('a');
+      const lobbyLink = screen.getByText('navigation.lobbies').closest('a');
 
       expect(homeLink).not.toHaveClass('active');
       expect(lobbyLink).toHaveClass('active');
@@ -192,7 +185,7 @@ describe('Header Component', () => {
         </TestWrapper>
       );
 
-      const homeLink = screen.getByText('Home').closest('a');
+      const homeLink = screen.getByText('navigation.home').closest('a');
       expect(homeLink).toHaveClass('active');
     });
   });

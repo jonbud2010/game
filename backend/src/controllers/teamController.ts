@@ -202,7 +202,7 @@ export const createTeam = async (req: Request, res: Response): Promise<void> => 
         });
 
         // Separate dummy/lobby players (available to everyone) from regular players
-        const testPlayers = requestedPlayers.filter(p => 
+        const testPlayers = (requestedPlayers || []).filter(p => 
           p.theme === 'DUMMY' || p.theme === 'LOBBY'
         ).map(p => p.id);
         
@@ -246,7 +246,7 @@ export const createTeam = async (req: Request, res: Response): Promise<void> => 
 
         const formationPositions: PlayerPosition[] = JSON.parse(formation.positions);
         const playersWithPositions = players.map((p: any, index: number) => {
-          const player = actualPlayers.find(ap => ap.id === p.playerId);
+          const player = (actualPlayers || []).find(ap => ap.id === p.playerId);
           return {
             position: player?.position as PlayerPosition,
             name: player?.name
@@ -376,7 +376,7 @@ export const updateTeam = async (req: Request, res: Response): Promise<void> => 
         });
 
         // Separate dummy/lobby players (available to everyone) from regular players
-        const testPlayers = requestedPlayers.filter(p => 
+        const testPlayers = (requestedPlayers || []).filter(p => 
           p.theme === 'DUMMY' || p.theme === 'LOBBY'
         ).map(p => p.id);
         

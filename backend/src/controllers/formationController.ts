@@ -6,6 +6,83 @@ import { prisma } from '../db/client';
  * Handles CRUD operations for football formations
  */
 
+interface FormationPosition {
+  position: string;
+  x: number;
+  y: number;
+}
+
+// Default coordinate mapping for positions (4-4-2 formation layout)
+const getDefaultCoordinates = (position: string, index: number): { x: number; y: number } => {
+  const defaults: Record<string, { x: number; y: number }> = {
+    'GK': { x: 50, y: 10 },
+    'LB': { x: 20, y: 25 },
+    'CB': { x: 40, y: 25 },
+    'RB': { x: 80, y: 25 },
+    'CDM': { x: 50, y: 40 },
+    'CM': { x: 50, y: 50 },
+    'CAM': { x: 50, y: 60 },
+    'LM': { x: 20, y: 50 },
+    'RM': { x: 80, y: 50 },
+    'LW': { x: 20, y: 75 },
+    'RW': { x: 80, y: 75 },
+    'ST': { x: 50, y: 75 },
+    'CF': { x: 50, y: 70 },
+    'LF': { x: 40, y: 75 },
+    'RF': { x: 60, y: 75 }
+  };
+
+  // If position has default coordinates, use them
+  if (defaults[position]) {
+    return defaults[position];
+  }
+
+  // For multiple same positions (like CB, CM, ST), adjust x coordinate
+  const baseCoord = defaults[position] || { x: 50, y: 50 };
+  const offset = (index % 3 - 1) * 20; // -20, 0, +20 for multiple positions
+  return {
+    x: Math.max(10, Math.min(90, baseCoord.x + offset)),
+    y: baseCoord.y
+  };
+};
+
+// Transform position data to ensure proper format
+const transformPositions = (positions: any[]): FormationPosition[] => {
+  return positions.map((pos, index) => {
+    // If it's already a proper FormationPosition object, return as is
+    if (typeof pos === 'object' && pos.position && typeof pos.x === 'number' && typeof pos.y === 'number') {
+      return pos as FormationPosition;
+    }
+    
+    // If it's a string (legacy format), convert to FormationPosition
+    if (typeof pos === 'string') {
+      const coords = getDefaultCoordinates(pos, index);
+      return {
+        position: pos,
+        x: coords.x,
+        y: coords.y
+      };
+    }
+    
+    // If it's an object but missing coordinates, add them
+    if (typeof pos === 'object' && pos.position) {
+      const coords = getDefaultCoordinates(pos.position, index);
+      return {
+        position: pos.position,
+        x: pos.x || coords.x,
+        y: pos.y || coords.y
+      };
+    }
+    
+    // Fallback for invalid data
+    return {
+      position: 'ST',
+      x: 50,
+      y: 75
+    };
+  });
+};
+
 // Get all formations
 export const getAllFormations = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -15,11 +92,12 @@ export const getAllFormations = async (req: Request, res: Response): Promise<voi
       }
     });
 
-    // Parse positions JSON string for each formation
+    // Parse positions JSON string for each formation and transform to proper format
     const formationsWithParsedPositions = formations.map(formation => {
-      let positions;
+      let positions: FormationPosition[];
       try {
-        positions = JSON.parse(formation.positions);
+        const parsedPositions = JSON.parse(formation.positions);
+        positions = transformPositions(parsedPositions);
       } catch (parseError) {
         console.error('Error parsing formation positions:', parseError);
         positions = [];
@@ -80,10 +158,11 @@ export const getFormationById = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Parse positions JSON string
-    let positions;
+    // Parse positions JSON string and transform to proper format
+    let positions: FormationPosition[];
     try {
-      positions = JSON.parse(formation.positions);
+      const parsedPositions = JSON.parse(formation.positions);
+      positions = transformPositions(parsedPositions);
     } catch (parseError) {
       console.error('Error parsing formation positions:', parseError);
       positions = [];
@@ -108,10 +187,10 @@ export const getFormationById = async (req: Request, res: Response): Promise<voi
 // Create new formation
 export const createFormation = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, positions } = req.body;
+    const { name, positions, percentage } = req.body;
     
-    // Default imageUrl if not provided (will be updated via file upload)
-    const imageUrl = req.body.imageUrl || '/images/formations/default.jpg';
+    // Default imageUrl (images are not required for formations)
+    const imageUrl = '/images/formations/default.jpg';
 
     // Validate positions structure
     if (!Array.isArray(positions) || positions.length !== 11) {
@@ -146,7 +225,8 @@ export const createFormation = async (req: Request, res: Response): Promise<void
       data: {
         name,
         imageUrl,
-        positions: JSON.stringify(positions)
+        positions: JSON.stringify(positions),
+        percentage: percentage || 0.05 // Default 5%
       }
     });
 
@@ -155,7 +235,7 @@ export const createFormation = async (req: Request, res: Response): Promise<void
       message: 'Formation created successfully',
       data: {
         ...formation,
-        positions
+        positions: transformPositions(positions)
       }
     });
   } catch (error) {
@@ -181,7 +261,7 @@ export const createFormation = async (req: Request, res: Response): Promise<void
 export const updateFormation = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, imageUrl, positions } = req.body;
+    const { name, positions, percentage } = req.body;
 
     // Check if formation exists
     const existingFormation = await prisma.formation.findUnique({
@@ -199,7 +279,7 @@ export const updateFormation = async (req: Request, res: Response): Promise<void
     // Prepare update data
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
-    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (percentage !== undefined) updateData.percentage = percentage;
     
     if (positions !== undefined) {
       // Validate positions if provided
@@ -239,10 +319,11 @@ export const updateFormation = async (req: Request, res: Response): Promise<void
       data: updateData
     });
 
-    // Parse positions for response
-    let parsedPositions;
+    // Parse positions for response and transform to proper format
+    let parsedPositions: FormationPosition[];
     try {
-      parsedPositions = JSON.parse(updatedFormation.positions);
+      const rawPositions = JSON.parse(updatedFormation.positions);
+      parsedPositions = transformPositions(rawPositions);
     } catch (parseError) {
       parsedPositions = [];
     }

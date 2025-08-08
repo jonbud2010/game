@@ -40,6 +40,19 @@ function validateFormData(schema: Joi.ObjectSchema) {
         }
       }
       
+      // Parse formationIds if it's a JSON string (from FormData)
+      if (processedBody.formationIds && typeof processedBody.formationIds === 'string') {
+        try {
+          processedBody.formationIds = JSON.parse(processedBody.formationIds);
+          console.log('Parsed formationIds from string:', processedBody.formationIds);
+        } catch (error) {
+          return res.status(400).json({
+            error: 'Validation error',
+            details: 'formationIds must be a valid JSON array'
+          });
+        }
+      }
+      
       // Parse positions if it's a JSON string (from FormData for formations)
       if (processedBody.positions && typeof processedBody.positions === 'string') {
         try {
@@ -329,6 +342,17 @@ const createFormationSchema = Joi.object({
     .messages({
       'array.length': 'Formation must have exactly 11 positions',
       'any.required': 'Positions are required'
+    }),
+  
+  percentage: Joi.number()
+    .min(0.001)
+    .max(1)
+    .optional()
+    .default(0.05)
+    .messages({
+      'number.base': 'Percentage must be a number',
+      'number.min': 'Percentage must be at least 0.001 (0.1%)',
+      'number.max': 'Percentage must not exceed 1 (100%)'
     })
 });
 
@@ -370,6 +394,14 @@ const createPackSchema = Joi.object({
       'string.base': 'Each player ID must be a string'
     }),
   
+  formationIds: Joi.array()
+    .items(Joi.string().required())
+    .optional()
+    .messages({
+      'array.base': 'Formation IDs must be an array',
+      'string.base': 'Each formation ID must be a string'
+    }),
+  
   status: Joi.string()
     .valid('ACTIVE', 'INACTIVE', 'EMPTY')
     .optional()
@@ -393,14 +425,30 @@ const packPlayerManagementSchema = Joi.object({
     })
 });
 
+const packFormationManagementSchema = Joi.object({
+  formationIds: Joi.array()
+    .items(Joi.string().required())
+    .min(1)
+    .required()
+    .messages({
+      'array.base': 'Formation IDs must be an array',
+      'array.min': 'At least one formation ID is required',
+      'array.includesRequiredUnknowns': 'At least one formation ID is required',
+      'string.base': 'Each formation ID must be a string',
+      'any.required': 'Formation IDs are required'
+    })
+});
+
 // Export validation middleware functions
 export const validateRegistration = validate(registerSchema);
 export const validateLogin = validate(loginSchema);
 export const validateCreatePlayer = validateFormData(createPlayerSchema);
 export const validateCreateLobby = validate(createLobbySchema);
 export const validateCreateFormation = validateFormData(createFormationSchema);
+export const validateCreateFormationJSON = validate(createFormationSchema);
 export const validateCreatePack = validateFormData(createPackSchema);
 export const validatePackPlayerManagement = validate(packPlayerManagementSchema);
+export const validatePackFormationManagement = validate(packFormationManagementSchema);
 
 // Generic parameter validation
 export function validateId(req: Request, res: Response, next: NextFunction): Response | void {

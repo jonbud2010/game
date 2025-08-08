@@ -70,6 +70,7 @@ export interface Formation {
   name: string;
   imageUrl: string;
   positions: string;
+  percentage?: number;
 }
 
 export interface Pack {
@@ -78,6 +79,8 @@ export interface Pack {
   imageUrl: string;
   price: number;
   playerCount: number;
+  formationCount?: number;
+  totalItemCount?: number;
   status: 'ACTIVE' | 'INACTIVE' | 'EMPTY';
 }
 
@@ -188,10 +191,14 @@ export interface LeagueResult {
 }
 
 export interface PackOpenResult {
-  drawnPlayer: Player;
+  itemType: 'player' | 'formation';
+  player?: Player;
+  formation?: Formation;
   coinsSpent: number;
   remainingCoins: number;
+  remainingItemsInPack: number;
   remainingPlayersInPack: number;
+  remainingFormationsInPack: number;
   packNowEmpty: boolean;
 }
 

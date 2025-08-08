@@ -106,7 +106,14 @@
       "Bash(yarn workspace:*)",
       "Bash(timeout 10s yarn workspace @football-tcg/backend tsx src/index.ts)",
       "Bash(timeout 10s yarn tsx:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(npx tsx:*)",
+      "Bash(SHELL=/bin/bash npx tsx backend/src/index.ts)",
+      "Bash(timeout 10s yarn test:*)",
+      "Bash(time yarn workspace @football-tcg/frontend test:fast)",
+      "Bash(timeout 30s yarn workspace @football-tcg/backend test)",
+      "Bash(timeout 60s yarn workspace @football-tcg/backend test)",
+      "Bash(timeout 30s yarn workspace @football-tcg/backend test src/controllers/lobbyController.test.ts)"
     ],
     "deny": []
   }

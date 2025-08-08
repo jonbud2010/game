@@ -10,8 +10,11 @@ interface Pack {
   price: number;
   status: string;
   playerCount: number;
+  formationCount?: number;
+  totalItemCount?: number;
   totalPercentage: number;
   players: PackPlayer[];
+  formations?: PackFormation[];
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +28,14 @@ interface PackPlayer {
   percentage: number;
 }
 
+interface PackFormation {
+  id: string;
+  name: string;
+  imageUrl: string;
+  positions: string;
+  percentage: number;
+}
+
 interface Player {
   id: string;
   name: string;
@@ -34,9 +45,18 @@ interface Player {
   percentage: number;
 }
 
+interface Formation {
+  id: string;
+  name: string;
+  imageUrl: string;
+  positions: string;
+  percentage: number;
+}
+
 const AdminPacksPage: React.FC = () => {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [formations, setFormations] = useState<Formation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);

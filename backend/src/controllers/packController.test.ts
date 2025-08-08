@@ -592,14 +592,16 @@ describe('Pack Controller', () => {
         packPlayers: [
           { player: { id: 'p1', percentage: 0.3 } },
           { player: { id: 'p2', percentage: 0.9 } } // Total = 1.2, needs scaling
-        ]
+        ],
+        packFormations: [] // Add empty formations array
       };
       const mockUpdatedPack = {
         id: '1',
         packPlayers: [
           { player: { id: 'p1', percentage: 0.25 } }, // 0.3 * (1.0/1.2)
-          { player: { id: 'p2', percentage: 0.75 } }  // 0.9 * (1.0/1.2)
-        ]
+          { player: { id: 'p2', percentage: 0.75 } }  // 0.9 * (1.2)
+        ],
+        packFormations: [] // Add empty formations array
       };
 
       mockedPrisma.pack.findUnique
@@ -634,7 +636,8 @@ describe('Pack Controller', () => {
         packPlayers: [
           { player: { id: 'p1', percentage: 0.0 } },
           { player: { id: 'p2', percentage: 0.0 } }
-        ]
+        ],
+        packFormations: [] // Add empty formations array
       };
 
       mockedPrisma.pack.findUnique.mockResolvedValue(mockPack);

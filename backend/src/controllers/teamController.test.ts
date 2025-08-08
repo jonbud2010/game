@@ -14,6 +14,8 @@ import { prisma } from '../db/client';
 vi.mock('@football-tcg/shared', () => ({
   calculateTeamChemistry: vi.fn(),
   validateTeamChemistry: vi.fn(),
+  validateTeamPositions: vi.fn(),
+  isDummyPlayer: vi.fn(),
   MATCH_SETTINGS: {
     PLAYERS_PER_TEAM: 11,
     EXACT_CHEMISTRY_COLORS: 3,
@@ -22,9 +24,11 @@ vi.mock('@football-tcg/shared', () => ({
 }));
 
 // Import mocked functions after mocking
-import { calculateTeamChemistry, validateTeamChemistry } from '@football-tcg/shared';
+import { calculateTeamChemistry, validateTeamChemistry, validateTeamPositions, isDummyPlayer } from '@football-tcg/shared';
 const mockCalculateTeamChemistry = vi.mocked(calculateTeamChemistry);
 const mockValidateTeamChemistry = vi.mocked(validateTeamChemistry);
+const mockValidateTeamPositions = vi.mocked(validateTeamPositions);
+const mockIsDummyPlayer = vi.mocked(isDummyPlayer);
 
 // Mock Prisma
 vi.mock('../db/client', () => ({
@@ -78,6 +82,10 @@ describe('Team Controller', () => {
 
     // Reset all mocks
     vi.clearAllMocks();
+    
+    // Set up default mock behaviors
+    mockIsDummyPlayer.mockReturnValue(false); // By default, players are not dummy players
+    mockValidateTeamPositions.mockReturnValue({ isValid: true, errors: [] }); // By default, positions are valid
   });
 
   describe('getUserTeams', () => {
@@ -238,7 +246,7 @@ describe('Team Controller', () => {
 
     it('should create team successfully', async () => {
       const mockLobbyMember = { id: 'lm1', userId: 'user1', lobbyId: 'lobby1' };
-      const mockFormation = { id: 'f1', name: '4-4-2' };
+      const mockFormation = { id: 'f1', name: '4-4-2', positions: JSON.stringify(['ST', 'ST', 'CAM', 'CM', 'CM', 'LM', 'RM', 'CB', 'CB', 'LB', 'RB']) };
       const mockUserPlayers = validPlayers.map(p => ({ playerId: p.playerId, userId: 'user1' }));
       const mockCreatedTeam = {
         id: 'team1',
@@ -258,6 +266,7 @@ describe('Team Controller', () => {
       mockedPrisma.team.findFirst.mockResolvedValue(null); // No existing team
       mockedPrisma.formation.findUnique.mockResolvedValue(mockFormation);
       mockedPrisma.userPlayer.findMany.mockResolvedValue(mockUserPlayers);
+      mockedPrisma.player.findMany.mockResolvedValue(validPlayers.map(p => ({ id: p.playerId, theme: 'REGULAR', position: 'ST' })));
       mockedPrisma.team.create.mockResolvedValue(mockCreatedTeam);
       mockedPrisma.teamPlayer.createMany.mockResolvedValue({ count: 11 });
       mockedPrisma.team.findUnique.mockResolvedValue(mockCompleteTeam);
@@ -365,7 +374,7 @@ describe('Team Controller', () => {
     });
 
     it('should update team successfully', async () => {
-      const existingTeam = { id: 'team1', name: 'Old Team', formation: { id: 'f1' } };
+      const existingTeam = { id: 'team1', name: 'Old Team', formation: { id: 'f1', positions: JSON.stringify(['ST', 'ST', 'CAM', 'CM', 'CM', 'LM', 'RM', 'CB', 'CB', 'LB', 'RB']) } };
       const mockUserPlayers = validPlayers.map(p => ({ playerId: p.playerId, userId: 'user1' }));
       const updatedTeam = {
         id: 'team1',
@@ -376,6 +385,7 @@ describe('Team Controller', () => {
 
       mockedPrisma.team.findFirst.mockResolvedValue(existingTeam);
       mockedPrisma.userPlayer.findMany.mockResolvedValue(mockUserPlayers);
+      mockedPrisma.player.findMany.mockResolvedValue(validPlayers.map(p => ({ id: p.playerId, theme: 'REGULAR', position: 'ST' })));
       mockedPrisma.team.update.mockResolvedValue({});
       mockedPrisma.teamPlayer.deleteMany.mockResolvedValue({ count: 11 });
       mockedPrisma.teamPlayer.createMany.mockResolvedValue({ count: 11 });

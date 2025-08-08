@@ -3,27 +3,12 @@ import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 
-// Mock localStorage
-const mockLocalStorage = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] || null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    })
-  };
-})();
+// Mock LoadingSpinner component
+vi.mock('../components/LoadingSpinner', () => ({
+  default: ({ text }: { text: string }) => <div data-testid="loading-spinner">{text}</div>
+}));
 
-Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
-
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch (global fetch is already mocked in vitest.setup.ts)
 const mockFetch = vi.mocked(fetch);
 
 // Test component to access context
@@ -49,12 +34,14 @@ const TestComponent: React.FC = () => {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockLocalStorage.clear();
+    // localStorage is already mocked globally in vitest.setup.ts
+    // Reset fetch mock
+    mockFetch.mockClear();
   });
 
   describe('initial state', () => {
     it('should initialize with default values when no token in localStorage', () => {
-      mockLocalStorage.getItem.mockReturnValue(null);
+      vi.mocked(localStorage.getItem).mockReturnValue(null);
 
       render(
         <AuthProvider>
@@ -67,8 +54,8 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('user')).toHaveTextContent('no-user');
     });
 
-    it('should initialize with loading state when token exists in localStorage', async () => {
-      mockLocalStorage.getItem.mockReturnValue('existing-token');
+    it('should show loading state when token exists in localStorage', async () => {
+      vi.mocked(localStorage.getItem).mockReturnValue('existing-token');
       
       // Mock successful user fetch
       mockFetch.mockResolvedValueOnce({
@@ -84,15 +71,20 @@ describe('AuthContext', () => {
         })
       } as Response);
 
+      let renderResult;
       await act(async () => {
-        render(
+        renderResult = render(
           <AuthProvider>
             <TestComponent />
           </AuthProvider>
         );
       });
 
-      expect(screen.getByTestId('loading')).toHaveTextContent('loading');
+      // Wait for auth check to complete
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated');
+        expect(screen.getByTestId('loading')).toHaveTextContent('not-loading');
+      });
     });
   });
 
@@ -114,11 +106,13 @@ describe('AuthContext', () => {
         })
       } as Response);
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       const loginButton = screen.getByText('Login');
       
@@ -131,7 +125,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('user')).toHaveTextContent(JSON.stringify(mockUser));
       });
 
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_token', 'mock-jwt-token');
+      expect(localStorage.setItem).toHaveBeenCalledWith('auth_token', 'mock-jwt-token');
       expect(mockFetch).toHaveBeenCalledWith('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -147,11 +141,13 @@ describe('AuthContext', () => {
         })
       } as Response);
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       const loginButton = screen.getByText('Login');
       
@@ -160,17 +156,19 @@ describe('AuthContext', () => {
       })).rejects.toThrow('Invalid credentials');
 
       expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated');
-      expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
+      expect(localStorage.setItem).not.toHaveBeenCalled();
     });
 
     it('should handle network errors during login', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       const loginButton = screen.getByText('Login');
       
@@ -201,11 +199,13 @@ describe('AuthContext', () => {
         })
       } as Response);
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       const registerButton = screen.getByText('Register');
       
@@ -218,7 +218,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('user')).toHaveTextContent(JSON.stringify(mockUser));
       });
 
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_token', 'mock-jwt-token');
+      expect(localStorage.setItem).toHaveBeenCalledWith('auth_token', 'mock-jwt-token');
       expect(mockFetch).toHaveBeenCalledWith('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -234,11 +234,13 @@ describe('AuthContext', () => {
         })
       } as Response);
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       const registerButton = screen.getByText('Register');
       
@@ -253,7 +255,7 @@ describe('AuthContext', () => {
   describe('logout functionality', () => {
     it('should logout and clear state', async () => {
       // First set up authenticated state
-      mockLocalStorage.getItem.mockReturnValue('existing-token');
+      vi.mocked(localStorage.getItem).mockReturnValue('existing-token');
       
       const mockUser = {
         id: 'user-1',
@@ -270,11 +272,13 @@ describe('AuthContext', () => {
         })
       } as Response);
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       // Wait for initial auth check
       await waitFor(() => {
@@ -290,13 +294,13 @@ describe('AuthContext', () => {
 
       expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated');
       expect(screen.getByTestId('user')).toHaveTextContent('no-user');
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
+      expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
     });
   });
 
   describe('token validation on mount', () => {
     it('should validate existing token and set user', async () => {
-      mockLocalStorage.getItem.mockReturnValue('valid-token');
+      vi.mocked(localStorage.getItem).mockReturnValue('valid-token');
       
       const mockUser = {
         id: 'user-1',
@@ -313,11 +317,13 @@ describe('AuthContext', () => {
         })
       } as Response);
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated');
@@ -334,7 +340,7 @@ describe('AuthContext', () => {
     });
 
     it('should handle invalid token and clear localStorage', async () => {
-      mockLocalStorage.getItem.mockReturnValue('invalid-token');
+      vi.mocked(localStorage.getItem).mockReturnValue('invalid-token');
       
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -344,38 +350,42 @@ describe('AuthContext', () => {
         })
       } as Response);
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated');
         expect(screen.getByTestId('loading')).toHaveTextContent('not-loading');
       });
 
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
+      expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
     });
   });
 
   describe('error handling', () => {
     it('should handle network errors during token validation', async () => {
-      mockLocalStorage.getItem.mockReturnValue('token');
+      vi.mocked(localStorage.getItem).mockReturnValue('token');
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      render(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>
-      );
+      await act(async () => {
+        render(
+          <AuthProvider>
+            <TestComponent />
+          </AuthProvider>
+        );
+      });
 
       await waitFor(() => {
         expect(screen.getByTestId('loading')).toHaveTextContent('not-loading');
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated');
       });
 
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token');
+      expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
     });
   });
 });

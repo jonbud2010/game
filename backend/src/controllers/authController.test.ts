@@ -68,7 +68,7 @@ describe('Auth Controller', () => {
     const validRegisterData = {
       username: 'testuser',
       email: 'test@example.com',
-      password: 'password123'
+      password: 'Password123'
     };
 
     it('should register a new user successfully', async () => {
@@ -112,7 +112,7 @@ describe('Auth Controller', () => {
       });
 
       // Verify bcrypt.hash was called with correct parameters
-      expect(mockedBcrypt.hash).toHaveBeenCalledWith('password123', 12);
+      expect(mockedBcrypt.hash).toHaveBeenCalledWith('Password123', 12);
       
       // Verify user creation
       expect(mockedUserCreate).toHaveBeenCalledWith({
@@ -191,7 +191,7 @@ describe('Auth Controller', () => {
   describe('POST /auth/login', () => {
     const validLoginData = {
       email: 'test@example.com',
-      password: 'password123'
+      password: 'Password123'
     };
 
     it('should login user successfully', async () => {
@@ -232,7 +232,7 @@ describe('Auth Controller', () => {
       });
 
       // Verify password comparison
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith('password123', 'hashed-password');
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith('Password123', 'hashed-password');
     });
 
     it('should return error for invalid credentials - user not found', async () => {

@@ -6,6 +6,21 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
+    
+    // Performance optimizations
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        minThreads: 1,
+        maxThreads: 3, // Limited due to SQLite file locking
+        useAtomics: true
+      }
+    },
+    
+    // Faster test execution
+    logLevel: 'error',
+    reporter: 'basic',
+    
     include: [
       'src/**/*.test.ts',
       'src/**/*.spec.ts'
@@ -37,8 +52,9 @@ export default defineConfig({
         }
       }
     },
-    testTimeout: 10000,
-    hookTimeout: 30000
+    // Optimized timeouts
+    testTimeout: 5000, // Reduced from 10s
+    hookTimeout: 15000 // Reduced from 30s
   },
   resolve: {
     alias: {

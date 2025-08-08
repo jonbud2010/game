@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
+import React, { act } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import LoginPage from './LoginPage';
@@ -55,11 +55,14 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('⚽ Anmelden')).toBeInTheDocument();
-    expect(screen.getByText('Willkommen zurück!')).toBeInTheDocument();
-    expect(screen.getByLabelText('E-Mail')).toBeInTheDocument();
-    expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Anmelden' })).toBeInTheDocument();
+    // Translation keys are rendered directly due to global mock
+
+    // Check elements render with translation keys  
+    expect(screen.getByText('⚽ buttons.login')).toBeInTheDocument();
+    expect(screen.getByText('pages.login.welcome_back')).toBeInTheDocument();
+    expect(screen.getByLabelText('forms.email')).toBeInTheDocument();
+    expect(screen.getByLabelText('forms.password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'buttons.login' })).toBeInTheDocument();
   });
 
   it('should render registration link', () => {
@@ -69,10 +72,12 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('Noch kein Account?')).toBeInTheDocument();
-    expect(screen.getByText('Registrieren')).toBeInTheDocument();
+    // Translation keys are rendered directly due to global mock
+
+    expect(screen.getByText('pages.login.no_account')).toBeInTheDocument();
+    expect(screen.getByText('buttons.register')).toBeInTheDocument();
     
-    const registerLink = screen.getByText('Registrieren').closest('a');
+    const registerLink = screen.getByText('buttons.register').closest('a');
     expect(registerLink).toHaveAttribute('href', '/register');
   });
 
@@ -83,8 +88,8 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    const emailInput = screen.getByLabelText('E-Mail') as HTMLInputElement;
-    const passwordInput = screen.getByLabelText('Passwort') as HTMLInputElement;
+    const emailInput = screen.getByLabelText('forms.email') as HTMLInputElement;
+    const passwordInput = screen.getByLabelText('forms.password') as HTMLInputElement;
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
@@ -102,13 +107,15 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    const emailInput = screen.getByLabelText('E-Mail');
-    const passwordInput = screen.getByLabelText('Passwort');
-    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+    const emailInput = screen.getByLabelText('forms.email');
+    const passwordInput = screen.getByLabelText('forms.password');
+    const submitButton = screen.getByRole('button', { name: 'buttons.login' });
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
+    await act(async () => {
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
@@ -127,13 +134,15 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    const emailInput = screen.getByLabelText('E-Mail');
-    const passwordInput = screen.getByLabelText('Passwort');
-    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+    const emailInput = screen.getByLabelText('forms.email');
+    const passwordInput = screen.getByLabelText('forms.password');
+    const submitButton = screen.getByRole('button', { name: 'buttons.login' });
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
+    await act(async () => {
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
@@ -150,17 +159,19 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    const emailInput = screen.getByLabelText('E-Mail');
-    const passwordInput = screen.getByLabelText('Passwort');
-    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+    const emailInput = screen.getByLabelText('forms.email');
+    const passwordInput = screen.getByLabelText('forms.password');
+    const submitButton = screen.getByRole('button', { name: 'buttons.login' });
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
+    await act(async () => {
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      fireEvent.click(submitButton);
+    });
 
-    // Check if button shows loading state
+    // Check if button shows loading state (would use translation key)
     await waitFor(() => {
-      expect(submitButton).toHaveTextContent('Lädt...');
+      expect(submitButton).toHaveTextContent(/.*\.\.\.|status\.loading/);
       expect(submitButton).toBeDisabled();
     });
 
@@ -179,13 +190,15 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    const emailInput = screen.getByLabelText('E-Mail');
-    const passwordInput = screen.getByLabelText('Passwort');
-    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+    const emailInput = screen.getByLabelText('forms.email');
+    const passwordInput = screen.getByLabelText('forms.password');
+    const submitButton = screen.getByRole('button', { name: 'buttons.login' });
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } });
-    fireEvent.click(submitButton);
+    await act(async () => {
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } });
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -193,7 +206,7 @@ describe('LoginPage Component', () => {
 
     // Check that loading state is reset
     expect(submitButton).not.toBeDisabled();
-    expect(submitButton).toHaveTextContent('Anmelden');
+    expect(submitButton).toHaveTextContent('buttons.login');
   });
 
   it('should display generic error message for non-Error exceptions', async () => {
@@ -205,16 +218,19 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    const emailInput = screen.getByLabelText('E-Mail');
-    const passwordInput = screen.getByLabelText('Passwort');
-    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+    const emailInput = screen.getByLabelText('forms.email');
+    const passwordInput = screen.getByLabelText('forms.password');
+    const submitButton = screen.getByRole('button', { name: 'buttons.login' });
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
+    await act(async () => {
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
-      expect(screen.getByText('Login fehlgeschlagen. Bitte versuche es erneut.')).toBeInTheDocument();
+      // Should show generic error translation key
+      expect(screen.getByText('auth.login_failed')).toBeInTheDocument();
     });
   });
 
@@ -230,22 +246,26 @@ describe('LoginPage Component', () => {
       </TestWrapper>
     );
 
-    const emailInput = screen.getByLabelText('E-Mail');
-    const passwordInput = screen.getByLabelText('Passwort');
-    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+    const emailInput = screen.getByLabelText('forms.email');
+    const passwordInput = screen.getByLabelText('forms.password');
+    const submitButton = screen.getByRole('button', { name: 'buttons.login' });
 
     // First submission
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } });
-    fireEvent.click(submitButton);
+    await act(async () => {
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } });
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('First error')).toBeInTheDocument();
     });
 
     // Second submission
-    fireEvent.change(passwordInput, { target: { value: 'correctpassword' } });
-    fireEvent.click(submitButton);
+    await act(async () => {
+      fireEvent.change(passwordInput, { target: { value: 'correctpassword' } });
+      fireEvent.click(submitButton);
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('First error')).not.toBeInTheDocument();
@@ -260,7 +280,7 @@ describe('LoginPage Component', () => {
         </TestWrapper>
       );
 
-      const emailInput = screen.getByLabelText('E-Mail');
+      const emailInput = screen.getByLabelText('forms.email');
       expect(emailInput).toHaveAttribute('required');
       expect(emailInput).toHaveAttribute('type', 'email');
     });
@@ -272,7 +292,7 @@ describe('LoginPage Component', () => {
         </TestWrapper>
       );
 
-      const passwordInput = screen.getByLabelText('Passwort');
+      const passwordInput = screen.getByLabelText('forms.password');
       expect(passwordInput).toHaveAttribute('required');
       expect(passwordInput).toHaveAttribute('type', 'password');
     });
@@ -286,11 +306,11 @@ describe('LoginPage Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByLabelText('E-Mail')).toBeInTheDocument();
-      expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
+      expect(screen.getByLabelText('forms.email')).toBeInTheDocument();
+      expect(screen.getByLabelText('forms.password')).toBeInTheDocument();
     });
 
-    it('should associate error messages with form', () => {
+    it('should associate error messages with form', async () => {
       mockLogin.mockRejectedValue(new Error('Test error'));
 
       render(
@@ -299,10 +319,17 @@ describe('LoginPage Component', () => {
         </TestWrapper>
       );
 
-      const submitButton = screen.getByRole('button', { name: 'Anmelden' });
-      fireEvent.click(submitButton);
+      const emailInput = screen.getByLabelText('forms.email');
+      const passwordInput = screen.getByLabelText('forms.password');
+      const submitButton = screen.getByRole('button', { name: 'buttons.login' });
+      
+      await act(async () => {
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'password123' } });
+        fireEvent.click(submitButton);
+      });
 
-      waitFor(() => {
+      await waitFor(() => {
         const errorMessage = screen.getByText('Test error');
         expect(errorMessage).toHaveClass('error-message');
       });

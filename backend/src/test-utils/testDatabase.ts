@@ -3,33 +3,35 @@ import { config } from 'dotenv';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 // Load test environment
 config({ path: '.env.test' });
 
 export class TestDatabase {
-  private static instance: TestDatabase;
   private prisma: PrismaClient;
   private testDbPath: string;
+  private isInitialized: boolean = false;
 
-  private constructor() {
-    // Use unique database name to avoid conflicts
+  constructor(testName?: string) {
+    // Create unique database for each test file/instance to avoid locks
+    const uniqueId = testName || crypto.randomBytes(8).toString('hex');
     const timestamp = Date.now();
-    this.testDbPath = path.join(process.cwd(), `test-${timestamp}.db`);
+    this.testDbPath = path.join(process.cwd(), `test-${uniqueId}-${timestamp}.db`);
+    
     this.prisma = new PrismaClient({
       datasources: {
         db: {
           url: `file:${this.testDbPath}`
         }
-      }
+      },
+      // Reduce connection timeouts for faster tests
+      __internal: {
+        engine: {
+          requestTimeout: 5000,
+        },
+      },
     });
-  }
-
-  public static getInstance(): TestDatabase {
-    if (!TestDatabase.instance) {
-      TestDatabase.instance = new TestDatabase();
-    }
-    return TestDatabase.instance;
   }
 
   public getPrisma(): PrismaClient {
@@ -40,22 +42,39 @@ export class TestDatabase {
    * Initialize test database with migrations
    */
   public async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      return; // Already initialized
+    }
+
     try {
       // Remove existing test database
       if (fs.existsSync(this.testDbPath)) {
         fs.unlinkSync(this.testDbPath);
       }
 
-      // Generate Prisma client
-      execSync('yarn prisma generate', { stdio: 'pipe' });
+      // Remove journal file if it exists
+      const journalPath = `${this.testDbPath}-journal`;
+      if (fs.existsSync(journalPath)) {
+        fs.unlinkSync(journalPath);
+      }
+
+      // Generate Prisma client (only once globally)
+      try {
+        execSync('yarn prisma generate', { stdio: 'pipe', timeout: 30000 });
+      } catch (error) {
+        // Ignore if already generated
+        console.warn('Prisma generate warning (likely already generated):', error.message);
+      }
 
       // Push schema to database (better for testing than migrations)
       execSync('yarn prisma db push --force-reset --skip-generate', { 
         stdio: 'pipe',
+        timeout: 15000,
         env: { ...process.env, DATABASE_URL: `file:${this.testDbPath}` }
       });
 
-      console.log('Test database initialized successfully');
+      this.isInitialized = true;
+      console.log(`Test database initialized: ${path.basename(this.testDbPath)}`);
     } catch (error) {
       console.error('Failed to initialize test database:', error);
       throw error;
@@ -143,18 +162,30 @@ export class TestDatabase {
    * Close database connection and cleanup test files
    */
   public async disconnect(): Promise<void> {
-    await this.prisma.$disconnect();
+    try {
+      await this.prisma.$disconnect();
+    } catch (error) {
+      console.warn('Error disconnecting Prisma:', error);
+    }
     
     // Clean up test database file
     try {
+      // Wait a bit to ensure connection is fully closed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       if (fs.existsSync(this.testDbPath)) {
         fs.unlinkSync(this.testDbPath);
       }
-      // Also clean up journal file if it exists
+      // Also clean up journal and WAL files if they exist
       const journalPath = `${this.testDbPath}-journal`;
-      if (fs.existsSync(journalPath)) {
-        fs.unlinkSync(journalPath);
-      }
+      const walPath = `${this.testDbPath}-wal`;
+      const shmPath = `${this.testDbPath}-shm`;
+      
+      [journalPath, walPath, shmPath].forEach(filePath => {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
     } catch (error) {
       console.warn('Failed to cleanup test database files:', error);
     }
@@ -189,19 +220,16 @@ export class TestDatabase {
   }
 }
 
-// Export singleton instance
-export const testDb = TestDatabase.getInstance();
-
-// Helper function for tests
-export const setupTestDatabase = async (): Promise<PrismaClient> => {
-  await testDb.initialize();
-  return testDb.getPrisma();
+// Helper functions for creating isolated test databases
+export const createTestDatabase = (testName?: string): TestDatabase => {
+  return new TestDatabase(testName);
 };
 
-export const cleanTestDatabase = async (): Promise<void> => {
-  await testDb.clean();
+export const setupTestDatabase = async (testName?: string): Promise<{ db: TestDatabase; prisma: PrismaClient }> => {
+  const db = createTestDatabase(testName);
+  await db.initialize();
+  return { db, prisma: db.getPrisma() };
 };
 
-export const resetTestDatabase = async (): Promise<void> => {
-  await testDb.reset();
-};
+// Legacy singleton for existing tests (will be phased out)
+export const testDb = createTestDatabase('legacy');

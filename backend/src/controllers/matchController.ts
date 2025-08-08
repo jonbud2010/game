@@ -526,7 +526,7 @@ export const simulateMatchday = async (req: Request, res: Response): Promise<voi
 export const getLeagueTable = async (req: Request, res: Response): Promise<void> => {
   try {
     const { lobbyId } = req.params;
-    const { matchDay } = req.query;
+    const { matchDay } = req.query || {};
 
     // Build where clause
     const whereClause: any = { lobbyId };
@@ -966,7 +966,7 @@ export const simulateEntireLeague = async (req: Request, res: Response): Promise
 export const getLeagueStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { lobbyId } = req.params;
-    const { matchDay } = req.query;
+    const { matchDay } = req.query || {};
 
     const lobby = await prisma.lobby.findUnique({
       where: { id: lobbyId },

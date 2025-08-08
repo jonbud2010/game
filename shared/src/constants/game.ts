@@ -1,21 +1,39 @@
 import type { PlayerColor, PlayerPosition } from '../types/game.js';
 
-// Position definitions are now handled by frontend i18n system
-// This constant is kept for reference only and should not be used for display
+// Position definitions with German descriptions for display
+export const PLAYER_POSITIONS = {
+  GK: 'Torwart',
+  CB: 'Innenverteidiger',
+  LB: 'Linksverteidiger',
+  RB: 'Rechtsverteidiger',
+  CDM: 'Defensives Mittelfeld',
+  CM: 'Zentrales Mittelfeld',
+  CAM: 'Offensives Mittelfeld',
+  LM: 'Linkes Mittelfeld',
+  RM: 'Rechtes Mittelfeld',
+  LW: 'Linker Flügel',
+  RW: 'Rechter Flügel',
+  ST: 'Stürmer',
+  CF: 'Mittelstürmer',
+  LF: 'Linker Stürmer',
+  RF: 'Rechter Stürmer'
+} as const;
+
+// Position enum for type checking
 export const PLAYER_POSITIONS_ENUM: PlayerPosition[] = [
   'GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 
   'LM', 'RM', 'LW', 'RW', 'ST', 'CF', 'LF', 'RF'
 ];
 
 export const PLAYER_COLORS: Record<PlayerColor, string> = {
+  DARK_GREEN: '#16A34A',
+  LIGHT_GREEN: '#22C55E',
+  DARK_BLUE: '#1E40AF',
+  LIGHT_BLUE: '#3B82F6',
   RED: '#DC2626',
-  BLUE: '#1E40AF',
-  GREEN: '#16A34A',
   YELLOW: '#FACC15',
   PURPLE: '#7C3AED',
-  ORANGE: '#EA580C',
-  PINK: '#EC4899',
-  CYAN: '#06B6D4'
+  ORANGE: '#EA580C'
 };
 
 export const CHEMISTRY_POINTS = {
@@ -62,7 +80,7 @@ export const DUMMY_PLAYER_SETTINGS = {
   POINTS: 50,
   MARKET_PRICE: 0,
   PERCENTAGE: 0,
-  COLOR: 'CYAN' as PlayerColor,
+  COLOR: 'DARK_BLUE' as PlayerColor,
   IMAGE_URL: '/images/players/dummy.png'
 } as const;
 

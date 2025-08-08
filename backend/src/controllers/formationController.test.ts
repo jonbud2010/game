@@ -61,7 +61,10 @@ describe('Formation Controller', () => {
       });
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        data: mockFormations,
+        data: [
+          { id: '1', name: '4-4-2', positions: [], createdAt: expect.any(Date) },
+          { id: '2', name: '4-3-3', positions: [], createdAt: expect.any(Date) }
+        ],
         count: 2
       });
     });
@@ -181,7 +184,8 @@ describe('Formation Controller', () => {
         data: {
           name: '4-4-2',
           imageUrl: '/images/formations/default.jpg',
-          positions: JSON.stringify(validPositions)
+          positions: JSON.stringify(validPositions),
+          percentage: 0.05
         }
       });
       expect(mockStatus).toHaveBeenCalledWith(201);

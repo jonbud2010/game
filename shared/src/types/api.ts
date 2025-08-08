@@ -62,6 +62,10 @@ export interface CreatePackRequest {
     playerId: string;
     percentage: number;
   }[];
+  formationPool?: {
+    formationId: string;
+    percentage: number;
+  }[];
 }
 
 export interface CreateTeamRequest {
@@ -78,7 +82,8 @@ export interface OpenPackRequest {
 }
 
 export interface OpenPackResponse {
-  player: {
+  itemType: 'player' | 'formation';
+  player?: {
     id: string;
     name: string;
     imageUrl: string;
@@ -86,6 +91,12 @@ export interface OpenPackResponse {
     position: string;
     color: string;
     theme: string;
+  };
+  formation?: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    positions: string;
   };
   newCoins: number;
 }
@@ -145,6 +156,7 @@ export interface CreateLobbyPackRequest {
   imageUrl?: string;
   price: number;
   playerIds?: string[];
+  formationIds?: string[];
 }
 
 export interface CreateLobbyFormationRequest {

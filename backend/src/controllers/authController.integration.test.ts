@@ -22,7 +22,7 @@ describe('Authentication Integration Tests', () => {
       const userData = {
         username: 'newuser',
         email: 'newuser@test.com',
-        password: 'password123'
+        password: 'Password123'
       };
 
       const response = await request(app)
@@ -53,8 +53,8 @@ describe('Authentication Integration Tests', () => {
       expect(createdUser?.coins).toBe(1000);
 
       // Verify password was hashed
-      expect(createdUser?.passwordHash).not.toBe('password123');
-      const isValidPassword = await bcrypt.compare('password123', createdUser?.passwordHash || '');
+      expect(createdUser?.passwordHash).not.toBe('Password123');
+      const isValidPassword = await bcrypt.compare('Password123', createdUser?.passwordHash || '');
       expect(isValidPassword).toBe(true);
     });
 
@@ -63,7 +63,7 @@ describe('Authentication Integration Tests', () => {
       const userData = {
         username: 'user1',
         email: 'duplicate@test.com',
-        password: 'password123'
+        password: 'Password123'
       };
 
       await request(app)
@@ -75,7 +75,7 @@ describe('Authentication Integration Tests', () => {
       const duplicateUserData = {
         username: 'user2',
         email: 'duplicate@test.com',
-        password: 'password456'
+        password: 'Password456'
       };
 
       const response = await request(app)
@@ -90,7 +90,7 @@ describe('Authentication Integration Tests', () => {
       const invalidData = {
         username: '', // Empty username
         email: 'invalid-email', // Invalid email format
-        password: '123' // Too short password
+        password: '123' // Too short password and missing pattern requirements
       };
 
       const response = await request(app)
@@ -115,11 +115,11 @@ describe('Authentication Integration Tests', () => {
     it('should login with valid credentials', async () => {
       const loginData = {
         email: 'player@test.com',
-        password: 'password123' // This matches the test hash setup
+        password: 'Password123' // This matches the test hash setup
       };
 
       // Note: The test setup uses a fixed hash, so we need to update the user with a real hash
-      const hashedPassword = await bcrypt.hash('password123', 10);
+      const hashedPassword = await bcrypt.hash('Password123', 10);
       await testDb.user.update({
         where: { id: testUser.id },
         data: { passwordHash: hashedPassword }
@@ -147,7 +147,7 @@ describe('Authentication Integration Tests', () => {
     it('should reject login with invalid email', async () => {
       const loginData = {
         email: 'nonexistent@test.com',
-        password: 'password123'
+        password: 'Password123'
       };
 
       const response = await request(app)
@@ -202,7 +202,7 @@ describe('Authentication Integration Tests', () => {
       const userData = {
         username: 'authuser',
         email: 'authuser@test.com',
-        password: 'password123'
+        password: 'Password123'
       };
 
       const registerResponse = await request(app)
@@ -232,14 +232,14 @@ describe('Authentication Integration Tests', () => {
         .get('/api/auth/me')
         .expect(401);
 
-      expect(response.body.error).toBe('Access denied. No token provided.');
+      expect(response.body.error).toBe('Access token required');
     });
 
     it('should reject request with invalid token', async () => {
       const response = await request(app)
         .get('/api/auth/me')
         .set('Authorization', 'Bearer invalid-token')
-        .expect(403);
+        .expect(401);
 
       expect(response.body.error).toBe('Invalid token');
     });
@@ -250,7 +250,7 @@ describe('Authentication Integration Tests', () => {
         .set('Authorization', 'InvalidFormat')
         .expect(401);
 
-      expect(response.body.error).toBe('Access denied. No token provided.');
+      expect(response.body.error).toBe('Access token required');
     });
   });
 });

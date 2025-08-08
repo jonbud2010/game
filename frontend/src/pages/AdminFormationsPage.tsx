@@ -7,6 +7,7 @@ interface Formation {
   name: string;
   imageUrl: string;
   positions: FormationPosition[];
+  percentage: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,7 +29,7 @@ const AdminFormationsPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     positions: [] as FormationPosition[],
-    image: null as File | null
+    percentage: 0.05 // Default 5%
   });
 
   const positions = ['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST', 'CF', 'LF', 'RF'];
@@ -75,24 +76,22 @@ const AdminFormationsPage: React.FC = () => {
     
     try {
       const token = localStorage.getItem('auth_token');
-      const formDataToSend = new FormData();
       
-      // Add form fields
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('positions', JSON.stringify(formData.positions));
-      
-      if (formData.image) {
-        formDataToSend.append('image', formData.image);
-      }
+      const requestBody = {
+        name: formData.name,
+        positions: formData.positions,
+        percentage: formData.percentage
+      };
 
       const response = await fetch(
         editingFormation ? `/api/formations/${editingFormation.id}` : '/api/formations',
         {
           method: editingFormation ? 'PUT' : 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           },
-          body: formDataToSend
+          body: JSON.stringify(requestBody)
         }
       );
 
@@ -105,7 +104,7 @@ const AdminFormationsPage: React.FC = () => {
       setFormData({
         name: '',
         positions: [...defaultFormation],
-        image: null
+        percentage: 0.05
       });
       setShowCreateForm(false);
       setEditingFormation(null);
@@ -118,10 +117,35 @@ const AdminFormationsPage: React.FC = () => {
 
   const handleEdit = (formation: Formation) => {
     setEditingFormation(formation);
+    
+    // Ensure positions are in the correct format
+    let positions = formation.positions || [...defaultFormation];
+    
+    // Transform any string positions to proper FormationPosition objects
+    positions = positions.map((pos, index) => {
+      // If it's already a proper object, return as is
+      if (typeof pos === 'object' && pos.position && typeof pos.x === 'number' && typeof pos.y === 'number') {
+        return pos;
+      }
+      
+      // If it's a string, convert to object with default coordinates
+      if (typeof pos === 'string') {
+        const defaultPos = defaultFormation.find(dp => dp.position === pos) || defaultFormation[index] || { position: pos, x: 50, y: 75 };
+        return {
+          position: pos,
+          x: defaultPos.x,
+          y: defaultPos.y
+        };
+      }
+      
+      // Fallback to default formation
+      return defaultFormation[index] || { position: 'ST', x: 50, y: 75 };
+    });
+    
     setFormData({
       name: formation.name,
-      positions: formation.positions || [...defaultFormation],
-      image: null
+      positions: positions,
+      percentage: formation.percentage || 0.05
     });
     setShowCreateForm(true);
   };
@@ -153,11 +177,24 @@ const AdminFormationsPage: React.FC = () => {
 
   const updatePosition = (index: number, field: 'position' | 'x' | 'y', value: string | number) => {
     const updatedPositions = [...formData.positions];
+    
+    // Ensure the position at index exists and is an object
+    if (!updatedPositions[index] || typeof updatedPositions[index] !== 'object') {
+      // Create a new position object if it doesn't exist or is invalid
+      updatedPositions[index] = {
+        position: 'ST',
+        x: 50,
+        y: 75
+      };
+    }
+    
+    // Update the field
     if (field === 'position') {
       updatedPositions[index]!.position = value as string;
     } else {
       updatedPositions[index]![field] = Number(value);
     }
+    
     setFormData({...formData, positions: updatedPositions});
   };
 
@@ -189,7 +226,7 @@ const AdminFormationsPage: React.FC = () => {
                 setFormData({
                   name: '',
                   positions: [...defaultFormation],
-                  image: null
+                  percentage: 0.05
                 });
               }}
             >
@@ -223,13 +260,19 @@ const AdminFormationsPage: React.FC = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="image">Formation Bild</label>
+                    <label htmlFor="percentage">Pack Draw Percentage *</label>
                     <input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setFormData({...formData, image: e.target.files?.[0] || null})}
+                      id="percentage"
+                      type="number"
+                      min="0.1"
+                      max="100"
+                      step="0.1"
+                      value={(formData.percentage * 100).toFixed(1)}
+                      onChange={(e) => setFormData({...formData, percentage: parseFloat(e.target.value) / 100})}
+                      placeholder="5.0"
+                      required
                     />
+                    <small>Wahrscheinlichkeit in % (0.1 - 100.0)</small>
                   </div>
                 </div>
 
@@ -317,18 +360,10 @@ const AdminFormationsPage: React.FC = () => {
             <div className="formations-grid">
               {formations.map(formation => (
                 <div key={formation.id} className="formation-card">
-                  <div className="formation-image">
-                    <img 
-                      src={formation.imageUrl} 
-                      alt={formation.name}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/formations/default.jpg';
-                      }}
-                    />
-                  </div>
                   <div className="formation-info">
                     <h3>{formation.name}</h3>
                     <p>{Array.isArray(formation.positions) ? formation.positions.length : 0} Positionen</p>
+                    <p className="formation-percentage">Pack Rate: {((formation.percentage || 0) * 100).toFixed(1)}%</p>
                     <div className="formation-positions">
                       {Array.isArray(formation.positions) && formation.positions.slice(0, 5).map((pos, idx) => (
                         <span key={idx} className="position-tag">{pos.position}</span>

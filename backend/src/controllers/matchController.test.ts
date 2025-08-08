@@ -50,6 +50,9 @@ vi.mock('../db/client', () => ({
       upsert: vi.fn(),
       update: vi.fn()
     },
+    scheduledMatchDay: {
+      findFirst: vi.fn()
+    },
     user: {
       update: vi.fn()
     }
@@ -185,6 +188,7 @@ describe('Match Controller', () => {
   describe('getLeagueTable', () => {
     beforeEach(() => {
       mockRequest.params = { lobbyId: 'lobby1' };
+      mockRequest.query = { matchDay: '1' }; // Request specific matchDay to get flat array
     });
 
     it('should return league table with calculated positions', async () => {
@@ -192,6 +196,7 @@ describe('Match Controller', () => {
         {
           id: 'lt1',
           userId: 'user1',
+          matchDay: 1,
           points: 9,
           goalsFor: 8,
           goalsAgainst: 3,
@@ -203,6 +208,7 @@ describe('Match Controller', () => {
         {
           id: 'lt2',
           userId: 'user2',
+          matchDay: 1,
           points: 6,
           goalsFor: 5,
           goalsAgainst: 4,
@@ -247,6 +253,7 @@ describe('Match Controller', () => {
         {
           id: 'lt1',
           userId: 'user1',
+          matchDay: 1,
           points: 6,
           goalsFor: 4,
           goalsAgainst: 2,
@@ -270,6 +277,7 @@ describe('Match Controller', () => {
 
       mockedPrisma.leagueTable.findMany.mockResolvedValue(mockLeagueTable);
       mockedPrisma.lobby.findUnique.mockResolvedValue(mockLobby);
+      mockedPrisma.scheduledMatchDay.findFirst.mockResolvedValue(null); // No scheduled matchdays
 
       await getLeagueStatus(mockRequest as Request, mockResponse as Response);
 

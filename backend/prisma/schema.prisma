@@ -24,6 +24,7 @@ model User {
   // Relations
   lobbyMembers    LobbyMember[]
   userPlayers     UserPlayer[]
+  userFormations  UserFormation[]
   teams           Team[]
   leagueTable     LeagueTable[]
   administeredLobbies Lobby[]   @relation("LobbyAdmin")
@@ -106,12 +107,15 @@ model Formation {
   name      String
   imageUrl  String   @map("image_url")
   positions String // JSON string of 11 positions in order
+  percentage Float   @default(1.0) // Draw probability percentage
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   teams           Team[]
   lobbyFormations LobbyFormation[]
+  packFormations  PackFormation[]
+  userFormations  UserFormation[]
 
   @@map("formations")
 }
@@ -126,8 +130,9 @@ model Pack {
   updatedAt   DateTime   @updatedAt @map("updated_at")
 
   // Relations
-  packPlayers PackPlayer[]
-  lobbyPacks  LobbyPack[]
+  packPlayers    PackPlayer[]
+  packFormations PackFormation[]
+  lobbyPacks     LobbyPack[]
 
   @@map("packs")
 }
@@ -146,6 +151,19 @@ model PackPlayer {
   @@map("pack_players")
 }
 
+model PackFormation {
+  id          String @id @default(cuid())
+  packId      String @map("pack_id")
+  formationId String @map("formation_id")
+
+  // Relations
+  pack      Pack      @relation(fields: [packId], references: [id], onDelete: Cascade)
+  formation Formation @relation(fields: [formationId], references: [id], onDelete: Cascade)
+
+  @@unique([packId, formationId])
+  @@map("pack_formations")
+}
+
 // User Collection
 model UserPlayer {
   id         String   @id @default(cuid())
@@ -158,6 +176,19 @@ model UserPlayer {
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@map("user_players")
+}
+
+model UserFormation {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  formationId String   @map("formation_id")
+  acquiredAt  DateTime @default(now()) @map("acquired_at")
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  formation Formation @relation(fields: [formationId], references: [id], onDelete: Cascade)
+
+  @@map("user_formations")
 }
 
 // Team Building

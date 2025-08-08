@@ -30,7 +30,7 @@ vi.mock('../db/connection', () => ({
 vi.mock('../middleware/auth', () => ({
   authenticateToken: vi.fn((req, res, next) => {
     // Mock authenticated user
-    req.user = { userId: 'user-1', role: 'USER' };
+    req.user = { id: 'user-1', userId: 'user-1', role: 'USER' };
     next();
   })
 }));
@@ -62,7 +62,14 @@ describe('Lobby Controller', () => {
           name: 'Test Lobby 1',
           maxPlayers: 4,
           status: 'WAITING',
+          adminId: 'user-1',
+          isActive: true,
+          currentMatchDay: 1,
           createdAt: new Date(),
+          admin: {
+            id: 'user-1',
+            username: 'testuser1'
+          },
           members: [
             {
               userId: 'user-1',
@@ -79,7 +86,14 @@ describe('Lobby Controller', () => {
           name: 'Test Lobby 2',
           maxPlayers: 4,
           status: 'WAITING',
+          adminId: 'user-2',
+          isActive: true,
+          currentMatchDay: 1,
           createdAt: new Date(),
+          admin: {
+            id: 'user-2',
+            username: 'testuser2'
+          },
           members: [
             {
               userId: 'user-2',
@@ -115,6 +129,13 @@ describe('Lobby Controller', () => {
             maxPlayers: 4,
             currentPlayers: 1,
             status: 'WAITING',
+            adminId: 'user-1',
+            admin: {
+              id: 'user-1',
+              username: 'testuser1'
+            },
+            isActive: true,
+            currentMatchDay: 1,
             members: [
               {
                 userId: 'user-1',
@@ -128,6 +149,13 @@ describe('Lobby Controller', () => {
             maxPlayers: 4,
             currentPlayers: 2,
             status: 'WAITING',
+            adminId: 'user-2',
+            admin: {
+              id: 'user-2',
+              username: 'testuser2'
+            },
+            isActive: true,
+            currentMatchDay: 1,
             members: [
               {
                 userId: 'user-2',
@@ -143,8 +171,17 @@ describe('Lobby Controller', () => {
       });
 
       expect(mockedPrisma.lobby.findMany).toHaveBeenCalledWith({
-        where: { status: 'WAITING' },
+        where: {
+          status: 'WAITING',
+          isActive: true
+        },
         include: {
+          admin: {
+            select: {
+              id: true,
+              username: true
+            }
+          },
           members: {
             include: {
               user: {
@@ -156,7 +193,9 @@ describe('Lobby Controller', () => {
             }
           }
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: {
+          createdAt: 'desc'
+        }
       });
     });
 
@@ -184,12 +223,19 @@ describe('Lobby Controller', () => {
         name: 'New Test Lobby',
         maxPlayers: 4,
         status: 'WAITING',
+        adminId: 'user-1',
+        isActive: true,
+        currentMatchDay: 1,
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
       const mockCompleteCreatedLobby = {
         ...mockCreatedLobby,
+        admin: {
+          id: 'user-1',
+          username: 'testuser'
+        },
         members: [
           {
             userId: 'user-1',
@@ -233,6 +279,13 @@ describe('Lobby Controller', () => {
           maxPlayers: 4,
           currentPlayers: 1,
           status: 'WAITING',
+          adminId: 'user-1',
+          admin: {
+            id: 'user-1',
+            username: 'testuser'
+          },
+          isActive: true,
+          currentMatchDay: 1,
           members: [
             {
               userId: 'user-1',
@@ -290,6 +343,13 @@ describe('Lobby Controller', () => {
 
       const mockUpdatedLobby = {
         ...mockLobby,
+        adminId: 'user-2',
+        isActive: true,
+        currentMatchDay: 1,
+        admin: {
+          id: 'user-2',
+          username: 'user2'
+        },
         members: [
           {
             userId: 'user-2',
@@ -321,11 +381,12 @@ describe('Lobby Controller', () => {
       // Mock the transaction
       mockedPrisma.$transaction.mockImplementation(async (callback) => {
         return await callback({
+          lobby: {
+            findUnique: vi.fn().mockResolvedValue(mockLobby),
+            update: vi.fn().mockResolvedValue({})
+          },
           lobbyMember: {
             create: vi.fn().mockResolvedValue({})
-          },
-          lobby: {
-            update: vi.fn().mockResolvedValue({})
           }
         });
       });
@@ -342,6 +403,13 @@ describe('Lobby Controller', () => {
           maxPlayers: 4,
           currentPlayers: 3,
           status: 'WAITING',
+          adminId: 'user-2',
+          admin: {
+            id: 'user-2',
+            username: 'user2'
+          },
+          isActive: true,
+          currentMatchDay: 1,
           members: expect.arrayContaining([
             expect.objectContaining({ userId: 'user-1', username: 'testuser' })
           ])
@@ -451,6 +519,7 @@ describe('Lobby Controller', () => {
       mockedPrisma.$transaction.mockImplementation(async (callback) => {
         return await callback({
           lobbyMember: {
+            findFirst: vi.fn().mockResolvedValue(mockMembership),
             delete: vi.fn().mockResolvedValue({})
           },
           lobby: {

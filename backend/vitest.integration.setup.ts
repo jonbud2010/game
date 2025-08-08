@@ -5,13 +5,32 @@
 
 import { PrismaClient } from '@prisma/client';
 import { beforeEach, afterAll, beforeAll } from 'vitest';
+import { unlink } from 'fs/promises';
+import { existsSync } from 'fs';
 
-// Set environment variables for test database
-process.env.DATABASE_URL = 'file:./test.db';
+// Generate unique test database for each test run
+const testDbName = `test-${Date.now()}.db`;
+process.env.DATABASE_URL = `file:./${testDbName}`;
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-integration-tests';
 
-// Test Database Client - uses the DATABASE_URL environment variable
-export const testDb = new PrismaClient();
+// Test Database Client with SQLite optimizations
+export const testDb = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+});
+
+// Configure SQLite for better concurrent access
+beforeAll(async () => {
+  // Enable WAL mode for better concurrency
+  await testDb.$executeRawUnsafe('PRAGMA journal_mode = WAL;');
+  await testDb.$executeRawUnsafe('PRAGMA synchronous = NORMAL;');
+  await testDb.$executeRawUnsafe('PRAGMA cache_size = 1000000;');
+  await testDb.$executeRawUnsafe('PRAGMA foreign_keys = ON;');
+  await testDb.$executeRawUnsafe('PRAGMA temp_store = MEMORY;');
+});
 
 // Setup vor jedem Test
 beforeEach(async () => {
@@ -21,7 +40,23 @@ beforeEach(async () => {
 
 // Cleanup nach allen Tests
 afterAll(async () => {
-  await testDb.$disconnect();
+  try {
+    // Disconnect from database
+    await testDb.$disconnect();
+    
+    // Clean up test database files
+    const dbFiles = [testDbName, `${testDbName}-wal`, `${testDbName}-shm`];
+    
+    for (const file of dbFiles) {
+      if (existsSync(file)) {
+        await unlink(file).catch(err => 
+          console.warn(`Could not delete ${file}:`, err.message)
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error during test cleanup:', error);
+  }
 });
 
 /**

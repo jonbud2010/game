@@ -131,7 +131,11 @@ const PackStorePage: React.FC = () => {
                 )}
               </div>
               <h3>{pack.name}</h3>
-              <p>{pack.playerCount} players available</p>
+              <p>
+                {pack.playerCount} players
+                {pack.formationCount ? `, ${pack.formationCount} formations` : ''}
+                {' '}available
+              </p>
               <div className="pack-price">{pack.price} Münzen</div>
               <button 
                 className="btn btn-primary"
@@ -141,12 +145,12 @@ const PackStorePage: React.FC = () => {
                   !user || 
                   user.coins < pack.price ||
                   pack.status !== 'ACTIVE' ||
-                  pack.playerCount === 0
+                  (pack.playerCount === 0 && (pack.formationCount || 0) === 0)
                 }
               >
                 {opening === pack.id ? 'Opening...' : 
                  pack.status !== 'ACTIVE' ? 'Unavailable' :
-                 pack.playerCount === 0 ? 'Empty' :
+                 (pack.playerCount === 0 && (pack.formationCount || 0) === 0) ? 'Empty' :
                  !user || user.coins < pack.price ? 'Not enough coins' :
                  'Open Pack'}
               </button>
@@ -158,10 +162,11 @@ const PackStorePage: React.FC = () => {
       <div className="pack-opening-info">
         <h3>💡 Pack-Opening Tipps</h3>
         <ul>
-          <li>Jeder Pack enthält einen zufälligen Spieler</li>
-          <li>Höhere Preise = bessere Spieler-Chancen</li>
+          <li>Jeder Pack enthält zufällige Spieler oder Formationen</li>
+          <li>Höhere Preise = bessere Chancen auf seltene Items</li>
           <li>Packs schrumpfen nach jedem Kauf</li>
           <li>Sammle verschiedene Farben für Team-Chemie</li>
+          <li>Formationen erweitern deine taktischen Möglichkeiten</li>
         </ul>
       </div>
 
@@ -175,28 +180,50 @@ const PackStorePage: React.FC = () => {
             </div>
             
             <div className="pack-result-content">
-              <div className="drawn-player">
-                <div className="player-card-large">
-                  <img
-                    src={packResult.drawnPlayer.imageUrl || '/images/players/default.jpg'}
-                    alt={packResult.drawnPlayer.name}
-                    className="player-image"
-                  />
-                  <div className="player-info">
-                    <h3>{packResult.drawnPlayer.name}</h3>
-                    <div className="player-details">
-                      <span className="player-position">{packResult.drawnPlayer.position}</span>
-                      <span className="player-points">{packResult.drawnPlayer.points} pts</span>
-                    </div>
-                    <div 
-                      className="player-color-badge"
-                      style={{ backgroundColor: `var(--color-${packResult.drawnPlayer.color})` }}
-                    >
-                      {packResult.drawnPlayer.color}
+              {packResult.itemType === 'player' && packResult.player ? (
+                <div className="drawn-player">
+                  <div className="player-card-large">
+                    <img
+                      src={packResult.player.imageUrl || '/images/players/default.jpg'}
+                      alt={packResult.player.name}
+                      className="player-image"
+                    />
+                    <div className="player-info">
+                      <h3>⚽ {packResult.player.name}</h3>
+                      <div className="player-details">
+                        <span className="player-position">{packResult.player.position}</span>
+                        <span className="player-points">{packResult.player.points} pts</span>
+                      </div>
+                      <div 
+                        className="player-color-badge"
+                        style={{ backgroundColor: `var(--color-${packResult.player.color})` }}
+                      >
+                        {packResult.player.color}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : packResult.itemType === 'formation' && packResult.formation ? (
+                <div className="drawn-formation">
+                  <div className="formation-card-large">
+                    <img
+                      src={packResult.formation.imageUrl || '/images/formations/default.jpg'}
+                      alt={packResult.formation.name}
+                      className="formation-image"
+                    />
+                    <div className="formation-info">
+                      <h3>⚡ {packResult.formation.name}</h3>
+                      <div className="formation-details">
+                        <span className="formation-type">Formation</span>
+                        <span className="formation-tactical">Tactic</span>
+                      </div>
+                      <div className="formation-badge">
+                        🏗️ Formation
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               
               <div className="pack-result-stats">
                 <div className="stat">
@@ -208,8 +235,12 @@ const PackStorePage: React.FC = () => {
                   <span>{packResult.remainingCoins}</span>
                 </div>
                 <div className="stat">
-                  <label>Players Left in Pack:</label>
-                  <span>{packResult.remainingPlayersInPack}</span>
+                  <label>Items Left in Pack:</label>
+                  <span>{packResult.remainingItemsInPack || (packResult.remainingPlayersInPack + (packResult.remainingFormationsInPack || 0))}</span>
+                </div>
+                <div className="stat">
+                  <label>Players / Formations:</label>
+                  <span>{packResult.remainingPlayersInPack} / {packResult.remainingFormationsInPack || 0}</span>
                 </div>
                 {packResult.packNowEmpty && (
                   <div className="pack-empty-notice">
@@ -220,15 +251,28 @@ const PackStorePage: React.FC = () => {
             </div>
             
             <div className="modal-actions">
-              <button 
-                className="btn btn-secondary"
-                onClick={() => {
-                  closeResultModal();
-                  window.location.href = '/team-builder';
-                }}
-              >
-                🏈 Add to Team
-              </button>
+              {packResult.itemType === 'player' && (
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    closeResultModal();
+                    window.location.href = '/team-builder';
+                  }}
+                >
+                  🏈 Add to Team
+                </button>
+              )}
+              {packResult.itemType === 'formation' && (
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    closeResultModal();
+                    window.location.href = '/team-builder';
+                  }}
+                >
+                  ⚡ Use Formation
+                </button>
+              )}
               <button className="btn btn-primary" onClick={closeResultModal}>
                 Continue
               </button>
