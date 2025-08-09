@@ -162,6 +162,7 @@ describe('Player Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockedPrisma.player.findMany.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app).get('/players');
@@ -171,6 +172,7 @@ describe('Player Controller', () => {
         success: false,
         error: 'Failed to fetch players'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -190,7 +192,7 @@ describe('Player Controller', () => {
       const mockCreatedPlayer = {
         id: 'player-new',
         ...validPlayerData,
-        color: 'HELLGRUEN', // Mock should return the transformed color
+        color: 'GREEN', // Backend uses English color names
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -209,14 +211,14 @@ describe('Player Controller', () => {
         points: 82,
         marketPrice: 180
       });
-      // The actual color should be the converted German name
-      expect(response.body.data.color).toBe('HELLGRUEN');
+      // Backend should use English color names
+      expect(response.body.data.color).toBe('GREEN');
 
       expect(mockedPrisma.player.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           name: 'New Player',
           position: 'CM',
-          color: 'HELLGRUEN',
+          color: 'GREEN',
           points: 82,
           marketPrice: 180
         })
@@ -238,6 +240,7 @@ describe('Player Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockedPrisma.player.create.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
@@ -249,6 +252,7 @@ describe('Player Controller', () => {
         success: false,
         error: 'Failed to create player'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 

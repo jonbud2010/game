@@ -140,6 +140,7 @@ describe('Team Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const error = new Error('Database error');
       mockedPrisma.team.findMany.mockRejectedValue(error);
 
@@ -150,6 +151,7 @@ describe('Team Controller', () => {
         error: 'Failed to fetch teams',
         details: 'Database error'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 

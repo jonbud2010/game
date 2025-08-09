@@ -275,7 +275,7 @@ const createPlayerSchema = Joi.object({
 // Lobby validation schemas
 const createLobbySchema = Joi.object({
   name: Joi.string()
-    .min(1)
+    .min(3)
     .max(50)
     .pattern(/^[a-zA-Z0-9\s\-_]+$/)
     .required()

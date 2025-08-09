@@ -200,6 +200,7 @@ describe('Lobby Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockedPrisma.lobby.findMany.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app).get('/lobbies');
@@ -209,6 +210,7 @@ describe('Lobby Controller', () => {
         success: false,
         error: 'Failed to fetch lobbies'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -309,6 +311,7 @@ describe('Lobby Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       // Mock findFirst to pass the existing membership check
       mockedPrisma.lobbyMember.findFirst.mockResolvedValue(null);
       // Mock transaction to fail
@@ -323,6 +326,7 @@ describe('Lobby Controller', () => {
         success: false,
         error: 'Failed to create lobby'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 

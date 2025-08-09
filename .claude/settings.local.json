@@ -113,7 +113,8 @@
       "Bash(time yarn workspace @football-tcg/frontend test:fast)",
       "Bash(timeout 30s yarn workspace @football-tcg/backend test)",
       "Bash(timeout 60s yarn workspace @football-tcg/backend test)",
-      "Bash(timeout 30s yarn workspace @football-tcg/backend test src/controllers/lobbyController.test.ts)"
+      "Bash(timeout 30s yarn workspace @football-tcg/backend test src/controllers/lobbyController.test.ts)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

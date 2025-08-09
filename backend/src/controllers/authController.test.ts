@@ -175,6 +175,7 @@ describe('Auth Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockedUserFindFirst.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
@@ -185,6 +186,7 @@ describe('Auth Controller', () => {
       expect(response.body).toMatchObject({
         error: 'Internal server error'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -290,6 +292,7 @@ describe('Auth Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockedUserFindUnique.mockRejectedValue(new Error('Database error'));
 
       const response = await request(app)
@@ -300,6 +303,7 @@ describe('Auth Controller', () => {
       expect(response.body).toMatchObject({
         error: 'Internal server error'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 });

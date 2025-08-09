@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db/client';
-import { calculateTeamChemistry, validateTeamChemistry, validateTeamPositions, PlayerPosition } from '@football-tcg/shared';
+import { calculateTeamChemistry, validateTeamChemistry, validateTeamPositions, PlayerPosition, isDummyPlayer } from '@football-tcg/shared';
 import { MATCH_SETTINGS } from '@football-tcg/shared';
 import { validateUniquePlayersInMatchday, checkPlayerUsageInMatchday, getUsedPlayersInMatchday } from '../utils/teamValidation';
 import { createDummyTeamPlayers } from '../utils/dummyPlayers';
@@ -159,7 +159,7 @@ export const createTeam = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Check if team already exists for this user, lobby, and matchday
+    // Check for existing team for same matchday
     const existingTeam = await prisma.team.findFirst({
       where: {
         userId,
@@ -195,18 +195,8 @@ export const createTeam = async (req: Request, res: Response): Promise<void> => 
       // Validate all players belong to user (with test mode for dummy/lobby players)
       const playerIds = players.map((p: any) => p.playerId).filter(Boolean);
       if (playerIds.length > 0) {
-        // Get all requested players to check their themes
-        const requestedPlayers = await prisma.player.findMany({
-          where: { id: { in: playerIds } },
-          select: { id: true, theme: true }
-        });
-
-        // Separate dummy/lobby players (available to everyone) from regular players
-        const testPlayers = (requestedPlayers || []).filter(p => 
-          p.theme === 'DUMMY' || p.theme === 'LOBBY'
-        ).map(p => p.id);
-        
-        const regularPlayerIds = playerIds.filter((id: string) => !testPlayers.includes(id));
+        // Separate dummy players (available to everyone) from regular players
+        const regularPlayerIds = playerIds.filter((id: string) => !isDummyPlayer(id));
 
         // Only check ownership for regular players
         if (regularPlayerIds.length > 0) {
@@ -369,18 +359,8 @@ export const updateTeam = async (req: Request, res: Response): Promise<void> => 
       // Validate all players belong to user (with test mode for dummy/lobby players)
       const playerIds = players.map((p: any) => p.playerId).filter(Boolean);
       if (playerIds.length > 0) {
-        // Get all requested players to check their themes
-        const requestedPlayers = await prisma.player.findMany({
-          where: { id: { in: playerIds } },
-          select: { id: true, theme: true }
-        });
-
-        // Separate dummy/lobby players (available to everyone) from regular players
-        const testPlayers = (requestedPlayers || []).filter(p => 
-          p.theme === 'DUMMY' || p.theme === 'LOBBY'
-        ).map(p => p.id);
-        
-        const regularPlayerIds = playerIds.filter((id: string) => !testPlayers.includes(id));
+        // Separate dummy players (available to everyone) from regular players
+        const regularPlayerIds = playerIds.filter((id: string) => !isDummyPlayer(id));
 
         // Only check ownership for regular players
         if (regularPlayerIds.length > 0) {

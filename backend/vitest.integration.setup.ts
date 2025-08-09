@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { beforeEach, afterAll, beforeAll } from 'vitest';
 import { unlink } from 'fs/promises';
 import { existsSync } from 'fs';
+import { execSync } from 'child_process';
 
 // Generate unique test database for each test run
 const testDbName = `test-${Date.now()}.db`;
@@ -24,12 +25,73 @@ export const testDb = new PrismaClient({
 
 // Configure SQLite for better concurrent access
 beforeAll(async () => {
+  console.log('🏗️  Setting up test database with migrations...');
+  
+  // Run database migrations to set up schema
+  await testDb.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "_prisma_migrations" (
+      "id" TEXT PRIMARY KEY NOT NULL,
+      "checksum" TEXT NOT NULL,
+      "finished_at" DATETIME,
+      "migration_name" TEXT NOT NULL,
+      "logs" TEXT,
+      "rolled_back_at" DATETIME,
+      "started_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "applied_steps_count" INTEGER UNSIGNED NOT NULL DEFAULT 0
+    );
+  `);
+  
+  // Apply migrations using Prisma's built-in migration deployment
+  try {
+    await testDb.$executeRaw`PRAGMA foreign_keys = OFF;`;
+    
+    // Use Prisma's programmatic migration deployment
+    const path = require('path');
+    const migrationPath = path.join(__dirname, 'prisma');
+    
+    // First, generate Prisma client
+    execSync('npx prisma generate', { 
+      cwd: __dirname,
+      env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
+      stdio: 'pipe'
+    });
+    
+    // Then deploy migrations
+    execSync('npx prisma migrate deploy', { 
+      cwd: __dirname,
+      env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
+      stdio: 'pipe'
+    });
+    
+    console.log('✅ Database migrations applied successfully');
+  } catch (error) {
+    console.error('❌ Migration deployment failed:', error.message);
+    console.error('Working directory:', __dirname);
+    console.error('Database URL:', process.env.DATABASE_URL);
+    
+    // Try using db push as a fallback
+    try {
+      console.log('🔧 Attempting schema push as fallback...');
+      execSync('npx prisma db push --force-reset', {
+        cwd: __dirname,
+        env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
+        stdio: 'pipe'
+      });
+      console.log('✅ Schema push completed successfully');
+    } catch (pushError) {
+      console.error('❌ Schema push also failed:', pushError.message);
+      throw pushError;
+    }
+  }
+  
   // Enable WAL mode for better concurrency
-  await testDb.$executeRawUnsafe('PRAGMA journal_mode = WAL;');
-  await testDb.$executeRawUnsafe('PRAGMA synchronous = NORMAL;');
-  await testDb.$executeRawUnsafe('PRAGMA cache_size = 1000000;');
-  await testDb.$executeRawUnsafe('PRAGMA foreign_keys = ON;');
-  await testDb.$executeRawUnsafe('PRAGMA temp_store = MEMORY;');
+  await testDb.$queryRawUnsafe('PRAGMA journal_mode = WAL;');
+  await testDb.$queryRawUnsafe('PRAGMA synchronous = NORMAL;');
+  await testDb.$queryRawUnsafe('PRAGMA cache_size = 1000000;');
+  await testDb.$queryRawUnsafe('PRAGMA foreign_keys = ON;');
+  await testDb.$queryRawUnsafe('PRAGMA temp_store = MEMORY;');
+  
+  console.log('🚀 Test database setup completed');
 });
 
 // Setup vor jedem Test

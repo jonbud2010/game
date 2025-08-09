@@ -3,13 +3,14 @@
  * Tests mit echter SQLite Database - Full API Flow Testing
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { testDb, createTestUsers } from '../../vitest.integration.setup';
 import authRoutes from '../routes/authRoutes';
+import { setTestDatabase, clearTestDatabase } from '../middleware/auth';
 
 // Express App für Integration Tests
 const app = express();
@@ -17,6 +18,14 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 describe('Authentication Integration Tests', () => {
+  beforeAll(async () => {
+    setTestDatabase(testDb);
+  });
+
+  afterAll(async () => {
+    clearTestDatabase();
+  });
+
   describe('POST /api/auth/register', () => {
     it('should register a new user with valid data', async () => {
       const userData = {

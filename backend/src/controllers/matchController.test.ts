@@ -137,6 +137,7 @@ describe('Match Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const error = new Error('Database error');
       mockedPrisma.match.findMany.mockRejectedValue(error);
 
@@ -147,6 +148,7 @@ describe('Match Controller', () => {
         error: 'Failed to fetch matches',
         details: 'Database error'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 

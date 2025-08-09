@@ -3,7 +3,7 @@
  * Tests mit echten File-Uploads und Sharp Image Processing
  */
 
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import path from 'path';
@@ -12,6 +12,7 @@ import sharp from 'sharp';
 import { testDb } from '../../vitest.integration.setup';
 import playerRoutes from '../routes/playerRoutes';
 import authRoutes from '../routes/authRoutes';
+import { setTestDatabase, clearTestDatabase } from '../middleware/auth';
 
 // Express App für Integration Tests
 const app = express();
@@ -21,6 +22,15 @@ app.use('/api/players', playerRoutes);
 
 describe('File Upload Integration Tests', () => {
   let adminToken: string;
+
+  // Set up test database for middleware
+  beforeAll(async () => {
+    setTestDatabase(testDb);
+  });
+
+  afterAll(async () => {
+    clearTestDatabase();
+  });
 
   // Create a simple test image buffer using Sharp (1x1 pixel PNG)
   const createTestImageBuffer = async () => {
@@ -43,8 +53,9 @@ describe('File Upload Integration Tests', () => {
       .send({
         username: 'uploadAdmin',
         email: 'upload@test.com',
-        password: 'password123'
+        password: 'Password123'
       });
+    
     
     // Update admin role
     await testDb.user.update({

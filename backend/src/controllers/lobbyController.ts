@@ -299,7 +299,7 @@ export const joinLobby = async (req: Request, res: Response): Promise<Response> 
     if (lobby.members.length >= lobby.maxPlayers) {
       return res.status(400).json({
         success: false,
-        error: 'Lobby is full'
+        error: 'Lobby is not accepting new members'
       });
     }
 
@@ -329,7 +329,7 @@ export const joinLobby = async (req: Request, res: Response): Promise<Response> 
       }
 
       if (currentLobby.members.length >= currentLobby.maxPlayers) {
-        throw new Error('Lobby is full');
+        throw new Error('Lobby is not accepting new members');
       }
 
       // Check if user is already in this lobby (race condition check)
@@ -345,8 +345,14 @@ export const joinLobby = async (req: Request, res: Response): Promise<Response> 
         }
       });
 
-      // Keep lobby in WAITING status for continuous operation
-      // Admin will manage when to start matchdays manually or via scheduling
+      // Check if lobby should auto-progress to IN_PROGRESS when full (4 players)
+      const newMemberCount = currentLobby.members.length + 1;
+      if (newMemberCount >= currentLobby.maxPlayers) {
+        await tx.lobby.update({
+          where: { id },
+          data: { status: 'IN_PROGRESS' }
+        });
+      }
     });
 
     // Fetch updated lobby data

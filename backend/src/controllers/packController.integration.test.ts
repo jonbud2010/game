@@ -3,12 +3,13 @@
  * Tests mit echter SQLite Database - Complete Pack Opening Workflow
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { testDb, createTestUsers, createTestPlayers, createTestPack } from '../../vitest.integration.setup';
 import packRoutes from '../routes/packRoutes';
 import authRoutes from '../routes/authRoutes';
+import { setTestDatabase, clearTestDatabase } from '../middleware/auth';
 
 // Express App für Integration Tests
 const app = express();
@@ -21,6 +22,14 @@ describe('Pack Integration Tests', () => {
   let adminToken: string;
   let testPlayers: any[];
   let testPack: any;
+
+  beforeAll(async () => {
+    setTestDatabase(testDb);
+  });
+
+  afterAll(async () => {
+    clearTestDatabase();
+  });
 
   beforeEach(async () => {
     // Create unique emails for each test run

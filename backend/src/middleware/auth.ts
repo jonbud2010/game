@@ -2,6 +2,20 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db/client';
 
+// Allow injection of test database for integration tests
+let testDbOverride: any = null;
+export function setTestDatabase(testDb: any) {
+  testDbOverride = testDb;
+}
+export function clearTestDatabase() {
+  testDbOverride = null;
+}
+
+// Get the appropriate database client (test or production)
+function getDbClient() {
+  return testDbOverride || prisma;
+}
+
 // Use global Request type extension from types/express.d.ts
 
 interface JwtPayload {
@@ -29,7 +43,8 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
     const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
     
     // Get user from database
-    const user = await prisma.user.findUnique({
+    const db = getDbClient();
+    const user = await db.user.findUnique({
       where: { id: decoded.userId },
       select: {
         id: true,
@@ -42,7 +57,6 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
     if (!user) {
       return res.status(401).json({ error: 'Invalid token' });
     }
-
     // Add user info to request
     req.userId = user.id;
     req.user = { ...user, userId: user.id } as any;
@@ -89,7 +103,8 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
     
-    const user = await prisma.user.findUnique({
+    const db = getDbClient();
+    const user = await db.user.findUnique({
       where: { id: decoded.userId },
       select: {
         id: true,

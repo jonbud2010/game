@@ -3,12 +3,13 @@
  * Tests mit echter SQLite Database - Complete Lobby Workflow
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { testDb } from '../../vitest.integration.setup';
 import lobbyRoutes from '../routes/lobbyRoutes';
 import authRoutes from '../routes/authRoutes';
+import { setTestDatabase, clearTestDatabase } from '../middleware/auth';
 
 // Express App für Integration Tests
 const app = express();
@@ -22,6 +23,14 @@ describe('Lobby Integration Tests', () => {
   let playerToken: string;
   let adminToken: string;
 
+  beforeAll(async () => {
+    setTestDatabase(testDb);
+  });
+
+  afterAll(async () => {
+    clearTestDatabase();
+  });
+
   beforeEach(async () => {
     // Create real authentication tokens
     const playerRegister = await request(app)
@@ -29,7 +38,7 @@ describe('Lobby Integration Tests', () => {
       .send({
         username: 'lobbyplayer',
         email: 'lobbyplayer@test.com',
-        password: 'password123'
+        password: 'Password123'
       });
     playerToken = playerRegister.body.token;
     playerUser = playerRegister.body.user;
@@ -39,7 +48,7 @@ describe('Lobby Integration Tests', () => {
       .send({
         username: 'lobbyadmin',
         email: 'lobbyadmin@test.com',
-        password: 'password123'
+        password: 'Password123'
       });
     
     // Update admin role in database
@@ -95,7 +104,7 @@ describe('Lobby Integration Tests', () => {
         .send(lobbyData)
         .expect(401);
 
-      expect(response.body.error).toBe('Access denied. No token provided.');
+      expect(response.body.error).toBe('Access token required');
     });
 
     it('should reject lobby creation with invalid data', async () => {
@@ -182,7 +191,8 @@ describe('Lobby Integration Tests', () => {
         data: {
           name: 'Integration Test Lobby',
           maxPlayers: 4,
-          status: 'WAITING'
+          status: 'WAITING',
+          adminId: playerUser.id
         }
       });
 
@@ -215,7 +225,7 @@ describe('Lobby Integration Tests', () => {
         .get('/api/lobbies')
         .expect(401);
 
-      expect(response.body.error).toBe('Access denied. No token provided.');
+      expect(response.body.error).toBe('Access token required');
     });
   });
 
@@ -229,7 +239,8 @@ describe('Lobby Integration Tests', () => {
         data: {
           name: 'Joinable Lobby',
           maxPlayers: 4,
-          status: 'WAITING'
+          status: 'WAITING',
+          adminId: playerUser.id
         }
       });
 
@@ -239,7 +250,7 @@ describe('Lobby Integration Tests', () => {
         .send({
           username: 'secondplayer',
           email: 'secondplayer@test.com',
-          password: 'password123'
+          password: 'Password123'
         });
       secondPlayerToken = secondPlayer.body.token;
     });
@@ -298,7 +309,7 @@ describe('Lobby Integration Tests', () => {
           .send({
             username: `player${i}`,
             email: `player${i}@test.com`,
-            password: 'password123'
+            password: 'Password123'
           });
         
         await request(app)
@@ -313,7 +324,7 @@ describe('Lobby Integration Tests', () => {
         .send({
           username: 'extraplayer',
           email: 'extraplayer@test.com',
-          password: 'password123'
+          password: 'Password123'
         });
 
       const response = await request(app)
@@ -335,7 +346,7 @@ describe('Lobby Integration Tests', () => {
           .send({
             username: `joinplayer${i}`,
             email: `joinplayer${i}@test.com`,
-            password: 'password123'
+            password: 'Password123'
           });
         players.push(player.body.token);
       }
@@ -370,7 +381,8 @@ describe('Lobby Integration Tests', () => {
         data: {
           name: 'Leavable Lobby',
           maxPlayers: 4,
-          status: 'WAITING'
+          status: 'WAITING',
+          adminId: playerUser.id
         }
       });
 
@@ -412,7 +424,7 @@ describe('Lobby Integration Tests', () => {
         .send({
           username: 'nonmember',
           email: 'nonmember@test.com',
-          password: 'password123'
+          password: 'Password123'
         });
 
       const response = await request(app)
@@ -438,7 +450,8 @@ describe('Lobby Integration Tests', () => {
         data: {
           name: 'In Progress Lobby',
           maxPlayers: 4,
-          status: 'IN_PROGRESS'
+          status: 'IN_PROGRESS',
+          adminId: playerUser.id
         }
       });
 
@@ -467,7 +480,8 @@ describe('Lobby Integration Tests', () => {
         data: {
           name: 'Single Member Lobby',
           maxPlayers: 4,
-          status: 'WAITING'
+          status: 'WAITING',
+          adminId: playerUser.id
         }
       });
 

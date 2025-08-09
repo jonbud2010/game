@@ -128,6 +128,7 @@ describe('Pack Controller', () => {
     });
 
     it('should handle database errors', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const error = new Error('Database connection failed');
       mockedPrisma.pack.findMany.mockRejectedValue(error);
 
@@ -138,6 +139,7 @@ describe('Pack Controller', () => {
         error: 'Failed to fetch packs',
         details: 'Database connection failed'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -249,6 +251,7 @@ describe('Pack Controller', () => {
     });
 
     it('should handle unique constraint violations', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const error = { code: 'P2002' };
       // Mock that all players exist (2 players found for 2 player IDs)
       mockedPrisma.player.findMany.mockResolvedValue([{ id: 'p1' }, { id: 'p2' }]);
@@ -261,6 +264,7 @@ describe('Pack Controller', () => {
         error: 'Pack already exists',
         message: 'A pack with this name already exists'
       });
+      consoleErrorSpy.mockRestore();
     });
   });
 

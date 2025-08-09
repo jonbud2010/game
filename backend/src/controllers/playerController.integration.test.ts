@@ -3,12 +3,13 @@
  * Tests mit echter SQLite Database - Player CRUD und Collection Workflow
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { testDb, createTestUsers, createTestPlayers } from '../../vitest.integration.setup';
 import playerRoutes from '../routes/playerRoutes';
 import authRoutes from '../routes/authRoutes';
+import { setTestDatabase, clearTestDatabase } from '../middleware/auth';
 
 // Express App für Integration Tests
 const app = express();
@@ -20,6 +21,14 @@ describe('Player Integration Tests', () => {
   let playerToken: string;
   let adminToken: string;
   let testPlayers: any[];
+
+  beforeAll(async () => {
+    setTestDatabase(testDb);
+  });
+
+  afterAll(async () => {
+    clearTestDatabase();
+  });
 
   beforeEach(async () => {
     // Create authentication tokens
@@ -170,7 +179,7 @@ describe('Player Integration Tests', () => {
         .get('/api/players/collection/my')
         .expect(401);
 
-      expect(response.body.error).toBe('Access denied. No token provided.');
+      expect(response.body.error).toBe('Access token required');
     });
   });
 
